@@ -73,16 +73,16 @@ export function SuccessModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
+            className="bg-card border-2 border-border rounded-none shadow-2xl max-w-lg w-full overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar pixel-border"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with character */}
-            <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 p-8 text-center">
+            <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 p-8 text-center border-b-2 border-orange-500/30">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring" }}
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mb-4 overflow-hidden"
+                className="inline-flex items-center justify-center w-20 h-20 rounded-none border-2 border-white/40 bg-white/20 backdrop-blur-sm mb-4 overflow-hidden"
               >
                 {character ? (
                   <Image
@@ -127,7 +127,7 @@ export function SuccessModal({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="p-4 rounded-xl bg-success/10 border border-success/20"
+                className="p-4 rounded-none border-2 border-success/30 bg-success/10 pixel-border"
               >
                 <div className="flex items-center gap-2 text-success text-sm mb-2">
                   <Key className="w-4 h-4" />
@@ -145,13 +145,13 @@ export function SuccessModal({
                 transition={{ delay: 0.6 }}
                 className="grid grid-cols-2 gap-4"
               >
-                <div className="text-center p-3 rounded-lg bg-secondary/50">
+                <div className="text-center p-3 rounded-none border-2 border-border bg-secondary/50">
                   <p className="text-2xl font-bold text-foreground">
                     {attempts}
                   </p>
                   <p className="text-xs text-muted-foreground">Attempts</p>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-secondary/50">
+                <div className="text-center p-3 rounded-none border-2 border-border bg-secondary/50">
                   <p className="text-2xl font-bold text-foreground">
                     {formatTime(timeSpent)}
                   </p>
@@ -168,7 +168,7 @@ export function SuccessModal({
                 >
                   <button
                     onClick={() => setShowEducation(!showEducation)}
-                    className="w-full flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/15 transition-colors"
+                    className="w-full flex items-center justify-between p-3 rounded-none border-2 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/15 transition-colors"
                   >
                     <div className="flex items-center gap-2 text-orange-500">
                       <BookOpen className="w-4 h-4" />
@@ -192,7 +192,7 @@ export function SuccessModal({
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="mt-3 space-y-4 p-4 rounded-lg bg-secondary/30 border border-border">
+                        <div className="mt-3 space-y-4 p-4 rounded-none border-2 border-border bg-secondary/30">
                           <h4 className="font-pixel text-xs text-orange-500">
                             {education.title}
                           </h4>
@@ -243,7 +243,7 @@ export function SuccessModal({
                             </div>
                           </div>
 
-                          <div className="p-3 rounded-lg bg-card border border-border">
+                          <div className="p-3 rounded-none border-2 border-border bg-card">
                             <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
                               <Globe className="w-3.5 h-3.5 text-green-500" />
                               Real-World Implication

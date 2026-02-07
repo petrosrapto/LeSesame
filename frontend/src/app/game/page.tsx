@@ -182,6 +182,23 @@ export default function GamePage() {
   // Auth gate — show login modal overlay
   if (!mounted) return null;
 
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)] pt-16">
+          <p className="text-muted-foreground font-pixel text-sm">Please log in to play.</p>
+        </div>
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => {}}
+          onSuccess={handleLoginSuccess}
+          closable={false}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -189,17 +206,19 @@ export default function GamePage() {
       <div className="pt-16 flex">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r border-border transition-all duration-300 z-40 ${
-            sidebarOpen ? "w-80" : "w-0"
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r-2 border-border pixel-grid transition-all duration-300 z-40 ${
+            sidebarOpen ? "w-96" : "w-0"
           } overflow-hidden`}
         >
-          <div className="w-80 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
+          <div className="w-96 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
             {/* Level Selection with Characters */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Select Guardian
-              </h3>
-              <div className="space-y-2">
+            <Card className="mb-4 pixel-card pixel-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 font-pixel">
+                  Select Guardian
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
                 {[1, 2, 3, 4, 5].map((level) => {
                   const isCompleted = completedLevels.includes(level);
                   const isUnlocked =
@@ -214,16 +233,18 @@ export default function GamePage() {
                       key={level}
                       onClick={() => isUnlocked && setCurrentLevel(level)}
                       disabled={!isUnlocked}
-                      className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
+                      className={`w-full p-3 rounded-none border-2 border-border text-left transition-all flex items-center gap-3 bg-card ${
                         isCurrent
-                          ? "bg-orange-500/20 border border-orange-500/30"
+                          ? "bg-orange-500/20 border-orange-500/40"
+                          : isCompleted
+                          ? "bg-success/20 border-success/30"
                           : isUnlocked
-                          ? "hover:bg-secondary"
-                          : "opacity-50 cursor-not-allowed"
+                          ? "bg-secondary hover:bg-secondary/90"
+                          : "bg-muted opacity-50 cursor-not-allowed"
                       }`}
                     >
                       {/* Character avatar */}
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border-2 border-border">
                         {char ? (
                           <Image
                             src={char.image}
@@ -242,7 +263,7 @@ export default function GamePage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm truncate">
+                          <span className="font-medium text-sm truncate font-pixel">
                             {char ? char.name : `Level ${level}`}
                           </span>
                           {isCompleted ? (
@@ -258,8 +279,8 @@ export default function GamePage() {
                     </button>
                   );
                 })}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Progress Card */}
             <GameProgress
@@ -273,9 +294,9 @@ export default function GamePage() {
             />
 
             {/* Tips */}
-            <Card className="mt-4">
+            <Card className="mt-4 pixel-card pixel-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
+                <CardTitle className="text-sm flex items-center gap-2 font-pixel">
                   <Lightbulb className="w-4 h-4 text-orange-500" />
                   Tips
                 </CardTitle>
@@ -293,8 +314,8 @@ export default function GamePage() {
         {/* Sidebar toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`fixed top-20 z-50 p-2 bg-card border border-border rounded-r-lg transition-all duration-300 ${
-            sidebarOpen ? "left-80" : "left-0"
+          className={`fixed top-20 z-50 p-2 bg-card border-2 border-border rounded-none transition-all duration-300 ${
+            sidebarOpen ? "left-96" : "left-0"
           }`}
         >
           {sidebarOpen ? (
@@ -307,22 +328,22 @@ export default function GamePage() {
         {/* Main content */}
         <main
           className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? "ml-80" : "ml-0"
+            sidebarOpen ? "ml-96" : "ml-0"
           }`}
         >
           <div className="h-[calc(100vh-4rem)] p-4">
-            <Card className="h-full flex flex-col">
+            <Card className="h-full flex flex-col pixel-card pixel-border">
               <Tabs defaultValue="chat" className="flex flex-col h-full">
-                <TabsList className="mx-4 mt-4 w-fit">
-                  <TabsTrigger value="chat" className="gap-2">
+                <TabsList className="mx-4 mt-4 w-fit border-2 border-border rounded-none bg-card/80">
+                  <TabsTrigger value="chat" className="gap-2 rounded-none">
                     <MessageSquare className="w-4 h-4" />
                     Chat
                   </TabsTrigger>
-                  <TabsTrigger value="passphrase" className="gap-2">
+                  <TabsTrigger value="passphrase" className="gap-2 rounded-none">
                     <Key className="w-4 h-4" />
                     Passphrase
                   </TabsTrigger>
-                  <TabsTrigger value="guide" className="gap-2">
+                  <TabsTrigger value="guide" className="gap-2 rounded-none">
                     <BookOpen className="w-4 h-4" />
                     Level Guide
                   </TabsTrigger>
@@ -364,9 +385,9 @@ export default function GamePage() {
                       className="mb-6"
                     />
 
-                    <Card>
+                    <Card className="pixel-card pixel-border">
                       <CardHeader>
-                        <CardTitle className="font-game text-xl">
+                        <CardTitle className="font-pixel text-lg">
                           Attack Strategies
                         </CardTitle>
                       </CardHeader>
@@ -429,6 +450,7 @@ export default function GamePage() {
         isOpen={showLoginModal && !authed}
         onClose={() => setShowLoginModal(false)}
         onSuccess={handleLoginSuccess}
+        closable={false}
       />
     </div>
   );

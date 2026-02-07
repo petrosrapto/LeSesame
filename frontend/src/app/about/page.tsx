@@ -197,7 +197,7 @@ export default function AboutPage() {
             <h1 className="pixel-heading text-2xl md:text-3xl mb-4 text-foreground">
               <span className="text-orange-500">About the Game</span>
             </h1>
-            <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
+            <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto">
               Le Sésame is an interactive exploration of AI security — testing
               whether LLM systems can keep secrets while remaining helpful.
             </p>
@@ -210,11 +210,11 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <Card className="bg-gradient-to-br from-orange-500/5 via-background to-background border-orange-500/20">
+            <Card className="bg-gradient-to-br from-orange-500/5 via-background to-background border-2 border-orange-500/20 pixel-border">
               <CardContent className="py-8">
                 <div className="grid md:grid-cols-2 gap-8 items-center">
                   <div>
-                    <h2 className="font-mono text-2xl font-bold mb-4">
+                    <h2 className="pixel-heading text-xl md:text-2xl mb-4">
                       The Challenge
                     </h2>
                     <p className="text-muted-foreground mb-4">
@@ -243,21 +243,21 @@ export default function AboutPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Card className="p-4 text-center">
+                    <Card className="p-4 text-center pixel-card pixel-border">
                       <Target className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                      <p className="text-sm font-medium">5 Defense Levels</p>
+                      <p className="text-sm font-medium font-pixel">5 Defense Levels</p>
                     </Card>
-                    <Card className="p-4 text-center">
+                    <Card className="p-4 text-center pixel-card pixel-border">
                       <Code className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                      <p className="text-sm font-medium">6+ Attack Types</p>
+                      <p className="text-sm font-medium font-pixel">6+ Attack Types</p>
                     </Card>
-                    <Card className="p-4 text-center">
+                    <Card className="p-4 text-center pixel-card pixel-border">
                       <Users className="w-8 h-8 text-success mx-auto mb-2" />
-                      <p className="text-sm font-medium">Global Leaderboard</p>
+                      <p className="text-sm font-medium font-pixel">Global Leaderboard</p>
                     </Card>
-                    <Card className="p-4 text-center">
+                    <Card className="p-4 text-center pixel-card pixel-border">
                       <Lightbulb className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                      <p className="text-sm font-medium">Learn by Doing</p>
+                      <p className="text-sm font-medium font-pixel">Learn by Doing</p>
                     </Card>
                   </div>
                 </div>
@@ -273,7 +273,7 @@ export default function AboutPage() {
             className="mb-16"
             id="levels"
           >
-            <h2 className="font-mono text-2xl font-bold mb-8 text-center">
+            <h2 className="pixel-heading text-2xl mb-8 text-center">
               The 5 Levels of Defense
             </h2>
             <div className="space-y-6">
@@ -285,23 +285,23 @@ export default function AboutPage() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * index }}
                 >
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden pixel-card pixel-border">
                     <div className="flex flex-col md:flex-row">
                       <div
-                        className={`p-6 ${level.bgColor} flex items-center justify-center md:w-48`}
+                        className={`p-6 ${level.bgColor} flex items-center justify-center md:w-48 border-b-2 md:border-b-0 md:border-r-2 border-border`}
                       >
                         <div className="text-center">
                           <level.icon
                             className={`w-12 h-12 ${level.color} mx-auto mb-2`}
                           />
-                          <p className="font-bold">Level {level.level}</p>
+                          <p className="font-bold font-pixel text-sm">Level {level.level}</p>
                           <p className={`text-sm ${level.color}`}>
                             {level.difficulty}
                           </p>
                         </div>
                       </div>
                       <CardContent className="flex-1 py-6">
-                        <h3 className="font-mono text-xl font-semibold mb-2">
+                        <h3 className="font-pixel text-lg font-semibold mb-2">
                           {level.name}
                         </h3>
                         <p className="text-muted-foreground mb-4">
@@ -322,7 +322,7 @@ export default function AboutPage() {
                               {level.weaknesses.map((weakness) => (
                                 <span
                                   key={weakness}
-                                  className="text-xs px-2 py-1 rounded-full bg-secondary"
+                                  className="text-xs px-2 py-1 rounded-none border-2 border-border bg-secondary"
                                 >
                                   {weakness}
                                 </span>
@@ -345,7 +345,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <h2 className="font-mono text-2xl font-bold mb-8 text-center">
+            <h2 className="pixel-heading text-2xl mb-8 text-center">
               Attack Strategies
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -357,9 +357,9 @@ export default function AboutPage() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * index }}
                 >
-                  <Card className="h-full">
+                  <Card className="h-full pixel-card pixel-border">
                     <CardHeader>
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
+                      <CardTitle className="text-lg font-pixel">{category.name}</CardTitle>
                       <CardDescription>{category.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -387,42 +387,57 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <Card>
+            <Card className="pixel-card pixel-border">
               <CardHeader>
-                <CardTitle className="font-mono text-2xl">
+                <CardTitle className="pixel-heading text-xl">
                   Why This Matters
                 </CardTitle>
               </CardHeader>
-              <CardContent className="prose dark:prose-invert max-w-none">
-                <p>
-                  Every enterprise deploying LLMs with access to sensitive data
-                  faces exactly this problem — role-based information access
-                  control in natural language, where the boundary between
-                  &ldquo;accessing&rdquo; and &ldquo;not accessing&rdquo; is fuzzy.
-                </p>
-                <p>Key insights from this challenge:</p>
-                <ul>
-                  <li>
-                    <strong>LLMs are trained to be helpful</strong> —
-                    secret-keeping requires selective non-compliance, which
-                    fights against the model&apos;s training objective.
-                  </li>
-                  <li>
-                    <strong>&ldquo;Keeping a secret&rdquo; isn&apos;t binary</strong> —
-                    information can leak partially through indirect reasoning,
-                    process of elimination, or differential behavior.
-                  </li>
-                  <li>
-                    <strong>Prompt-level instructions are fragile</strong> —
-                    anything in the context window is extractable given enough
-                    adversarial pressure.
-                  </li>
-                  <li>
-                    <strong>Defense in depth matters</strong> — no single layer
-                    is sufficient; the interesting question is how many layers
-                    deep you can go and what breaks at each level.
-                  </li>
-                </ul>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">
+                      Every enterprise deploying LLMs with access to sensitive data
+                      faces exactly this problem — role-based information access
+                      control in natural language, where the boundary between
+                      &ldquo;accessing&rdquo; and &ldquo;not accessing&rdquo; is fuzzy.
+                    </p>
+                    <div className="pixel-ledge p-4 text-sm text-muted-foreground">
+                      The challenge turns abstract AI security concerns into
+                      concrete, hands-on experiments you can run yourself.
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="border-2 border-border rounded-none p-3 bg-card/80">
+                      <p className="text-sm font-semibold">LLMs are trained to be helpful</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Secret-keeping requires selective non-compliance, which
+                        fights against the model&apos;s training objective.
+                      </p>
+                    </div>
+                    <div className="border-2 border-border rounded-none p-3 bg-card/80">
+                      <p className="text-sm font-semibold">Keeping a secret is not binary</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Information can leak through indirect reasoning,
+                        process of elimination, or differential behavior.
+                      </p>
+                    </div>
+                    <div className="border-2 border-border rounded-none p-3 bg-card/80">
+                      <p className="text-sm font-semibold">Prompt defenses are fragile</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Anything in the context window can be extracted with
+                        enough adversarial pressure.
+                      </p>
+                    </div>
+                    <div className="border-2 border-border rounded-none p-3 bg-card/80">
+                      <p className="text-sm font-semibold">Defense in depth matters</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        No single layer is sufficient; each layer shifts what breaks.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.section>
@@ -434,7 +449,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h2 className="font-mono text-2xl font-bold mb-4">
+            <h2 className="pixel-heading text-2xl mb-4">
               Ready to Test Your Skills?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
@@ -443,7 +458,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/game">
-                <Button variant="gold" size="lg" className="gap-2">
+                <Button variant="gold" size="lg" className="gap-2 pixel-border">
                   <Gamepad2 className="w-5 h-5" />
                   Start Playing
                   <ArrowRight className="w-4 h-4" />

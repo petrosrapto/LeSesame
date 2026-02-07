@@ -43,7 +43,7 @@ export function GameProgress({
   };
 
   return (
-    <Card className={cn("p-6", className)}>
+    <Card className={cn("p-6 pixel-card pixel-border", className)}>
       <div className="space-y-6">
         {/* Overall Progress */}
         <div>
@@ -73,7 +73,7 @@ export function GameProgress({
               >
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                    "w-10 h-10 rounded-none border-2 border-border flex items-center justify-center transition-all duration-300",
                     isCompleted && "bg-success text-success-foreground",
                     isCurrent &&
                       !isCompleted &&
@@ -95,8 +95,8 @@ export function GameProgress({
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-            <div className="p-2 rounded-lg bg-primary/10">
+          <div className="flex items-center gap-3 p-3 rounded-none border-2 border-border bg-secondary/50">
+            <div className="p-2 rounded-none border-2 border-border bg-primary/10">
               <MessageSquare className="w-4 h-4 text-primary" />
             </div>
             <div>
@@ -105,8 +105,8 @@ export function GameProgress({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-            <div className="p-2 rounded-lg bg-success/10">
+          <div className="flex items-center gap-3 p-3 rounded-none border-2 border-border bg-secondary/50">
+            <div className="p-2 rounded-none border-2 border-border bg-success/10">
               <Target className="w-4 h-4 text-success" />
             </div>
             <div>
@@ -115,8 +115,8 @@ export function GameProgress({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-            <div className="p-2 rounded-lg bg-orange-500/10">
+          <div className="flex items-center gap-3 p-3 rounded-none border-2 border-border bg-secondary/50">
+            <div className="p-2 rounded-none border-2 border-border bg-orange-500/10">
               <Trophy className="w-4 h-4 text-orange-500" />
             </div>
             <div>
@@ -125,8 +125,8 @@ export function GameProgress({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+          <div className="flex items-center gap-3 p-3 rounded-none border-2 border-border bg-secondary/50">
+            <div className="p-2 rounded-none border-2 border-border bg-blue-500/10">
               <Clock className="w-4 h-4 text-blue-500" />
             </div>
             <div>

@@ -132,7 +132,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+      <section className="relative pt-28 pb-20 px-4 overflow-hidden pixel-section">
         {/* Background decoration */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
@@ -146,67 +146,69 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            {/* Badge */}
-            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-8 mx-auto w-fit">
-              <Sparkles className="w-3 h-3" />
-              <span>THE AI SECRET KEEPER CHALLENGE</span>
-            </div>
+            <div className="pixel-panel px-6 py-10 md:px-10 md:py-12">
+              {/* Badge */}
+              <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-8 mx-auto w-fit">
+                <Sparkles className="w-3 h-3" />
+                <span>THE AI SECRET KEEPER CHALLENGE</span>
+              </div>
 
-            {/* Main heading */}
-            <h1 className="pixel-heading text-3xl md:text-5xl mb-6 text-foreground">
-              Le Sésame
-            </h1>
+              {/* Main heading */}
+              <h1 className="pixel-heading text-3xl md:text-5xl mb-6 text-foreground">
+                Le Sésame
+              </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              Can you extract the secret? Test your skills against our AI guardian
-              through{" "}
-              <span className="text-orange-500 font-semibold">
-                5 progressively challenging levels
-              </span>{" "}
-              of defense.
-            </p>
+              <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
+                Can you extract the secret? Test your skills against our AI guardian
+                through{" "}
+                <span className="text-orange-500 font-semibold">
+                  5 progressively challenging levels
+                </span>{" "}
+                of defense.
+              </p>
 
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link href="/game">
-                <Button variant="gold" size="xl" className="gap-2 text-lg">
-                  <Gamepad2 className="w-5 h-5" />
-                  Start Playing
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/about">
-                <Button variant="outline" size="xl" className="gap-2 text-lg border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
-                  Learn More
-                </Button>
-              </Link>
-            </div>
+              {/* CTA buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <Link href="/game">
+                  <Button variant="gold" size="xl" className="gap-2 text-lg pixel-border">
+                    <Gamepad2 className="w-5 h-5" />
+                    Start Playing
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link href="/about">
+                  <Button variant="outline" size="xl" className="gap-2 text-lg border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                    Learn More
+                  </Button>
+                </Link>
+              </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index, duration: 0.5 }}
-                  className="text-center"
-                >
-                  <p className="text-3xl md:text-4xl font-bold font-mono text-orange-500">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-mono">
-                    {stat.label}
-                  </p>
-                </motion.div>
-              ))}
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                {stats.map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index, duration: 0.5 }}
+                    className="text-center pixel-card pixel-border py-4"
+                  >
+                    <p className="text-3xl md:text-4xl font-bold font-mono text-orange-500">
+                      {stat.value}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-mono">
+                      {stat.label}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-card/50">
+      <section className="py-20 px-4 bg-card/60 pixel-section pixel-grid">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -218,7 +220,7 @@ export default function HomePage() {
               <Target className="w-3 h-3" />
               <span>WHY PLAY</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               Why Play Le Sésame?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -236,12 +238,12 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 * index }}
               >
-                <Card className={`h-full bg-gradient-to-br ${feature.gradient} border ${feature.borderColor} hover:scale-[1.02] transition-all duration-300 group`}>
+                <Card className={`h-full bg-gradient-to-br ${feature.gradient} border-2 ${feature.borderColor} pixel-border hover:scale-[1.02] transition-all duration-300 group`}>
                   <CardContent className="pt-6">
-                    <div className="p-3 rounded-lg bg-background/50 w-fit mb-4">
+                    <div className="p-3 rounded-none border-2 border-border bg-background/50 w-fit mb-4">
                       <feature.icon className="w-6 h-6 text-orange-500" />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">
+                    <h3 className="font-bold text-lg mb-2 font-pixel">
                       {feature.title}
                     </h3>
                     <p className="text-sm text-muted-foreground">
@@ -268,7 +270,7 @@ export default function HomePage() {
               <Shield className="w-3 h-3" />
               <span>CHALLENGE LEVELS</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               5 Levels of Challenge
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -286,18 +288,18 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 * index }}
               >
-                <Card className="hover:border-orange-500/30 transition-all duration-300 group">
-                  <CardContent className="py-4">
+                <Card className="pixel-card pixel-border hover:border-orange-500/40 transition-all duration-300 group">
+                  <CardContent className="py-5">
                     <div className="flex items-center gap-4">
                       {/* Level icon */}
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${level.bgColor}`}>
-                        <div className={`w-4 h-4 ${level.dotColor} rounded-sm`} style={{ imageRendering: "pixelated" }} />
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-none border-2 border-border ${level.bgColor}`}>
+                        <div className={`w-4 h-4 ${level.dotColor} rounded-none`} style={{ imageRendering: "pixelated" }} />
                       </div>
                       {/* Level info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-sm">Level {level.level}: {level.name}</h3>
-                          <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${level.badgeColor}`}>
+                          <h3 className="font-bold text-sm font-pixel">Level {level.level}: {level.name}</h3>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-none border-2 border-border font-mono font-bold ${level.badgeColor}`}>
                             {level.badge}
                           </span>
                         </div>
@@ -323,7 +325,7 @@ export default function HomePage() {
 
           <div className="text-center mt-12">
             <Link href="/game">
-              <Button variant="gold" size="lg" className="gap-2">
+              <Button variant="gold" size="lg" className="gap-2 pixel-border">
                 Start with Level 1
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -333,7 +335,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 bg-card/50">
+      <section className="py-20 px-4 bg-card/60 pixel-section">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -345,7 +347,7 @@ export default function HomePage() {
               <Code className="w-3 h-3" />
               <span>HOW IT WORKS</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               How It Works
             </h2>
           </motion.div>
@@ -383,14 +385,14 @@ export default function HomePage() {
                 className="text-center"
               >
                 <div className="relative inline-block mb-6">
-                  <div className="p-4 rounded-lg bg-orange-500/10">
+                  <div className="p-4 rounded-none border-2 border-border bg-orange-500/10">
                     <item.icon className="w-8 h-8 text-orange-500" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded bg-orange-500 text-white text-xs font-mono font-bold flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-none border-2 border-orange-400 bg-orange-500 text-white text-xs font-mono font-bold flex items-center justify-center">
                     {item.step}
                   </div>
                 </div>
-                <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                <h3 className="font-bold text-lg mb-2 font-pixel">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {item.description}
                 </p>
@@ -408,7 +410,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-background to-orange-600/5 border-orange-500/20">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-background to-orange-600/5 border-2 border-orange-500/20 pixel-border">
               <CardContent className="py-12 text-center">
                 <div className="absolute inset-0 shimmer pointer-events-none" />
                 <Logo className="h-16 w-16 mx-auto mb-6" />
@@ -420,7 +422,7 @@ export default function HomePage() {
                   security. Can you extract the secret?
                 </p>
                 <Link href="/game">
-                  <Button variant="gold" size="xl" className="gap-2 text-lg">
+                  <Button variant="gold" size="xl" className="gap-2 text-lg pixel-border">
                     <Gamepad2 className="w-5 h-5" />
                     Play Now
                     <ArrowRight className="w-5 h-5" />

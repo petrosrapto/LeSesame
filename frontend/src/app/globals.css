@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&family=VT323&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,76 +6,76 @@
 
 @layer base {
   :root {
-    --background: 0 0% 96%;
-    --foreground: 0 0% 8%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
-    
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 30%;
-    
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 45%;
-    
-    --accent: 0 0% 92%;
-    --accent-foreground: 0 0% 20%;
-    
+    --background: 40 50% 96%;
+    --foreground: 228 22% 10%;
+
+    --card: 40 60% 98%;
+    --card-foreground: 228 22% 12%;
+
+    --popover: 40 60% 98%;
+    --popover-foreground: 228 22% 12%;
+
+    --primary: 32 95% 55%;
+    --primary-foreground: 40 60% 98%;
+
+    --secondary: 220 18% 92%;
+    --secondary-foreground: 228 22% 28%;
+
+    --muted: 220 18% 90%;
+    --muted-foreground: 228 12% 40%;
+
+    --accent: 220 18% 92%;
+    --accent-foreground: 228 22% 18%;
+
     --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    
+    --destructive-foreground: 40 60% 98%;
+
     --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
-    --ring: 24 95% 53%;
-    
+    --success-foreground: 40 60% 98%;
+
+    --border: 220 18% 82%;
+    --input: 220 18% 82%;
+    --ring: 32 95% 55%;
+
     --radius: 0.5rem;
 
-    --font-inter: 'Inter', system-ui, sans-serif;
+    --font-inter: 'Space Grotesk', sans-serif;
     --font-pixel: 'Press Start 2P', monospace;
     --font-mono: 'JetBrains Mono', monospace;
     --font-game: 'VT323', monospace;
   }
-  
+
   .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93%;
-    
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 93%;
-    
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 93%;
-    
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 4%;
-    
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 80%;
-    
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 55%;
-    
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 90%;
-    
+    --background: 230 30% 10%;
+    --foreground: 40 30% 92%;
+
+    --card: 230 26% 14%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 230 26% 14%;
+    --popover-foreground: 40 30% 92%;
+
+    --primary: 32 95% 60%;
+    --primary-foreground: 230 30% 10%;
+
+    --secondary: 230 22% 18%;
+    --secondary-foreground: 40 20% 85%;
+
+    --muted: 230 22% 18%;
+    --muted-foreground: 40 15% 65%;
+
+    --accent: 230 22% 18%;
+    --accent-foreground: 40 20% 88%;
+
     --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --success: 142 76% 42%;
-    --success-foreground: 0 0% 100%;
-    
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 24 95% 53%;
+    --destructive-foreground: 40 60% 98%;
+
+    --success: 142 70% 45%;
+    --success-foreground: 230 30% 10%;
+
+    --border: 230 18% 22%;
+    --input: 230 18% 22%;
+    --ring: 32 95% 60%;
   }
 }
 
@@ -83,112 +83,182 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-inter);
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-inter);
-    @apply font-bold tracking-tight;
+    background-image:
+      radial-gradient(circle at 12% 10%, rgba(249, 115, 22, 0.18), transparent 42%),
+      radial-gradient(circle at 88% 18%, rgba(14, 165, 233, 0.15), transparent 38%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 30%),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: auto, auto, auto, 26px 26px, 26px 26px;
+    background-attachment: fixed;
   }
 
-  /* Pixel headings for special hero/display contexts */
-  .pixel-heading {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-pixel);
-    @apply leading-relaxed;
   }
 }
 
-@layer utilities {
-  /* Gradient text effect - orange accent */
+@layer components {
+  .pixel-heading {
+    font-family: var(--font-pixel);
+    @apply font-bold tracking-tight;
+  }
+
+  .pixel-subtitle {
+    font-family: var(--font-game);
+    @apply text-lg tracking-wide;
+  }
+
+  .pixel-border {
+    box-shadow:
+      inset -3px -3px 0 0 rgba(0, 0, 0, 0.35),
+      inset 3px 3px 0 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .pixel-panel {
+    @apply relative border-2 border-border bg-card/95 rounded-none;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .pixel-panel::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+
+  .pixel-ledge {
+    @apply relative border-2 border-border bg-card/95;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .pixel-card {
+    @apply border-2 border-border bg-card/90 rounded-none;
+    image-rendering: pixelated;
+  }
+
+  .pixel-glow {
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35), 0 0 22px rgba(249, 115, 22, 0.25);
+  }
+
+  .pixel-chip {
+    @apply inline-flex items-center gap-2 rounded-none border-2 border-border px-3 py-1 text-xs uppercase tracking-widest;
+    font-family: var(--font-mono);
+  }
+
+  .pixel-hr {
+    @apply border-t-2 border-dashed border-border/70;
+  }
+
   .gradient-text {
     @apply bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600 bg-clip-text text-transparent;
-    background-size: 200% auto;
   }
-  
-  /* Orange shimmer effect */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
+
+  .section-label {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-widest;
+    font-family: var(--font-mono);
+  }
+
+  .chat-plate {
+    @apply border-2 border-border bg-card/90 rounded-none;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+  }
+
+  .chat-scanlines {
+    position: relative;
+  }
+
+  .chat-scanlines::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
       transparent,
-      rgba(249, 115, 22, 0.12),
-      transparent
+      transparent 3px,
+      rgba(0, 0, 0, 0.12) 3px,
+      rgba(0, 0, 0, 0.12) 4px
     );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
+    pointer-events: none;
+    opacity: 0.35;
   }
-  
-  /* Glass morphism effect */
-  .glass {
-    @apply bg-white/70 dark:bg-[#121212]/70 backdrop-blur-xl border border-white/20 dark:border-white/5;
+
+  .chat-bubble-user {
+    @apply bg-orange-500 text-white rounded-none border-2 border-orange-400;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
   }
-  
-  .glass-dark {
-    @apply bg-[#121212]/80 backdrop-blur-xl border border-white/5;
+
+  .chat-bubble-ai {
+    @apply bg-card border-2 border-border rounded-none;
   }
-  
-  /* Secret card gradient */
-  .secret-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card)) 0%,
-      hsl(var(--card)) 50%,
-      rgba(249, 115, 22, 0.05) 100%
-    );
+
+  .pixel-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
-  
-  /* Level badge styles - pixelated feel */
+
+  .pixel-noise {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='1' height='1' x='4' y='5' fill='rgba(255,255,255,0.05)'/%3E%3Crect width='1' height='1' x='20' y='18' fill='rgba(255,255,255,0.04)'/%3E%3Crect width='1' height='1' x='32' y='40' fill='rgba(255,255,255,0.03)'/%3E%3Crect width='1' height='1' x='56' y='22' fill='rgba(255,255,255,0.04)'/%3E%3Crect width='1' height='1' x='72' y='60' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+  }
+
+  .pixel-section {
+    @apply relative border-y border-border/60;
+  }
+
+  .pixel-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(249, 115, 22, 0.08), transparent 40%, rgba(59, 130, 246, 0.08));
+    pointer-events: none;
+  }
+
   .level-badge {
     @apply inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider;
     font-family: var(--font-mono);
   }
-  
+
   .level-locked {
     @apply bg-muted text-muted-foreground;
   }
-  
+
   .level-active {
     @apply bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30;
   }
-  
+
   .level-completed {
     @apply bg-success/20 text-success border border-success/30;
   }
-  
-  /* Chat bubble styles */
-  .chat-bubble-user {
-    @apply bg-orange-500 text-white rounded-lg rounded-br-sm;
-  }
-  
-  .chat-bubble-ai {
-    @apply bg-card border border-border rounded-lg rounded-bl-sm;
-  }
-  
-  /* Scrollbar styling */
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-border rounded-full hover:bg-muted-foreground/30;
   }
-  
-  /* Focus ring */
+
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
-  
-  /* Pixel underline animation */
+
   .elegant-underline {
     position: relative;
   }
-  
+
   .elegant-underline::after {
     content: '';
     position: absolute;
@@ -199,41 +269,40 @@
     @apply bg-orange-500;
     transition: width 0.3s ease;
   }
-  
+
   .elegant-underline:hover::after {
     width: 100%;
   }
-  
-  /* Pixel border effect */
-  .pixel-border {
-    box-shadow: 
-      inset -2px -2px 0px 0px rgba(0,0,0,0.3),
-      inset 2px 2px 0px 0px rgba(255,255,255,0.1);
-  }
 
-  /* Pixel card styling */  
-  .pixel-card {
-    @apply border-2 border-border;
-    image-rendering: pixelated;
-  }
-
-  /* Section label like Mistral's */
-  .section-label {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-widest;
-    font-family: var(--font-mono);
-  }
-
-  /* Monospace text */
   .mono {
     font-family: var(--font-mono);
   }
 
-  /* Floating label animation */
-  .floating-label {
-    @apply transition-all duration-200 ease-out;
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(249, 115, 22, 0.12),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
   }
-  
-  /* Delay utilities for staggered animations */
+
+  .scanline-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+  }
+
   .delay-75 { animation-delay: 75ms; }
   .delay-100 { animation-delay: 100ms; }
   .delay-150 { animation-delay: 150ms; }
@@ -243,7 +312,6 @@
   .delay-500 { animation-delay: 500ms; }
 }
 
-/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -268,11 +336,16 @@
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(249, 115, 22, 0.5);
+    box-shadow: 0 0 34px rgba(249, 115, 22, 0.55);
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes pixel-blink {
@@ -280,9 +353,9 @@
   50% { opacity: 0.3; }
 }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 .animate-fadeInUp {
@@ -301,22 +374,10 @@
   animation: pixel-blink 1s steps(2) infinite;
 }
 
-/* Selection color */
-::selection {
-  @apply bg-orange-500/30;
+.animate-float {
+  animation: float 2.2s ease-in-out infinite;
 }
 
-/* Pixel art scanline overlay for game areas */
-.scanline-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  pointer-events: none;
+::selection {
+  @apply bg-orange-500/30;
 }

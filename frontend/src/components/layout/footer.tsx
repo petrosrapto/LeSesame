@@ -5,13 +5,15 @@ import { Github, Linkedin, Globe, GraduationCap, Mail } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card/50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="border-t-2 border-border bg-card/70 pixel-grid">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Logo className="h-7 w-7" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="p-1.5 border-2 border-border bg-background/60 pixel-border">
+                <Logo className="h-7 w-7" />
+              </div>
               <span className="font-pixel text-sm text-orange-500">
                 Le Sésame
               </span>
@@ -35,14 +37,14 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
+            <h4 className="font-semibold mb-4 text-xs uppercase tracking-widest text-muted-foreground">
               Quick Links
             </h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/game"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   Play Game
                 </Link>
@@ -50,7 +52,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/leaderboard"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   Leaderboard
                 </Link>
@@ -58,7 +60,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   About
                 </Link>
@@ -68,14 +70,14 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
+            <h4 className="font-semibold mb-4 text-xs uppercase tracking-widest text-muted-foreground">
               Resources
             </h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/about#how-it-works"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   How It Works
                 </Link>
@@ -83,7 +85,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about#levels"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   Level Guide
                 </Link>
@@ -93,7 +95,7 @@ export function Footer() {
                   href="https://github.com/petrosrapto"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors elegant-underline"
                 >
                   GitHub
                 </a>
@@ -103,7 +105,7 @@ export function Footer() {
 
           {/* Author */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
+            <h4 className="font-semibold mb-4 text-xs uppercase tracking-widest text-muted-foreground">
               Author
             </h4>
             <p className="text-sm text-muted-foreground mb-3">
@@ -114,7 +116,7 @@ export function Footer() {
                 href="https://github.com/petrosrapto"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="p-2 rounded-none border-2 border-border bg-secondary hover:bg-secondary/80 transition-colors"
                 title="GitHub"
               >
                 <Github className="w-4 h-4" />
@@ -123,7 +125,7 @@ export function Footer() {
                 href="https://www.linkedin.com/in/petrosrapto/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="p-2 rounded-none border-2 border-border bg-secondary hover:bg-secondary/80 transition-colors"
                 title="LinkedIn"
               >
                 <Linkedin className="w-4 h-4" />
@@ -132,7 +134,7 @@ export function Footer() {
                 href="https://scholar.google.com/citations?user=G7paGngAAAAJ&hl=en&oi=ao"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="p-2 rounded-none border-2 border-border bg-secondary hover:bg-secondary/80 transition-colors"
                 title="Google Scholar"
               >
                 <GraduationCap className="w-4 h-4" />
@@ -141,14 +143,14 @@ export function Footer() {
                 href="https://petrosraptopoulos.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="p-2 rounded-none border-2 border-border bg-secondary hover:bg-secondary/80 transition-colors"
                 title="Website"
               >
                 <Globe className="w-4 h-4" />
               </a>
               <a
                 href="mailto:petrosrapto@gmail.com"
-                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="p-2 rounded-none border-2 border-border bg-secondary hover:bg-secondary/80 transition-colors"
                 title="Email"
               >
                 <Mail className="w-4 h-4" />
@@ -157,8 +159,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-8 pt-6 border-t-2 border-border">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} Le Sésame. All rights reserved.
             </p>

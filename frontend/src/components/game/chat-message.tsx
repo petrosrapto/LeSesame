@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { User, Key, CheckCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getInitials, UserProfile } from "@/lib/profile";
 
 export interface Message {
   id: string;
@@ -17,12 +19,24 @@ export interface Message {
 
 interface ChatMessageProps {
   message: Message;
+  assistantAvatarUrl?: string;
+  assistantName?: string;
+  userProfile?: UserProfile | null;
   className?: string;
 }
 
-export function ChatMessage({ message, className }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  assistantAvatarUrl,
+  assistantName,
+  userProfile,
+  className,
+}: ChatMessageProps) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
+
+  const initials = getInitials(userProfile?.displayName || "Player");
+  const accent = userProfile?.accent || "#f97316";
 
   if (isSystem) {
     return (
@@ -37,7 +51,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        "flex items-start gap-3",
+        "flex items-start gap-3.5",
         isUser && "flex-row-reverse",
         className
       )}
@@ -45,24 +59,37 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
       {/* Avatar */}
       <div
         className={cn(
-          "p-2 rounded-full shrink-0",
+          "w-11 h-11 rounded-xl border-2 border-border shrink-0 overflow-hidden flex items-center justify-center",
           isUser ? "bg-primary/20" : "bg-secondary"
         )}
       >
         {isUser ? (
-          <User className="w-4 h-4 text-primary" />
+          <span
+            className="w-full h-full flex items-center justify-center text-sm font-pixel text-white"
+            style={{ backgroundColor: accent }}
+          >
+            {initials}
+          </span>
+        ) : assistantAvatarUrl ? (
+          <Image
+            src={assistantAvatarUrl}
+            alt={assistantName || "Guardian"}
+            width={44}
+            height={44}
+            className="object-cover"
+          />
         ) : (
-          <Key className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs font-mono text-muted-foreground">AI</span>
         )}
       </div>
 
       {/* Message bubble */}
       <Card
         className={cn(
-          "max-w-[80%] p-4 relative",
+          "max-w-[78%] md:max-w-[70%] p-4 relative pixel-border",
           isUser
-            ? "chat-bubble-user"
-            : "chat-bubble-ai",
+            ? "chat-bubble-user shadow-[0_6px_0_rgba(0,0,0,0.3)]"
+            : "chat-bubble-ai shadow-[0_4px_0_rgba(0,0,0,0.2)]",
           message.isSecretRevealed && "ring-2 ring-success bg-success/5",
           message.isWarning && "ring-2 ring-orange-500 bg-orange-500/5"
         )}
@@ -84,7 +111,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
         {/* Message content */}
         <div
           className={cn(
-            "prose prose-sm max-w-none",
+            "prose prose-lg max-w-none font-game leading-relaxed text-[17px]",
             isUser
               ? "prose-invert"
               : "dark:prose-invert"
@@ -98,7 +125,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
         {/* Timestamp */}
         <div
           className={cn(
-            "text-[10px] mt-2 opacity-60",
+            "text-[11px] mt-2 opacity-60",
             isUser ? "text-right" : "text-left"
           )}
         >

@@ -61,7 +61,7 @@ services:
       context: ../../frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_API_URL=http://localhost:8000/api
         - NEXT_PUBLIC_ENABLE_AUTH=true
     container_name: le-sesame-frontend
     ports:

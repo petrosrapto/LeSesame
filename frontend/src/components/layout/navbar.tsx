@@ -10,7 +10,6 @@ import {
   Gamepad2,
   Trophy,
   Info,
-  Github,
   Moon,
   Sun,
   Menu,
@@ -63,33 +62,35 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-border/70 bg-card/90 backdrop-blur-md pixel-grid">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo className="h-7 w-7" />
+        <div className="relative flex h-16 items-center">
+          {/* Logo — left */}
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <div className="p-1.5 border-2 border-border bg-background/60 pixel-border">
+              <Logo className="h-7 w-7" />
+            </div>
             <span className="font-pixel text-sm text-orange-500 hidden sm:block">
               Le Sésame
             </span>
+          </Link>
+
+          {/* Desktop Navigation — center */}
+          <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
             <Image
               src="/mistral-logo.png"
               alt="Mistral AI"
-              width={20}
-              height={20}
-              className="opacity-60 hidden sm:block"
+              width={22}
+              height={22}
+              className="opacity-80"
             />
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <Button
                   variant={pathname === item.href ? "secondary" : "ghost"}
                   className={cn(
-                    "gap-2 text-sm",
-                    pathname === item.href && "bg-orange-500/10 text-orange-500"
+                    "gap-2 text-sm border-2 border-transparent",
+                    pathname === item.href && "bg-orange-500/10 text-orange-500 border-orange-500/30"
                   )}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
@@ -100,14 +101,14 @@ export function Navbar() {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             {/* Theme toggle */}
             {mounted && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground border-2 border-transparent hover:border-border"
               >
                 {theme === "dark" ? (
                   <Sun className="h-5 w-5" />
@@ -117,29 +118,23 @@ export function Navbar() {
               </Button>
             )}
 
-            {/* GitHub link */}
-            <a
-              href="https://github.com/petrosrapto"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="ghost" size="icon" className="hidden sm:flex">
-                <Github className="h-5 w-5" />
-              </Button>
-            </a>
-
             {/* Auth button */}
-            {mounted && authed ? (
+            {!mounted ? (
+              <div className="hidden sm:block w-[148px]" aria-hidden="true" />
+            ) : authed ? (
               <div className="hidden sm:flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-mono">
+                <Link
+                  href="/profile"
+                  className="text-xs text-muted-foreground font-mono border-2 border-border/50 px-2 py-1 bg-background/70 hover:border-orange-500/40 hover:text-foreground transition-colors"
+                >
                   <User className="w-3 h-3 inline mr-1" />
                   {username}
-                </span>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="gap-1 text-xs"
+                  className="gap-1 text-xs border-2 border-transparent hover:border-border"
                 >
                   <LogOut className="w-3 h-3" />
                   Logout
@@ -147,7 +142,7 @@ export function Navbar() {
               </div>
             ) : (
               <Link href="/game" className="hidden sm:block">
-                <Button variant="gold" size="sm" className="gap-2">
+                <Button variant="gold" size="sm" className="gap-2 pixel-border">
                   <Gamepad2 className="w-4 h-4" />
                   Play Now
                   <ArrowRight className="w-3 h-3" />
@@ -159,7 +154,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden border-2 border-transparent hover:border-border"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -173,7 +168,7 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-4 animate-slide-up">
+          <div className="md:hidden border-t-2 border-border py-4 animate-slide-up">
             <div className="flex flex-col gap-2">
               {navItems.map((item) => (
                 <Link
@@ -184,8 +179,8 @@ export function Navbar() {
                   <Button
                     variant={pathname === item.href ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start gap-2",
-                      pathname === item.href && "bg-orange-500/10 text-orange-500"
+                      "w-full justify-start gap-2 border-2 border-transparent",
+                      pathname === item.href && "bg-orange-500/10 text-orange-500 border-orange-500/30"
                     )}
                   >
                     {item.icon && <item.icon className="w-4 h-4" />}
@@ -194,14 +189,25 @@ export function Navbar() {
                 </Link>
               ))}
               {mounted && authed && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout ({username})
-                </Button>
+                <>
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout ({username})
+                  </Button>
+                </>
               )}
             </div>
           </div>

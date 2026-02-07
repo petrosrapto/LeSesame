@@ -22,9 +22,10 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  closable?: boolean;
 }
 
-export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
+export function LoginModal({ isOpen, onClose, onSuccess, closable = true }: LoginModalProps) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -80,25 +81,27 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={closable ? onClose : undefined}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            className="bg-card border-2 border-border rounded-none shadow-2xl max-w-md w-full overflow-hidden pixel-border"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-center">
-              <button
-                onClick={onClose}
-                className="absolute top-3 right-3 p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm mb-3">
+            <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-center border-b-2 border-orange-500/30">
+              {closable && (
+                <button
+                  onClick={onClose}
+                  className="absolute top-3 right-3 p-1 rounded-none border-2 border-white/40 bg-white/20 hover:bg-white/30 transition-colors"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              )}
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-none border-2 border-white/40 bg-white/20 backdrop-blur-sm mb-3">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-lg font-pixel text-white">
@@ -114,7 +117,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
             {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                <div className="p-3 rounded-none border-2 border-red-500/30 bg-red-500/10 text-red-500 text-sm">
                   {error}
                 </div>
               )}
@@ -130,6 +133,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                   placeholder="Enter your username"
                   autoComplete="username"
                   disabled={isLoading}
+                  className="rounded-none border-2 border-border"
                 />
               </div>
 
@@ -148,6 +152,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                     placeholder="you@example.com"
                     autoComplete="email"
                     disabled={isLoading}
+                    className="rounded-none border-2 border-border"
                   />
                 </div>
               )}
@@ -166,7 +171,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                       mode === "login" ? "current-password" : "new-password"
                     }
                     disabled={isLoading}
-                    className="pr-10"
+                    className="pr-10 rounded-none border-2 border-border"
                   />
                   <button
                     type="button"
@@ -185,7 +190,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
               <Button
                 type="submit"
                 variant="gold"
-                className="w-full gap-2"
+                className="w-full gap-2 pixel-border"
                 disabled={isLoading}
               >
                 {isLoading ? (
