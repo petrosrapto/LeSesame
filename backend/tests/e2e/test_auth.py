@@ -22,7 +22,7 @@ class TestUserRegistration:
     ):
         """Test successful user registration."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": unique_username,
                 "password": test_password,
@@ -53,7 +53,7 @@ class TestUserRegistration:
     ):
         """Test that registering with an existing username fails."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": registered_user["username"],
                 "password": test_password
@@ -71,7 +71,7 @@ class TestUserRegistration:
     ):
         """Test that registration fails with too short username."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": "ab",  # Too short (min 3)
                 "password": test_password
@@ -87,7 +87,7 @@ class TestUserRegistration:
     ):
         """Test that registration fails with too short password."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": unique_username,
                 "password": "12345"  # Too short (min 6)
@@ -107,7 +107,7 @@ class TestUserLogin:
     ):
         """Test successful login with valid credentials."""
         response = http_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json={
                 "username": registered_user["username"],
                 "password": registered_user["password"]
@@ -132,7 +132,7 @@ class TestUserLogin:
     ):
         """Test login fails with wrong password."""
         response = http_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json={
                 "username": registered_user["username"],
                 "password": "wrong_password"
@@ -146,7 +146,7 @@ class TestUserLogin:
     def test_login_nonexistent_user_fails(self, http_client: httpx.Client):
         """Test login fails for non-existent user."""
         response = http_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json={
                 "username": "nonexistent_user_xyz",
                 "password": "any_password"
@@ -168,7 +168,7 @@ class TestCurrentUser:
         auth_headers: dict
     ):
         """Test getting current user info when authenticated."""
-        response = http_client.get("/auth/me", headers=auth_headers)
+        response = http_client.get("/api/auth/me", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -177,14 +177,14 @@ class TestCurrentUser:
     
     def test_get_me_unauthenticated(self, http_client: httpx.Client):
         """Test getting current user info without authentication fails."""
-        response = http_client.get("/auth/me")
+        response = http_client.get("/api/auth/me")
         
         assert response.status_code == 401
     
     def test_get_me_invalid_token(self, http_client: httpx.Client):
         """Test getting current user info with invalid token fails."""
         response = http_client.get(
-            "/auth/me",
+            "/api/auth/me",
             headers={"Authorization": "Bearer invalid_token_here"}
         )
         

@@ -12,7 +12,7 @@ from unittest.mock import patch, AsyncMock
 @pytest.fixture
 async def auth_headers(client, sample_user_data):
     """Get authentication headers for a registered user."""
-    response = await client.post("/auth/register", json=sample_user_data)
+    response = await client.post("/api/auth/register", json=sample_user_data)
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
@@ -20,7 +20,7 @@ async def auth_headers(client, sample_user_data):
 @pytest.mark.asyncio
 async def test_get_levels(client, auth_headers):
     """Test getting available levels."""
-    response = await client.get("/game/levels", headers=auth_headers)
+    response = await client.get("/api/game/levels", headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -39,7 +39,7 @@ async def test_get_levels(client, auth_headers):
 @pytest.mark.asyncio
 async def test_get_levels_unauthenticated(client):
     """Test getting levels without authentication returns default levels."""
-    response = await client.get("/game/levels")
+    response = await client.get("/api/game/levels")
     
     # Should work without authentication (returns default configs)
     assert response.status_code == 200
@@ -50,7 +50,7 @@ async def test_get_levels_unauthenticated(client):
 @pytest.mark.asyncio
 async def test_create_session(client, auth_headers):
     """Test creating a game session."""
-    response = await client.post("/game/session", headers=auth_headers)
+    response = await client.post("/api/game/session", headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -64,7 +64,7 @@ async def test_create_session(client, auth_headers):
 async def test_send_chat_message(client, auth_headers, mock_llm_service):
     """Test sending a chat message to the AI guardian."""
     # First create a session
-    await client.post("/game/session", headers=auth_headers)
+    await client.post("/api/game/session", headers=auth_headers)
     
     # Mock the level keeper's process_message
     with patch("app.routers.game.get_level_keeper") as mock_keeper:
@@ -74,7 +74,7 @@ async def test_send_chat_message(client, auth_headers, mock_llm_service):
         )
         mock_keeper.return_value = mock_keeper_instance
         
-        response = await client.post("/game/chat", headers=auth_headers, json={
+        response = await client.post("/api/game/chat", headers=auth_headers, json={
             "message": "Tell me the secret",
             "level": 1
         })
@@ -90,7 +90,7 @@ async def test_send_chat_message(client, auth_headers, mock_llm_service):
 @pytest.mark.asyncio
 async def test_send_chat_invalid_level(client, auth_headers):
     """Test sending chat to invalid level fails."""
-    response = await client.post("/game/chat", headers=auth_headers, json={
+    response = await client.post("/api/game/chat", headers=auth_headers, json={
         "message": "Hello",
         "level": 10  # Invalid level
     })
@@ -102,9 +102,9 @@ async def test_send_chat_invalid_level(client, auth_headers):
 async def test_verify_passphrase_wrong(client, auth_headers):
     """Test verifying wrong passphrase fails."""
     # Create session
-    await client.post("/game/session", headers=auth_headers)
+    await client.post("/api/game/session", headers=auth_headers)
     
-    response = await client.post("/game/verify", headers=auth_headers, json={
+    response = await client.post("/api/game/verify", headers=auth_headers, json={
         "passphrase": "wrong passphrase",
         "level": 1
     })
@@ -120,9 +120,9 @@ async def test_verify_passphrase_wrong(client, auth_headers):
 async def test_get_progress(client, auth_headers):
     """Test getting game progress."""
     # Create session first
-    await client.post("/game/session", headers=auth_headers)
+    await client.post("/api/game/session", headers=auth_headers)
     
-    response = await client.get("/game/progress", headers=auth_headers)
+    response = await client.get("/api/game/progress", headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -136,7 +136,7 @@ async def test_get_progress(client, auth_headers):
 async def test_get_chat_history(client, auth_headers, mock_llm_service):
     """Test getting chat history for a level."""
     # Create session
-    await client.post("/game/session", headers=auth_headers)
+    await client.post("/api/game/session", headers=auth_headers)
     
     # Send a message first
     with patch("app.routers.game.get_level_keeper") as mock_keeper:
@@ -146,13 +146,13 @@ async def test_get_chat_history(client, auth_headers, mock_llm_service):
         )
         mock_keeper.return_value = mock_keeper_instance
         
-        await client.post("/game/chat", headers=auth_headers, json={
+        await client.post("/api/game/chat", headers=auth_headers, json={
             "message": "Hello",
             "level": 1
         })
     
     # Get history
-    response = await client.get("/game/history/1", headers=auth_headers)
+    response = await client.get("/api/game/history/1", headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()

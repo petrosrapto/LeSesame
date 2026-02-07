@@ -56,7 +56,7 @@ def test_password() -> str:
 def registered_user(http_client: httpx.Client, unique_username: str, test_password: str) -> dict:
     """Register a new user and return user info with token."""
     response = http_client.post(
-        "/auth/register",
+        "/api/auth/register",
         json={
             "username": unique_username,
             "password": test_password,
@@ -106,7 +106,7 @@ def check_llm_availability(base_url: str) -> bool:
             # Register a test user
             username = f"llm_check_{uuid.uuid4().hex[:8]}"
             reg_response = client.post(
-                "/auth/register",
+                "/api/auth/register",
                 json={"username": username, "password": "TestPass123!"}
             )
             if reg_response.status_code != 200:
@@ -116,11 +116,11 @@ def check_llm_availability(base_url: str) -> bool:
             headers = {"Authorization": f"Bearer {token}"}
             
             # Create session
-            client.post("/game/session", headers=headers)
+            client.post("/api/game/session", headers=headers)
             
             # Try to send a chat message
             chat_response = client.post(
-                "/game/chat",
+                "/api/game/chat",
                 headers=headers,
                 json={"message": "test", "level": 1}
             )

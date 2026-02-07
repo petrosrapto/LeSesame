@@ -34,7 +34,7 @@ def _send_chat(
     if model_config is not None:
         payload["model_config"] = model_config
     return http_client.post(
-        "/game/chat",
+        "/api/game/chat",
         headers=auth_headers,
         json=payload,
         timeout=timeout,
@@ -66,7 +66,7 @@ class TestDefaultProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(http_client, auth_headers)
         _assert_chat_ok(response)
 
@@ -85,7 +85,7 @@ class TestMistralProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -111,7 +111,7 @@ class TestOpenAIProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -137,7 +137,7 @@ class TestDeepSeekProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -164,7 +164,7 @@ class TestAlibabaProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -191,7 +191,7 @@ class TestTogetherProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -219,7 +219,7 @@ class TestVLLMProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -246,7 +246,7 @@ class TestGoogleProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -264,7 +264,7 @@ class TestGoogleProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -290,7 +290,7 @@ class TestBedrockProvider:
         http_client: httpx.Client,
         auth_headers: dict,
     ):
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,
@@ -316,7 +316,7 @@ class TestModelArgsOverride:
         auth_headers: dict,
     ):
         """Chat with explicit temperature and max_tokens overrides."""
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         response = _send_chat(
             http_client,
             auth_headers,

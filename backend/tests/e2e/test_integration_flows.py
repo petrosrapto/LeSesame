@@ -23,7 +23,7 @@ class TestCompleteUserFlow:
         
         # Step 1: Register
         register_response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": username, "password": password}
         )
         assert register_response.status_code == 200
@@ -31,23 +31,23 @@ class TestCompleteUserFlow:
         headers = {"Authorization": f"Bearer {token}"}
         
         # Step 2: Verify we can get our user info
-        me_response = http_client.get("/auth/me", headers=headers)
+        me_response = http_client.get("/api/auth/me", headers=headers)
         assert me_response.status_code == 200
         assert me_response.json()["username"] == username
         
         # Step 3: Create game session
-        session_response = http_client.post("/game/session", headers=headers)
+        session_response = http_client.post("/api/game/session", headers=headers)
         assert session_response.status_code == 200
         session_id = session_response.json()["session_id"]
         
         # Step 4: Get initial progress
-        progress_response = http_client.get("/game/progress", headers=headers)
+        progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
         
         # Step 5: Send a chat message
         chat_response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=headers,
             json={"message": "What is the secret?", "level": 1}
         )
@@ -55,7 +55,7 @@ class TestCompleteUserFlow:
         assert len(chat_response.json()["response"]) > 0
         
         # Step 6: Check history includes our message
-        history_response = http_client.get("/game/history/1", headers=headers)
+        history_response = http_client.get("/api/game/history/1", headers=headers)
         assert history_response.status_code == 200
         assert len(history_response.json()["messages"]) > 0
     
@@ -66,7 +66,7 @@ class TestCompleteUserFlow:
         
         # Step 1: Register
         register_response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": username, "password": password}
         )
         assert register_response.status_code == 200
@@ -74,16 +74,16 @@ class TestCompleteUserFlow:
         headers = {"Authorization": f"Bearer {token}"}
         
         # Step 2: Verify we can get our user info
-        me_response = http_client.get("/auth/me", headers=headers)
+        me_response = http_client.get("/api/auth/me", headers=headers)
         assert me_response.status_code == 200
         assert me_response.json()["username"] == username
         
         # Step 3: Create game session
-        session_response = http_client.post("/game/session", headers=headers)
+        session_response = http_client.post("/api/game/session", headers=headers)
         assert session_response.status_code == 200
         
         # Step 4: Get initial progress
-        progress_response = http_client.get("/game/progress", headers=headers)
+        progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
         assert len(progress_response.json()["levels"]) == 5
@@ -96,39 +96,39 @@ class TestCompleteUserFlow:
         
         # Register and create session
         register_response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": username, "password": password}
         )
         token1 = register_response.json()["access_token"]
         headers1 = {"Authorization": f"Bearer {token1}"}
         
         # Create session and play
-        session_response1 = http_client.post("/game/session", headers=headers1)
+        session_response1 = http_client.post("/api/game/session", headers=headers1)
         original_session_id = session_response1.json()["session_id"]
         
         # Send some messages
         http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=headers1,
             json={"message": "First message", "level": 1}
         )
         
         # Login again (simulating new browser session)
         login_response = http_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json={"username": username, "password": password}
         )
         token2 = login_response.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
         
         # Should get the same session
-        session_response2 = http_client.post("/game/session", headers=headers2)
+        session_response2 = http_client.post("/api/game/session", headers=headers2)
         resumed_session_id = session_response2.json()["session_id"]
         
         assert original_session_id == resumed_session_id
         
         # History should still be there
-        history_response = http_client.get("/game/history/1", headers=headers2)
+        history_response = http_client.get("/api/game/history/1", headers=headers2)
         assert len(history_response.json()["messages"]) > 0
 
 
@@ -140,7 +140,7 @@ class TestMultipleUsersIsolation:
         # Create user 1
         user1_name = f"isolation_u1_{uuid.uuid4().hex[:6]}"
         reg1 = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": user1_name, "password": "Test123!"}
         )
         token1 = reg1.json()["access_token"]
@@ -149,15 +149,15 @@ class TestMultipleUsersIsolation:
         # Create user 2
         user2_name = f"isolation_u2_{uuid.uuid4().hex[:6]}"
         reg2 = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": user2_name, "password": "Test123!"}
         )
         token2 = reg2.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
         
         # Both create sessions
-        session1 = http_client.post("/game/session", headers=headers1).json()
-        session2 = http_client.post("/game/session", headers=headers2).json()
+        session1 = http_client.post("/api/game/session", headers=headers1).json()
+        session2 = http_client.post("/api/game/session", headers=headers2).json()
         
         # Sessions should be different
         assert session1["session_id"] != session2["session_id"]
@@ -169,7 +169,7 @@ class TestErrorHandling:
     def test_invalid_json_body(self, http_client: httpx.Client):
         """Test that invalid JSON is handled gracefully."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             content="invalid json{",
             headers={"Content-Type": "application/json"}
         )
@@ -179,7 +179,7 @@ class TestErrorHandling:
     def test_missing_required_fields(self, http_client: httpx.Client):
         """Test that missing required fields return proper error."""
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={"username": "test_user"}  # Missing password
         )
         
@@ -194,7 +194,7 @@ class TestErrorHandling:
     ):
         """Test that API handles tokens (even if not expired in test)."""
         # Valid token should work
-        response = http_client.get("/auth/me", headers=auth_headers)
+        response = http_client.get("/api/auth/me", headers=auth_headers)
         assert response.status_code == 200
 
 
@@ -209,13 +209,13 @@ class TestConcurrentAccess:
     ):
         """Test sending multiple messages in sequence."""
         # Create session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         messages = ["First question", "Second question", "Third question"]
         
         for i, msg in enumerate(messages, 1):
             response = http_client.post(
-                "/game/chat",
+                "/api/game/chat",
                 headers=auth_headers,
                 json={"message": msg, "level": 1}
             )
@@ -229,12 +229,12 @@ class TestConcurrentAccess:
     ):
         """Test multiple passphrase attempts are tracked."""
         # Create session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         attempts = []
         for i in range(3):
             response = http_client.post(
-                "/game/verify",
+                "/api/game/verify",
                 headers=auth_headers,
                 json={"passphrase": f"wrong_{i}", "level": 1}
             )
@@ -255,12 +255,12 @@ class TestAPIRobustness:
         auth_headers: dict
     ):
         """Test handling of very long chat messages."""
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         # Send a long message (within 2000 char limit)
         long_message = "Hello " * 300  # About 1800 characters
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={"message": long_message, "level": 1}
         )
@@ -273,12 +273,12 @@ class TestAPIRobustness:
         auth_headers: dict
     ):
         """Test that too long messages are rejected."""
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         # Message over 2000 characters
         very_long_message = "A" * 2001
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={"message": very_long_message, "level": 1}
         )
@@ -292,11 +292,11 @@ class TestAPIRobustness:
         auth_headers: dict
     ):
         """Test that special characters are handled correctly."""
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         special_message = "Hello! What's the <secret>? 🔐 🎮 \n\t\"test\""
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={"message": special_message, "level": 1}
         )
@@ -307,7 +307,7 @@ class TestAPIRobustness:
         """Test that unicode in username is handled."""
         # Note: Depending on validation rules, this may fail validation
         response = http_client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": f"user_test_{uuid.uuid4().hex[:6]}",  # ASCII for safety
                 "password": "Test123!"

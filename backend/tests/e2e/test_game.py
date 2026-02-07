@@ -20,7 +20,7 @@ class TestGameSession:
         auth_headers: dict
     ):
         """Test creating a game session when authenticated."""
-        response = http_client.post("/game/session", headers=auth_headers)
+        response = http_client.post("/api/game/session", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -31,7 +31,7 @@ class TestGameSession:
     
     def test_create_session_unauthenticated_fails(self, http_client: httpx.Client):
         """Test creating a session without authentication fails."""
-        response = http_client.post("/game/session")
+        response = http_client.post("/api/game/session")
         
         assert response.status_code == 401
     
@@ -42,12 +42,12 @@ class TestGameSession:
     ):
         """Test that session persists across requests."""
         # Create first session
-        response1 = http_client.post("/game/session", headers=auth_headers)
+        response1 = http_client.post("/api/game/session", headers=auth_headers)
         assert response1.status_code == 200
         session1 = response1.json()
         
         # Request session again
-        response2 = http_client.post("/game/session", headers=auth_headers)
+        response2 = http_client.post("/api/game/session", headers=auth_headers)
         assert response2.status_code == 200
         session2 = response2.json()
         
@@ -66,10 +66,10 @@ class TestChatEndpoint:
     ):
         """Test sending a chat message to the AI guardian."""
         # First create a session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={
                 "message": "Hello, what is the secret?",
@@ -95,7 +95,7 @@ class TestChatEndpoint:
     ):
         """Test that sending chat to invalid level fails."""
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={
                 "message": "Hello",
@@ -113,7 +113,7 @@ class TestChatEndpoint:
     ):
         """Test that level 0 is invalid."""
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={
                 "message": "Hello",
@@ -126,7 +126,7 @@ class TestChatEndpoint:
     def test_send_chat_unauthenticated_fails(self, http_client: httpx.Client):
         """Test sending chat without authentication fails."""
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             json={
                 "message": "Hello",
                 "level": 1
@@ -142,7 +142,7 @@ class TestChatEndpoint:
     ):
         """Test sending empty message fails validation."""
         response = http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={
                 "message": "",
@@ -163,10 +163,10 @@ class TestPassphraseVerification:
     ):
         """Test that wrong passphrase returns failure."""
         # Create session first
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         response = http_client.post(
-            "/game/verify",
+            "/api/game/verify",
             headers=auth_headers,
             json={
                 "passphrase": "wrong_passphrase_123",
@@ -189,7 +189,7 @@ class TestPassphraseVerification:
     ):
         """Test that verification fails for invalid level."""
         response = http_client.post(
-            "/game/verify",
+            "/api/game/verify",
             headers=auth_headers,
             json={
                 "passphrase": "test",
@@ -203,7 +203,7 @@ class TestPassphraseVerification:
     def test_verify_unauthenticated_fails(self, http_client: httpx.Client):
         """Test that verification without auth fails."""
         response = http_client.post(
-            "/game/verify",
+            "/api/game/verify",
             json={
                 "passphrase": "test",
                 "level": 1
@@ -219,11 +219,11 @@ class TestPassphraseVerification:
     ):
         """Test that attempts counter increments on each try."""
         # Create session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
         # First attempt
         response1 = http_client.post(
-            "/game/verify",
+            "/api/game/verify",
             headers=auth_headers,
             json={"passphrase": "wrong1", "level": 1}
         )
@@ -231,7 +231,7 @@ class TestPassphraseVerification:
         
         # Second attempt
         response2 = http_client.post(
-            "/game/verify",
+            "/api/game/verify",
             headers=auth_headers,
             json={"passphrase": "wrong2", "level": 1}
         )
@@ -250,9 +250,9 @@ class TestGameProgress:
     ):
         """Test getting game progress when authenticated."""
         # Create session first
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
-        response = http_client.get("/game/progress", headers=auth_headers)
+        response = http_client.get("/api/game/progress", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -267,7 +267,7 @@ class TestGameProgress:
     
     def test_get_progress_unauthenticated_fails(self, http_client: httpx.Client):
         """Test getting progress without auth fails."""
-        response = http_client.get("/game/progress")
+        response = http_client.get("/api/game/progress")
         
         assert response.status_code == 401
     
@@ -277,9 +277,9 @@ class TestGameProgress:
         auth_headers: dict
     ):
         """Test that level info has correct structure."""
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
-        response = http_client.get("/game/progress", headers=auth_headers)
+        response = http_client.get("/api/game/progress", headers=auth_headers)
         data = response.json()
         
         for level_info in data["levels"]:
@@ -298,7 +298,7 @@ class TestLevelsEndpoint:
     
     def test_get_levels_unauthenticated(self, http_client: httpx.Client):
         """Test getting levels without auth returns basic info."""
-        response = http_client.get("/game/levels")
+        response = http_client.get("/api/game/levels")
         
         assert response.status_code == 200
         data = response.json()
@@ -318,9 +318,9 @@ class TestLevelsEndpoint:
     ):
         """Test getting levels when authenticated includes progress."""
         # Create session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
-        response = http_client.get("/game/levels", headers=auth_headers)
+        response = http_client.get("/api/game/levels", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -338,9 +338,9 @@ class TestChatHistory:
     ):
         """Test getting empty chat history."""
         # Create fresh session
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
-        response = http_client.get("/game/history/1", headers=auth_headers)
+        response = http_client.get("/api/game/history/1", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -356,14 +356,14 @@ class TestChatHistory:
     ):
         """Test chat history after sending messages."""
         # Create session and send a message
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         http_client.post(
-            "/game/chat",
+            "/api/game/chat",
             headers=auth_headers,
             json={"message": "Hello guardian!", "level": 1}
         )
         
-        response = http_client.get("/game/history/1", headers=auth_headers)
+        response = http_client.get("/api/game/history/1", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -376,7 +376,7 @@ class TestChatHistory:
         auth_headers: dict
     ):
         """Test getting history for invalid level fails."""
-        response = http_client.get("/game/history/10", headers=auth_headers)
+        response = http_client.get("/api/game/history/10", headers=auth_headers)
         
         # API returns 400 for invalid level (manual validation in handler)
         assert response.status_code in [400, 422]
@@ -392,9 +392,9 @@ class TestSessionReset:
     ):
         """Test resetting a game session."""
         # Create session first
-        http_client.post("/game/session", headers=auth_headers)
+        http_client.post("/api/game/session", headers=auth_headers)
         
-        response = http_client.delete("/game/session", headers=auth_headers)
+        response = http_client.delete("/api/game/session", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
@@ -402,7 +402,7 @@ class TestSessionReset:
     
     def test_reset_session_unauthenticated_fails(self, http_client: httpx.Client):
         """Test resetting session without auth fails."""
-        response = http_client.delete("/game/session")
+        response = http_client.delete("/api/game/session")
         
         assert response.status_code == 401
     
@@ -413,14 +413,14 @@ class TestSessionReset:
     ):
         """Test that a new session is created after reset."""
         # Create first session
-        response1 = http_client.post("/game/session", headers=auth_headers)
+        response1 = http_client.post("/api/game/session", headers=auth_headers)
         session1_id = response1.json()["session_id"]
         
         # Reset session
-        http_client.delete("/game/session", headers=auth_headers)
+        http_client.delete("/api/game/session", headers=auth_headers)
         
         # Create new session
-        response2 = http_client.post("/game/session", headers=auth_headers)
+        response2 = http_client.post("/api/game/session", headers=auth_headers)
         session2_id = response2.json()["session_id"]
         
         # Should be a different session
