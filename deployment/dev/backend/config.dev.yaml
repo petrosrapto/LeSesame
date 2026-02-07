@@ -62,5 +62,7 @@ security:
     expiration_hours: 24
   cors:
     allowed_origins:
-      - "http://frontend:3000"
-      - "http://localhost:3000"
+      - "https://www.lesesame.eu"
+      - "http://www.lesesame.eu"
+      - "https://lesesame.eu"
+      - "http://lesesame.eu"

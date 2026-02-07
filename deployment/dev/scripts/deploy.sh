@@ -102,7 +102,7 @@ check_docker() {
 stop_containers() {
     echo -e "\n${YELLOW}📦 Stopping existing containers...${NC}"
     cd "$DEPLOY_DIR"
-    docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
     
     # Also stop any conflicting containers by name
     for container in le-sesame-postgres le-sesame-backend le-sesame-frontend; do
@@ -119,14 +119,14 @@ stop_containers() {
 show_status() {
     echo -e "\n${YELLOW}📊 Container Status:${NC}"
     cd "$DEPLOY_DIR"
-    docker-compose -f "$COMPOSE_FILE" ps
+    docker compose -f "$COMPOSE_FILE" ps
 }
 
 # Function to show logs
 show_logs() {
     echo -e "\n${YELLOW}📜 Container Logs:${NC}"
     cd "$DEPLOY_DIR"
-    docker-compose -f "$COMPOSE_FILE" logs -f --tail=100
+    docker compose -f "$COMPOSE_FILE" logs -f --tail=100
 }
 
 # Handle special modes
@@ -154,7 +154,7 @@ if [ "$RESTART" = true ]; then
     stop_containers
     echo -e "\n${YELLOW}🔄 Restarting services...${NC}"
     cd "$DEPLOY_DIR"
-    docker-compose -f "$COMPOSE_FILE" up -d
+    docker compose -f "$COMPOSE_FILE" up -d
     show_status
     exit 0
 fi
@@ -293,7 +293,7 @@ if [ "$BUILD" = true ]; then
     echo -e "${GREEN}✅ Images built successfully${NC}"
 else
     echo -e "\n${YELLOW}📥 Step 3: Pulling images from registry...${NC}"
-    docker-compose -f "$COMPOSE_FILE" pull
+    docker compose -f "$COMPOSE_FILE" pull
     echo -e "${GREEN}✅ Images pulled successfully${NC}"
 fi
 
@@ -305,9 +305,9 @@ echo -e "\n${YELLOW}🚀 Step 4: Starting services...${NC}"
 if [ "$BUILD" = true ]; then
     # For local builds, override the image names
     BACKEND_IMAGE="dev-backend:latest" FRONTEND_IMAGE="dev-frontend:latest" \
-        docker-compose -f "$COMPOSE_FILE" up -d
+        docker compose -f "$COMPOSE_FILE" up -d
 else
-    docker-compose -f "$COMPOSE_FILE" up -d
+    docker compose -f "$COMPOSE_FILE" up -d
 fi
 
 echo -e "${GREEN}✅ Services started${NC}"
@@ -317,10 +317,18 @@ echo -e "${GREEN}✅ Services started${NC}"
 # ============================================
 echo -e "\n${YELLOW}🏥 Step 5: Running health checks...${NC}"
 
+# Load DB credentials from backend .env (with defaults matching docker-compose.yml)
+if [ -f "$DEPLOY_DIR/backend/.env" ]; then
+    POSTGRES_USER=$(grep -E '^POSTGRES_USER=' "$DEPLOY_DIR/backend/.env" | cut -d '=' -f2- | tr -d '[:space:]')
+    POSTGRES_DB=$(grep -E '^POSTGRES_DB=' "$DEPLOY_DIR/backend/.env" | cut -d '=' -f2- | tr -d '[:space:]')
+fi
+POSTGRES_USER="${POSTGRES_USER:-le_sesame_user}"
+POSTGRES_DB="${POSTGRES_DB:-le_sesame}"
+
 # Wait for PostgreSQL
 echo -e "\n${BLUE}Checking PostgreSQL...${NC}"
 for i in {1..30}; do
-    if docker exec le-sesame-postgres pg_isready -U le_sesame_user > /dev/null 2>&1; then
+    if docker exec le-sesame-postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
         break
     fi
@@ -380,7 +388,7 @@ echo -e "📚 API Docs:   ${BLUE}http://localhost:8000/docs${NC}"
 echo -e "🗄️  Database:   ${BLUE}localhost:5432${NC}"
 echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
-echo -e "  View logs:     ${BLUE}docker-compose logs -f${NC}"
+echo -e "  View logs:     ${BLUE}docker compose logs -f${NC}"
 echo -e "  Stop services: ${BLUE}./deploy.sh --down${NC}"
 echo -e "  Restart:       ${BLUE}./deploy.sh --restart${NC}"
 echo -e "  Run E2E tests: ${BLUE}cd $PROJECT_ROOT/backend && ./tests/e2e/run_tests.sh${NC}"

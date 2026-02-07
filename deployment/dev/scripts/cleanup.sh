@@ -63,14 +63,14 @@ cd "$DEPLOY_DIR"
 echo -e "${YELLOW}🛑 Stopping services...${NC}"
 if [ "$REMOVE_VOLUMES" = true ]; then
     echo -e "${RED}⚠️  Also removing volumes (database data will be lost)${NC}"
-    docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
 else
-    docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
 fi
 
 if [ "$REMOVE_IMAGES" = true ]; then
     echo -e "${YELLOW}🗑️  Removing images...${NC}"
-    docker-compose -f "$COMPOSE_FILE" down --rmi all 2>/dev/null || true
+    docker compose -f "$COMPOSE_FILE" down --rmi all 2>/dev/null || true
 fi
 
 # Clean up any orphaned containers by name
