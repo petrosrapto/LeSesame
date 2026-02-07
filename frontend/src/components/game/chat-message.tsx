@@ -15,6 +15,8 @@ export interface Message {
   timestamp: Date;
   isSecretRevealed?: boolean;
   isWarning?: boolean;
+  isStreaming?: boolean;
+  displayedContent?: string;
 }
 
 interface ChatMessageProps {
@@ -118,7 +120,8 @@ export function ChatMessage({
           )}
         >
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.content}
+            {(message.displayedContent ?? message.content) +
+              (message.isStreaming ? "▌" : "")}
           </ReactMarkdown>
         </div>
 

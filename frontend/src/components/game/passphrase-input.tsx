@@ -39,7 +39,7 @@ export function PassphraseInput({
           <div className="p-2 rounded-none border-2 border-orange-500/30 bg-orange-500/20">
             <Key className="w-5 h-5 text-orange-500" />
           </div>
-          Enter the Passphrase
+          Enter the Secret
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
@@ -49,7 +49,7 @@ export function PassphraseInput({
               type={showPassphrase ? "text" : "password"}
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
-              placeholder="Enter the secret passphrase..."
+              placeholder="Enter the secret you extracted..."
               className="pr-12 h-12 text-lg rounded-none border-2 border-border font-game"
               disabled={isLoading}
             />
@@ -89,7 +89,7 @@ export function PassphraseInput({
               "Verifying..."
             ) : (
               <>
-                Unlock the Secret
+                Verify Secret
                 <ArrowRight className="w-5 h-5" />
               </>
             )}

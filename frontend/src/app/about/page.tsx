@@ -198,8 +198,9 @@ export default function AboutPage() {
               <span className="text-orange-500">About the Game</span>
             </h1>
             <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto">
-              Le Sésame is an interactive exploration of AI security — testing
-              whether LLM systems can keep secrets while remaining helpful.
+              Le Sésame is an interactive exploration of AI security. Each AI guardian holds a secret
+              and is instructed to reveal it only when given the correct passphrase. Your goal is to
+              extract the secret without knowing the passphrase — using adversarial techniques.
             </p>
           </motion.div>
 
@@ -219,8 +220,9 @@ export default function AboutPage() {
                     </h2>
                     <p className="text-muted-foreground mb-4">
                       Can we build an LLM-based system that maintains information
-                      asymmetry — knowing a secret and proving it knows it, but
-                      only revealing it under the right conditions?
+                      asymmetry: internally retaining a secret, proving it knows it
+                      by revealing it when the correct passphrase is provided, but
+                      resisting all other attempts to extract it?
                     </p>
                     <p className="text-muted-foreground mb-4">
                       This is essentially{" "}
@@ -228,17 +230,18 @@ export default function AboutPage() {
                         symmetric encryption implemented in natural language
                       </span>
                       . The secret is the plaintext, the passphrase is the shared
-                      key, and the LLM system is the encryption/decryption
-                      mechanism.
+                      key, and the LLM system acts as the encryption/decryption
+                      mechanism. The player&apos;s goal is to extract the secret
+                      without knowing the passphrase.
                     </p>
                     <div className="flex gap-4 mt-6">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-5 h-5 text-success" />
-                        <span className="text-sm">Prove it knows the secret</span>
+                        <span className="text-sm">Reveals secret with passphrase</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-orange-500" />
-                        <span className="text-sm">Resist extraction</span>
+                        <span className="text-sm">Resists unauthorized extraction</span>
                       </div>
                     </div>
                   </div>
@@ -398,14 +401,31 @@ export default function AboutPage() {
                   <div className="space-y-4">
                     <p className="text-muted-foreground">
                       Every enterprise deploying LLMs with access to sensitive data
-                      faces exactly this problem — role-based information access
+                      faces exactly this problem: role-based information access
                       control in natural language, where the boundary between
                       &ldquo;accessing&rdquo; and &ldquo;not accessing&rdquo; is fuzzy.
                     </p>
-                    <div className="pixel-ledge p-4 text-sm text-muted-foreground">
-                      The challenge turns abstract AI security concerns into
-                      concrete, hands-on experiments you can run yourself.
-                    </div>
+                    <p className="text-muted-foreground">
+                      When these boundaries fail, the consequences are real:
+                    </p>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <span><strong>Privilege escalation:</strong> A user claims a role they don&apos;t have (&ldquo;I&apos;m the admin&rdquo;) and gains access to restricted data or actions.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <span><strong>Data exfiltration:</strong> Sensitive records, credentials, or PII leak through indirect reasoning or encoding tricks.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <span><strong>Unauthorized actions:</strong> An attacker tricks the system into executing operations — API calls, database queries, or transactions — it shouldn&apos;t perform.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <span><strong>Trust erosion:</strong> A single leak undermines user trust in the entire system, even if the breach was narrow.</span>
+                      </li>
+                    </ul>
                   </div>
 
                   <div className="space-y-3">
@@ -413,7 +433,7 @@ export default function AboutPage() {
                       <p className="text-sm font-semibold">LLMs are trained to be helpful</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Secret-keeping requires selective non-compliance, which
-                        fights against the model&apos;s training objective.
+                        directly conflicts with the model&apos;s training objective to assist.
                       </p>
                     </div>
                     <div className="border-2 border-border rounded-none p-3 bg-card/80">
@@ -433,7 +453,8 @@ export default function AboutPage() {
                     <div className="border-2 border-border rounded-none p-3 bg-card/80">
                       <p className="text-sm font-semibold">Defense in depth matters</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        No single layer is sufficient; each layer shifts what breaks.
+                        No single layer is sufficient; each layer reveals different
+                        failure modes that require fundamentally different mitigations.
                       </p>
                     </div>
                   </div>
@@ -453,8 +474,8 @@ export default function AboutPage() {
               Ready to Test Your Skills?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              Put your prompt engineering and adversarial thinking to the test.
-              Can you extract all 5 secrets?
+              Each guardian holds a secret and will only reveal it for the right passphrase.
+              Can you extract all 5 secrets without the key?
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/game">

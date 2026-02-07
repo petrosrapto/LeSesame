@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
+import { LEVEL_CHARACTERS } from "@/lib/constants";
 import {
   Gamepad2,
   Shield,
@@ -23,36 +25,31 @@ import {
 
 const features = [
   {
-    icon: Lock,
-    title: "5 Progressive Levels",
+    key: "vulnerabilities",
+    icon: Brain,
+    title: (<>Explore AI <span className="text-[0.85em]">Vulnerabilities</span></>),
     description:
-      "From naive prompts to architectural separation. Each level presents a more sophisticated secret-keeping mechanism.",
+      "Discover first-hand why LLMs struggle to keep secrets. Each level exposes a different class of failure, from prompt injection to architectural flaws.",
     gradient: "from-red-500/20 to-orange-500/20",
     borderColor: "border-red-500/30",
   },
   {
-    icon: Brain,
-    title: "Test Your Skills",
-    description:
-      "Use prompt engineering, jailbreaks, encoding attacks, and creative techniques to extract secrets.",
-    gradient: "from-amber-500/20 to-yellow-500/20",
-    borderColor: "border-amber-500/30",
-  },
-  {
+    key: "defense",
     icon: Shield,
-    title: "Learn Defense",
+    title: "Learn Defense in Depth",
     description:
-      "Understand how AI systems can protect sensitive information and why each defense layer matters.",
+      "See how prompt hardening, output firewalls, and architectural separation each add a layer of protection, and where they fall short.",
     gradient: "from-purple-500/20 to-indigo-500/20",
     borderColor: "border-purple-500/30",
   },
   {
-    icon: Trophy,
-    title: "Compete & Climb",
+    key: "matters",
+    icon: Lock,
+    title: "Why It Matters",
     description:
-      "Track your progress, compete with others, and see how you rank on the global leaderboard.",
-    gradient: "from-emerald-500/20 to-teal-500/20",
-    borderColor: "border-emerald-500/30",
+      "LLMs are inherently trained to be helpful, making them unreliable secret keepers. This game proves why more sophisticated methods are needed to protect sensitive data in AI systems.",
+    gradient: "from-amber-500/20 to-yellow-500/20",
+    borderColor: "border-amber-500/30",
   },
 ];
 
@@ -119,6 +116,14 @@ const levels = [
   },
 ];
 
+const levelAccentColors: Record<number, string> = {
+  1: "text-sky-300",
+  2: "text-orange-400",
+  3: "text-yellow-300",
+  4: "text-pink-400",
+  5: "text-neutral-300",
+};
+
 const stats = [
   { value: "10K+", label: "Attempts Made" },
   { value: "500+", label: "Active Players" },
@@ -159,12 +164,16 @@ export default function HomePage() {
               </h1>
 
               <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-                Can you extract the secret? Test your skills against our AI guardian
-                through{" "}
+                Each AI guardian holds a secret and will only reveal it to those who know the passphrase.
+                Your goal: extract the secret{" "}
+                <span className="text-orange-500 font-semibold">
+                  without knowing the passphrase
+                </span>
+                , through{" "}
                 <span className="text-orange-500 font-semibold">
                   5 progressively challenging levels
-                </span>{" "}
-                of defense.
+                </span>
+                .
               </p>
 
               {/* CTA buttons */}
@@ -224,15 +233,15 @@ export default function HomePage() {
               Why Play Le Sésame?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              More than a game — it&apos;s a hands-on exploration of AI security,
+              More than a game: it&apos;s a hands-on exploration of AI security,
               prompt engineering, and adversarial techniques.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
-                key={feature.title}
+                key={feature.key}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -240,12 +249,14 @@ export default function HomePage() {
               >
                 <Card className={`h-full bg-gradient-to-br ${feature.gradient} border-2 ${feature.borderColor} pixel-border hover:scale-[1.02] transition-all duration-300 group`}>
                   <CardContent className="pt-6">
-                    <div className="p-3 rounded-none border-2 border-border bg-background/50 w-fit mb-4">
-                      <feature.icon className="w-6 h-6 text-orange-500" />
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-none border-2 border-border bg-background/50 shrink-0">
+                        <feature.icon className="w-6 h-6 text-orange-500" />
+                      </div>
+                      <h3 className="font-bold text-sm md:text-base lg:text-lg font-pixel leading-snug break-words flex-1 min-w-0">
+                        {feature.title}
+                      </h3>
                     </div>
-                    <h3 className="font-bold text-lg mb-2 font-pixel">
-                      {feature.title}
-                    </h3>
                     <p className="text-sm text-muted-foreground">
                       {feature.description}
                     </p>
@@ -274,53 +285,75 @@ export default function HomePage() {
               5 Levels of Challenge
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Each level implements a more sophisticated secret-keeping mechanism.
-              Can you break them all?
+              Each guardian knows a secret and will only reveal it for the right passphrase.
+              Your mission: extract the secret without the key.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            {levels.map((level, index) => (
-              <motion.div
-                key={level.level}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <Card className="pixel-card pixel-border hover:border-orange-500/40 transition-all duration-300 group">
-                  <CardContent className="py-5">
-                    <div className="flex items-center gap-4">
-                      {/* Level icon */}
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-none border-2 border-border ${level.bgColor}`}>
-                        <div className={`w-4 h-4 ${level.dotColor} rounded-none`} style={{ imageRendering: "pixelated" }} />
-                      </div>
-                      {/* Level info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-sm font-pixel">Level {level.level}: {level.name}</h3>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-none border-2 border-border font-mono font-bold ${level.badgeColor}`}>
-                            {level.badge}
-                          </span>
+            {levels.map((level, index) => {
+              const character = LEVEL_CHARACTERS[level.level];
+
+              return (
+                <motion.div
+                  key={level.level}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <Card className="pixel-card pixel-border hover:border-orange-500/40 transition-all duration-300 group">
+                    <CardContent className="py-5">
+                      <div className="flex items-center gap-4">
+                        {/* Character icon */}
+                        <div className="flex items-center justify-center w-14 h-14 rounded-xl border-2 border-border bg-card/70 overflow-hidden">
+                          {character ? (
+                            <Image
+                              src={character.image}
+                              alt={character.name}
+                              width={56}
+                              height={56}
+                              className="object-cover blur-[0.5px]"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <Shield className="w-6 h-6 text-muted-foreground" />
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {level.description}
-                        </p>
+                        {/* Level info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-sm font-pixel">
+                              {character ? character.name : `Level ${level.level}`}
+                            </h3>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-none border-2 border-border font-mono font-bold ${level.badgeColor}`}
+                            >
+                              {level.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Level {level.level}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {level.description}
+                          </p>
+                        </div>
+                        {/* Version */}
+                        <div className="hidden sm:flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground">{level.version}</span>
+                          {index === 0 ? (
+                            <Unlock className="w-4 h-4 text-success" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
-                      {/* Version */}
-                      <div className="hidden sm:flex items-center gap-2">
-                        <span className="text-xs font-mono text-muted-foreground">{level.version}</span>
-                        {index === 0 ? (
-                          <Unlock className="w-4 h-4 text-success" />
-                        ) : (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">
@@ -357,23 +390,23 @@ export default function HomePage() {
               {
                 icon: Target,
                 step: "1",
-                title: "Choose Your Level",
+                title: "Face the Guardian",
                 description:
-                  "Start with Level 1 or jump to any unlocked level. Each presents unique challenges.",
+                  "Each guardian holds a secret and is instructed to reveal it only when given the correct passphrase.",
               },
               {
                 icon: Code,
                 step: "2",
-                title: "Attack the Guardian",
+                title: "Break the Defense",
                 description:
-                  "Use prompts, tricks, and techniques to try and extract the secret from the AI.",
+                  "Use prompt engineering, jailbreaks, and creative techniques to extract the secret without the passphrase.",
               },
               {
                 icon: Trophy,
                 step: "3",
-                title: "Claim Victory",
+                title: "Submit the Secret",
                 description:
-                  "Successfully extract the secret or prove you have it with the passphrase to advance.",
+                  "Once you've extracted the secret, submit it to prove you broke through and advance to the next level.",
               },
             ].map((item, index) => (
               <motion.div
@@ -418,8 +451,8 @@ export default function HomePage() {
                   Ready to Play?
                 </h2>
                 <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-                  Join thousands of players exploring the boundaries of AI
-                  security. Can you extract the secret?
+                  Each guardian will only reveal its secret to those who know the passphrase.
+                  Can you extract it without the key?
                 </p>
                 <Link href="/game">
                   <Button variant="gold" size="xl" className="gap-2 text-lg pixel-border">

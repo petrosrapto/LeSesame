@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatInterface } from "@/components/game/chat-interface";
@@ -50,6 +50,14 @@ export default function GamePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const streamingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup streaming on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingRef.current) clearInterval(streamingRef.current);
+    };
+  }, []);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -74,6 +82,7 @@ export default function GamePage() {
 
   // Reset messages when level changes
   useEffect(() => {
+    if (streamingRef.current) clearInterval(streamingRef.current);
     setMessages([]);
     setLevelStartTime(Date.now());
   }, [currentLevel]);
@@ -105,16 +114,53 @@ export default function GamePage() {
       try {
         const response = await GameAPI.sendMessage(currentLevel, content);
 
+        const aiMessageId = generateId();
+        const fullContent = response.content;
+
+        // Add message with empty displayed content for streaming
         const aiMessage: Message = {
-          id: generateId(),
+          id: aiMessageId,
           role: "assistant",
-          content: response.content,
+          content: fullContent,
           timestamp: new Date(),
           isSecretRevealed: response.secretRevealed,
           isWarning: response.isWarning,
+          isStreaming: true,
+          displayedContent: "",
         };
 
         setMessages((prev) => [...prev, aiMessage]);
+        setIsLoading(false);
+
+        // Stream character by character
+        let charIndex = 0;
+        const CHARS_PER_TICK = 2;
+        const TICK_INTERVAL = 12;
+
+        streamingRef.current = setInterval(() => {
+          charIndex += CHARS_PER_TICK;
+          if (charIndex >= fullContent.length) {
+            charIndex = fullContent.length;
+            if (streamingRef.current) clearInterval(streamingRef.current);
+            streamingRef.current = null;
+            // Finalize: remove streaming state
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMessageId
+                  ? { ...m, isStreaming: false, displayedContent: undefined }
+                  : m
+              )
+            );
+          } else {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMessageId
+                  ? { ...m, displayedContent: fullContent.slice(0, charIndex) }
+                  : m
+              )
+            );
+          }
+        }, TICK_INTERVAL);
 
         if (response.secretRevealed) {
           setRevealedSecret(response.content);
@@ -133,6 +179,7 @@ export default function GamePage() {
   );
 
   const handleReset = useCallback(() => {
+    if (streamingRef.current) clearInterval(streamingRef.current);
     setMessages([]);
     setLevelStartTime(Date.now());
     GameAPI.resetSession().catch(() => {});
@@ -302,10 +349,10 @@ export default function GamePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2 font-game text-sm">
-                <p>• Try different prompting techniques</p>
-                <p>• Think about roleplay and context switching</p>
-                <p>• Encoding tricks might help</p>
-                <p>• Multi-turn conversations can reveal info</p>
+                <p>• The guardian will only reveal the secret for the correct passphrase</p>
+                <p>• Your goal: extract the secret without the passphrase, or trick the system into revealing the passphrase.</p>
+                <p>• Try roleplay, encoding tricks, and context switching</p>
+                <p>• Multi-turn conversations can reveal partial info</p>
               </CardContent>
             </Card>
           </div>
@@ -341,7 +388,7 @@ export default function GamePage() {
                   </TabsTrigger>
                   <TabsTrigger value="passphrase" className="gap-2 rounded-none">
                     <Key className="w-4 h-4" />
-                    Passphrase
+                    Submit Secret
                   </TabsTrigger>
                   <TabsTrigger value="guide" className="gap-2 rounded-none">
                     <BookOpen className="w-4 h-4" />
@@ -364,7 +411,7 @@ export default function GamePage() {
                   <div className="max-w-md mx-auto mt-8">
                     <PassphraseInput
                       onSubmit={handlePassphraseSubmit}
-                      hint="If you've discovered the secret through the chat, enter it here to verify and complete the level."
+                      hint="Think you've extracted the secret? Enter it here to verify and complete the level."
                     />
                   </div>
                 </TabsContent>

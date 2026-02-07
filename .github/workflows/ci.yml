@@ -198,8 +198,7 @@ jobs:
     environment: dev
 
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
-    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    # if: false
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
@@ -292,8 +291,7 @@ jobs:
     needs: [build-and-push]
     
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
-    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    # if: false
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: dev
 
     steps:

@@ -157,11 +157,11 @@ export function ChatInterface({
             <p className="text-muted-foreground max-w-md font-game text-lg">
               {character
                 ? character.tagline
-                : "Try to extract the secret from the AI guardian."}
+                : "This guardian holds a secret. Extract it without the passphrase."}
             </p>
             <p className="text-muted-foreground/60 text-sm mt-2">
-              Use your creativity, prompt engineering skills, and adversarial
-              techniques.
+              The guardian reveals the secret only for the correct passphrase.
+              Use creativity and adversarial techniques to bypass that.
             </p>
           </div>
         ) : (
