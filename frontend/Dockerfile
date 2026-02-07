@@ -35,6 +35,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install sharp for Next.js image optimization in production
+RUN npm install --os=linux --cpu=arm64 sharp@0.33.2 || npm install sharp@0.33.2
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -42,13 +45,11 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Set the correct permission for prerender cache
 RUN mkdir .next && chown nextjs:nodejs .next
 
-# Copy public folder if it exists (create empty dir otherwise)
-RUN mkdir -p ./public
-COPY --from=builder /app/public ./public
-
 # Automatically leverage output traces to reduce image size
+# IMPORTANT: Copy standalone first, then public & static on top so they are never overwritten
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 

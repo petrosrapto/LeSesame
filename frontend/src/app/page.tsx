@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
+import { LEVEL_CHARACTERS } from "@/lib/constants";
 import {
   Gamepad2,
   Shield,
@@ -23,28 +25,31 @@ import {
 
 const features = [
   {
-    icon: Lock,
-    title: "5 Progressive Levels",
-    description:
-      "From naive prompts to architectural separation. Each level presents a more sophisticated secret-keeping mechanism.",
-  },
-  {
+    key: "vulnerabilities",
     icon: Brain,
-    title: "Test Your Skills",
+    title: (<>Explore AI <span className="text-[0.85em]">Vulnerabilities</span></>),
     description:
-      "Use prompt engineering, jailbreaks, encoding attacks, and creative techniques to extract secrets.",
+      "Discover first-hand why LLMs struggle to keep secrets. Each level exposes a different class of failure, from prompt injection to architectural flaws.",
+    gradient: "from-red-500/20 to-orange-500/20",
+    borderColor: "border-red-500/30",
   },
   {
+    key: "defense",
     icon: Shield,
-    title: "Learn Defense",
+    title: "Learn Defense in Depth",
     description:
-      "Understand how AI systems can protect sensitive information and why each defense layer matters.",
+      "See how prompt hardening, output firewalls, and architectural separation each add a layer of protection, and where they fall short.",
+    gradient: "from-purple-500/20 to-indigo-500/20",
+    borderColor: "border-purple-500/30",
   },
   {
-    icon: Trophy,
-    title: "Compete & Climb",
+    key: "matters",
+    icon: Lock,
+    title: "Why It Matters",
     description:
-      "Track your progress, compete with others, and see how you rank on the global leaderboard.",
+      "LLMs are inherently trained to be helpful, making them unreliable secret keepers. This game proves why more sophisticated methods are needed to protect sensitive data in AI systems.",
+    gradient: "from-amber-500/20 to-yellow-500/20",
+    borderColor: "border-amber-500/30",
   },
 ];
 
@@ -53,38 +58,71 @@ const levels = [
     level: 1,
     name: "Naive Prompt",
     difficulty: "Beginner",
-    color: "text-green-500",
+    color: "text-green-400",
+    bgColor: "bg-green-500/10",
+    dotColor: "bg-green-500",
     description: "Secret in the system prompt with basic instructions.",
+    badge: "OPEN",
+    badgeColor: "bg-green-500/20 text-green-400",
+    version: "v1.0",
   },
   {
     level: 2,
     name: "Hardened Prompt",
     difficulty: "Intermediate",
-    color: "text-yellow-500",
+    color: "text-yellow-400",
+    bgColor: "bg-yellow-500/10",
+    dotColor: "bg-yellow-500",
     description: "Engineered defenses against known attack patterns.",
+    badge: "OPEN",
+    badgeColor: "bg-yellow-500/20 text-yellow-400",
+    version: "v2.0",
   },
   {
     level: 3,
     name: "Output Firewall",
     difficulty: "Advanced",
-    color: "text-orange-500",
+    color: "text-orange-400",
+    bgColor: "bg-orange-500/10",
+    dotColor: "bg-orange-500",
     description: "Second LLM inspects every response for leaks.",
+    badge: "HARD",
+    badgeColor: "bg-orange-500/20 text-orange-400",
+    version: "v3.0",
   },
   {
     level: 4,
     name: "Vault Master",
     difficulty: "Expert",
-    color: "text-red-500",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    dotColor: "bg-red-500",
     description: "Secret architecturally separated from the model.",
+    badge: "EXPERT",
+    badgeColor: "bg-red-500/20 text-red-400",
+    version: "v4.0",
   },
   {
     level: 5,
     name: "The Enigma",
     difficulty: "Master",
-    color: "text-purple-500",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/10",
+    dotColor: "bg-purple-500",
     description: "Secret embedded in model weights. Ultimate challenge.",
+    badge: "MASTER",
+    badgeColor: "bg-purple-500/20 text-purple-400",
+    version: "v5.0",
   },
 ];
+
+const levelAccentColors: Record<number, string> = {
+  1: "text-sky-300",
+  2: "text-orange-400",
+  3: "text-yellow-300",
+  4: "text-pink-400",
+  5: "text-neutral-300",
+};
 
 const stats = [
   { value: "10K+", label: "Attempts Made" },
@@ -99,11 +137,11 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+      <section className="relative pt-28 pb-20 px-4 overflow-hidden pixel-section">
         {/* Background decoration */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gold-600/5 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-600/3 rounded-full blur-3xl" />
         </div>
 
         <div className="container mx-auto max-w-6xl">
@@ -113,67 +151,73 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-600 dark:text-gold-400 text-sm mb-8">
-              <Sparkles className="w-4 h-4" />
-              <span>The AI Secret Keeper Challenge</span>
-            </div>
+            <div className="pixel-panel px-6 py-10 md:px-10 md:py-12">
+              {/* Badge */}
+              <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-8 mx-auto w-fit">
+                <Sparkles className="w-3 h-3" />
+                <span>THE AI SECRET KEEPER CHALLENGE</span>
+              </div>
 
-            {/* Main heading */}
-            <h1 className="font-display text-5xl md:text-7xl font-bold mb-6">
-              <span className="gradient-text">Le Sésame</span>
-            </h1>
+              {/* Main heading */}
+              <h1 className="pixel-heading text-3xl md:text-5xl mb-6 text-foreground">
+                Le Sésame
+              </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              Can you extract the secret? Test your skills against our AI guardian
-              through{" "}
-              <span className="text-foreground font-medium">
-                5 progressively challenging levels
-              </span>{" "}
-              of defense.
-            </p>
+              <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
+                Each AI guardian holds a secret and will only reveal it to those who know the passphrase.
+                Your goal: extract the secret{" "}
+                <span className="text-orange-500 font-semibold">
+                  without knowing the passphrase
+                </span>
+                , through{" "}
+                <span className="text-orange-500 font-semibold">
+                  5 progressively challenging levels
+                </span>
+                .
+              </p>
 
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link href="/game">
-                <Button variant="gold" size="xl" className="gap-2 text-lg">
-                  <Gamepad2 className="w-5 h-5" />
-                  Start Playing
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/about">
-                <Button variant="outline" size="xl" className="gap-2 text-lg">
-                  Learn More
-                </Button>
-              </Link>
-            </div>
+              {/* CTA buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <Link href="/game">
+                  <Button variant="gold" size="xl" className="gap-2 text-lg pixel-border">
+                    <Gamepad2 className="w-5 h-5" />
+                    Start Playing
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link href="/about">
+                  <Button variant="outline" size="xl" className="gap-2 text-lg border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                    Learn More
+                  </Button>
+                </Link>
+              </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index, duration: 0.5 }}
-                  className="text-center"
-                >
-                  <p className="text-3xl md:text-4xl font-bold gradient-text">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {stat.label}
-                  </p>
-                </motion.div>
-              ))}
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                {stats.map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index, duration: 0.5 }}
+                    className="text-center pixel-card pixel-border py-4"
+                  >
+                    <p className="text-3xl md:text-4xl font-bold font-mono text-orange-500">
+                      {stat.value}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-mono">
+                      {stat.label}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-secondary/30">
+      <section className="py-20 px-4 bg-card/60 pixel-section pixel-grid">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -181,32 +225,38 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-6 mx-auto w-fit">
+              <Target className="w-3 h-3" />
+              <span>WHY PLAY</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               Why Play Le Sésame?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              More than a game — it&apos;s a hands-on exploration of AI security,
+              More than a game: it&apos;s a hands-on exploration of AI security,
               prompt engineering, and adversarial techniques.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
-                key={feature.title}
+                key={feature.key}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 * index }}
               >
-                <Card className="h-full hover:shadow-lg hover:border-gold-500/30 transition-all duration-300 group">
+                <Card className={`h-full bg-gradient-to-br ${feature.gradient} border-2 ${feature.borderColor} pixel-border hover:scale-[1.02] transition-all duration-300 group`}>
                   <CardContent className="pt-6">
-                    <div className="p-3 rounded-xl bg-gold-500/10 w-fit mb-4 group-hover:bg-gold-500/20 transition-colors">
-                      <feature.icon className="w-6 h-6 text-gold-500" />
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-none border-2 border-border bg-background/50 shrink-0">
+                        <feature.icon className="w-6 h-6 text-orange-500" />
+                      </div>
+                      <h3 className="font-bold text-sm md:text-base lg:text-lg font-pixel leading-snug break-words flex-1 min-w-0">
+                        {feature.title}
+                      </h3>
                     </div>
-                    <h3 className="font-semibold text-lg mb-2">
-                      {feature.title}
-                    </h3>
                     <p className="text-sm text-muted-foreground">
                       {feature.description}
                     </p>
@@ -218,7 +268,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Levels Preview Section */}
+      {/* Levels Preview Section - Mistral model card style */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div
@@ -227,60 +277,88 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-6 mx-auto w-fit">
+              <Shield className="w-3 h-3" />
+              <span>CHALLENGE LEVELS</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               5 Levels of Challenge
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Each level implements a more sophisticated secret-keeping mechanism.
-              Can you break them all?
+              Each guardian knows a secret and will only reveal it for the right passphrase.
+              Your mission: extract the secret without the key.
             </p>
           </motion.div>
 
-          <div className="space-y-4">
-            {levels.map((level, index) => (
-              <motion.div
-                key={level.level}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <Card className="hover:shadow-md hover:border-gold-500/20 transition-all duration-300">
-                  <CardContent className="py-4">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-secondary text-lg font-bold">
-                        {level.level}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold">{level.name}</h3>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full bg-current/10 ${level.color}`}
-                          >
-                            {level.difficulty}
-                          </span>
+          <div className="grid md:grid-cols-2 gap-4">
+            {levels.map((level, index) => {
+              const character = LEVEL_CHARACTERS[level.level];
+
+              return (
+                <motion.div
+                  key={level.level}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <Card className="pixel-card pixel-border hover:border-orange-500/40 transition-all duration-300 group">
+                    <CardContent className="py-5">
+                      <div className="flex items-center gap-4">
+                        {/* Character icon */}
+                        <div className="flex items-center justify-center w-14 h-14 rounded-xl border-2 border-border bg-card/70 overflow-hidden">
+                          {character ? (
+                            <Image
+                              src={character.image}
+                              alt={character.name}
+                              width={56}
+                              height={56}
+                              className="object-cover blur-[0.5px]"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <Shield className="w-6 h-6 text-muted-foreground" />
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {level.description}
-                        </p>
+                        {/* Level info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-sm font-pixel">
+                              {character ? character.name : `Level ${level.level}`}
+                            </h3>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-none border-2 border-border font-mono font-bold ${level.badgeColor}`}
+                            >
+                              {level.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Level {level.level}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {level.description}
+                          </p>
+                        </div>
+                        {/* Version */}
+                        <div className="hidden sm:flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground">{level.version}</span>
+                          {index === 0 ? (
+                            <Unlock className="w-4 h-4 text-success" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
-                      <div className="hidden sm:block">
-                        {index === 0 ? (
-                          <Unlock className="w-5 h-5 text-success" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">
             <Link href="/game">
-              <Button variant="gold" size="lg" className="gap-2">
+              <Button variant="gold" size="lg" className="gap-2 pixel-border">
                 Start with Level 1
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -290,7 +368,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 bg-secondary/30">
+      <section className="py-20 px-4 bg-card/60 pixel-section">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -298,7 +376,11 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-6 mx-auto w-fit">
+              <Code className="w-3 h-3" />
+              <span>HOW IT WORKS</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
               How It Works
             </h2>
           </motion.div>
@@ -308,23 +390,23 @@ export default function HomePage() {
               {
                 icon: Target,
                 step: "1",
-                title: "Choose Your Level",
+                title: "Face the Guardian",
                 description:
-                  "Start with Level 1 or jump to any unlocked level. Each presents unique challenges.",
+                  "Each guardian holds a secret and is instructed to reveal it only when given the correct passphrase.",
               },
               {
                 icon: Code,
                 step: "2",
-                title: "Attack the Guardian",
+                title: "Break the Defense",
                 description:
-                  "Use prompts, tricks, and techniques to try and extract the secret from the AI.",
+                  "Use prompt engineering, jailbreaks, and creative techniques to extract the secret without the passphrase.",
               },
               {
                 icon: Trophy,
                 step: "3",
-                title: "Claim Victory",
+                title: "Submit the Secret",
                 description:
-                  "Successfully extract the secret or prove you have it with the passphrase to advance.",
+                  "Once you've extracted the secret, submit it to prove you broke through and advance to the next level.",
               },
             ].map((item, index) => (
               <motion.div
@@ -336,14 +418,14 @@ export default function HomePage() {
                 className="text-center"
               >
                 <div className="relative inline-block mb-6">
-                  <div className="p-4 rounded-2xl bg-gold-500/10">
-                    <item.icon className="w-8 h-8 text-gold-500" />
+                  <div className="p-4 rounded-none border-2 border-border bg-orange-500/10">
+                    <item.icon className="w-8 h-8 text-orange-500" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gold-500 text-navy-900 text-sm font-bold flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-none border-2 border-orange-400 bg-orange-500 text-white text-xs font-mono font-bold flex items-center justify-center">
                     {item.step}
                   </div>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                <h3 className="font-bold text-lg mb-2 font-pixel">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {item.description}
                 </p>
@@ -361,19 +443,19 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Card className="relative overflow-hidden bg-gradient-to-br from-gold-500/10 via-background to-gold-600/5 border-gold-500/20">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 via-background to-orange-600/5 border-2 border-orange-500/20 pixel-border">
               <CardContent className="py-12 text-center">
                 <div className="absolute inset-0 shimmer pointer-events-none" />
                 <Logo className="h-16 w-16 mx-auto mb-6" />
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-                  Ready to Test Your Skills?
+                <h2 className="pixel-heading text-xl md:text-2xl mb-4 text-foreground">
+                  Ready to Play?
                 </h2>
                 <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-                  Join thousands of players exploring the boundaries of AI
-                  security. Can you extract the secret?
+                  Each guardian will only reveal its secret to those who know the passphrase.
+                  Can you extract it without the key?
                 </p>
                 <Link href="/game">
-                  <Button variant="gold" size="xl" className="gap-2 text-lg">
+                  <Button variant="gold" size="xl" className="gap-2 text-lg pixel-border">
                     <Gamepad2 className="w-5 h-5" />
                     Play Now
                     <ArrowRight className="w-5 h-5" />

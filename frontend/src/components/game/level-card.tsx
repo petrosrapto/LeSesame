@@ -60,9 +60,9 @@ export function LevelCard({
   return (
     <Card
       className={cn(
-        "relative overflow-hidden transition-all duration-300 group",
+        "relative overflow-hidden transition-all duration-300 group pixel-card pixel-border",
         status === "locked" && "opacity-60 grayscale",
-        status === "active" && "ring-2 ring-gold-500/50 shadow-lg shadow-gold-500/10",
+        status === "active" && "ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/10",
         status === "completed" && "bg-success/5 border-success/30",
         status !== "locked" && "hover:shadow-xl hover:scale-[1.02] cursor-pointer",
         className
@@ -78,7 +78,7 @@ export function LevelCard({
       <div className="absolute top-4 right-4">
         <span
           className={cn(
-            "level-badge text-xs",
+            "level-badge text-xs border-2 border-border rounded-none",
             status === "locked" && "level-locked",
             status === "active" && "level-active",
             status === "completed" && "level-completed"
@@ -94,29 +94,29 @@ export function LevelCard({
         <div className="flex items-start gap-4">
           <div
             className={cn(
-              "p-3 rounded-xl transition-all duration-300",
+              "p-3 rounded-none border-2 border-border transition-all duration-300",
               status === "completed"
                 ? "bg-success/20 text-success"
                 : status === "active"
-                ? "bg-gold-500/20 text-gold-500 animate-pulse-glow"
+                ? "bg-orange-500/20 text-orange-500 animate-pulse-glow"
                 : "bg-muted text-muted-foreground"
             )}
           >
             <Icon className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2 font-pixel">
               Level {level}
               <span
                 className={cn(
-                  "text-xs px-2 py-0.5 rounded-full font-normal",
+                  "text-xs px-2 py-0.5 rounded-none border-2 border-border font-normal",
                   difficultyColors[level]
                 )}
               >
                 {difficultyLabels[level]}
               </span>
             </CardTitle>
-            <CardDescription className="mt-1 font-display text-base">
+            <CardDescription className="mt-1 font-mono text-base">
               {name}
             </CardDescription>
           </div>

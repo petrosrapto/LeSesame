@@ -6,7 +6,7 @@ Date: 2026/02/06
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -45,10 +45,35 @@ class LoginRequest(BaseModel):
 
 # ============== Game Schemas ==============
 
+class ModelConfig(BaseModel):
+    """Optional per-request model configuration.
+
+    Mirrors the structure used by the MCP client::
+
+        {
+            "provider": "openai",
+            "model_id": "gpt-4o",
+            "endpoint_url": "https://api.deepseek.com",
+            "args": {"temperature": 0.5, "max_tokens": 2048}
+        }
+
+    Any omitted field falls back to the config.yaml defaults.
+    """
+    provider: Optional[str] = None
+    model_id: Optional[str] = None
+    endpoint_url: Optional[str] = None
+    args: Optional[Dict[str, Any]] = None
+
+
 class ChatMessageRequest(BaseModel):
     """Schema for sending a chat message."""
     message: str = Field(..., min_length=1, max_length=2000)
     level: int = Field(..., ge=1, le=5)
+    model_config_request: Optional[ModelConfig] = Field(
+        default=None,
+        alias="model_config",
+        description="Optional model configuration to override defaults",
+    )
 
 
 class ChatMessageResponse(BaseModel):

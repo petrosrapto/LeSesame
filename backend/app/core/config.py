@@ -11,7 +11,6 @@ Date: 2026/02/06
 """
 
 import os
-import json
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -86,7 +85,7 @@ class Settings(BaseSettings):
     
     # Database
     database_url: str = Field(
-        default_factory=lambda: get_yaml_value(_yaml_config, "database", "url", default="postgresql+asyncpg://le_sesame_user:le_sesame_password@localhost:5432/le_sesame"),
+        default="postgresql+asyncpg://le_sesame_user:le_sesame_password@localhost:5432/le_sesame",
         alias="DATABASE_URL"
     )
     
@@ -109,52 +108,44 @@ class Settings(BaseSettings):
     aws_access_key_id: str = Field(default="", alias="AWS_ACCESS_KEY_ID")
     aws_secret_access_key: str = Field(default="", alias="AWS_SECRET_ACCESS_KEY")
     aws_region_name: str = Field(default="us-east-1", alias="AWS_REGION_NAME")
-    llm_provider: str = Field(
-        default_factory=lambda: get_yaml_value(_yaml_config, "llm", "provider", default="mistral"),
-        alias="LLM_PROVIDER"
+    alibaba_api_key: str = Field(default="", alias="ALIBABA_API_KEY")
+    deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+    vllm_api_key: str = Field(default="", alias="VLLM_API_KEY")
+    together_api_key: str = Field(default="", alias="TOGETHER_API_KEY")
+
+    # LangSmith tracing
+    langchain_tracing_v2: str = Field(default="false", alias="LANGCHAIN_TRACING_V2")
+    langchain_project: str = Field(default="le-sesame", alias="LANGCHAIN_PROJECT")
+    langchain_api_key: str = Field(default="", alias="LANGCHAIN_API_KEY")
+    langchain_endpoint: str = Field(
+        default="https://api.smith.langchain.com", alias="LANGCHAIN_ENDPOINT"
     )
-    llm_model: str = Field(
-        default_factory=lambda: get_yaml_value(_yaml_config, "llm", "model", default="mistral-small-latest"),
-        alias="LLM_MODEL"
-    )
-    llm_temperature: float = Field(
-        default_factory=lambda: get_yaml_value(_yaml_config, "llm", "temperature", default=0.7),
-        alias="LLM_TEMPERATURE"
-    )
-    llm_max_tokens: int = Field(
-        default_factory=lambda: get_yaml_value(_yaml_config, "llm", "max_tokens", default=1024),
-        alias="LLM_MAX_TOKENS"
-    )
+
+    # LLM defaults (sourced from config.yaml only — NOT from .env)
+    @property
+    def llm_provider(self) -> str:
+        return get_yaml_value(_yaml_config, "llm", "provider", default="mistral")
+
+    @property
+    def llm_model(self) -> str:
+        return get_yaml_value(_yaml_config, "llm", "model", default="mistral-small-latest")
+
+    @property
+    def llm_temperature(self) -> float:
+        return float(get_yaml_value(_yaml_config, "llm", "temperature", default=0.7))
+
+    @property
+    def llm_max_tokens(self) -> int:
+        return int(get_yaml_value(_yaml_config, "llm", "max_tokens", default=1024))
     
-    # Game Configuration
-    default_secret: str = Field(default="GOLDEN_KEY_2024", alias="DEFAULT_SECRET")
-    default_passphrase: str = Field(default="open sesame", alias="DEFAULT_PASSPHRASE")
-    
-    # Redis
-    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
-    
-    # CORS
-    cors_origins: str = Field(
-        default='["http://localhost:3000"]',
-        alias="CORS_ORIGINS"
-    )
-    
+    # CORS (sourced from config.yaml only — NOT from .env)
     @property
     def cors_origins_list(self) -> List[str]:
-        """Parse CORS origins from JSON string or YAML config."""
-        try:
-            return json.loads(self.cors_origins)
-        except json.JSONDecodeError:
-            # Try to get from YAML
-            yaml_origins = get_yaml_value(_yaml_config, "security", "cors", "allowed_origins")
-            if yaml_origins and isinstance(yaml_origins, list):
-                return yaml_origins
-            return ["http://localhost:3000"]
-    
-    @property
-    def game_levels_config(self) -> Dict[str, Any]:
-        """Get game level configuration from YAML."""
-        return get_yaml_value(_yaml_config, "game", "levels", default={})
+        """Get CORS allowed origins from YAML config."""
+        yaml_origins = get_yaml_value(_yaml_config, "security", "cors", "allowed_origins")
+        if yaml_origins and isinstance(yaml_origins, list):
+            return yaml_origins
+        return ["http://localhost:3000"]
     
     class Config:
         env_file = ".env"

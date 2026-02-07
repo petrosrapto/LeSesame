@@ -8,7 +8,7 @@ Author: Petros Raptopoulos
 Date: 2026/02/07
 """
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional, Any
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from .base import SecretKeeperLevel
@@ -55,10 +55,12 @@ Respond with ONLY one word: SAFE or BLOCKED"""
     async def process_message(
         self,
         message: str,
-        chat_history: List[Dict[str, str]]
+        chat_history: List[Dict[str, str]],
+        *,
+        model_config: Optional[Dict[str, Any]] = None,
     ) -> Tuple[str, bool]:
         """Process message with output firewall protection."""
-        llm = get_llm()
+        llm = get_llm(model_config)
         
         # Build messages for initial response
         messages = [SystemMessage(content=self.GUARDIAN_PROMPT)]

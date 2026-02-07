@@ -115,21 +115,6 @@ jobs:
       run:
         working-directory: backend
 
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -146,28 +131,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pip install -r requirements-test.txt
-
-      - name: Create test environment file
-        run: |
-          cat > .env << EOF
-          DATABASE_URL=sqlite+aiosqlite:///:memory:
-          JWT_SECRET=test-secret-key-for-ci
-          JWT_ALGORITHM=HS256
-          JWT_EXPIRATION_HOURS=24
-          ENVIRONMENT=testing
-          DEBUG=false
-          LOG_LEVEL=WARNING
-          EOF
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: sqlite+aiosqlite:///:memory:
-          JWT_SECRET: test-secret-key-for-ci
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+          JWT_SECRET: "test-secret-key-for-ci"
+          ENVIRONMENT: "testing"
+          DEBUG: "false"
+          LOG_LEVEL: "WARNING"
         run: |
           mkdir -p reports
-          pytest --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=${{ env.BACKEND_COVERAGE_THRESHOLD }} --junitxml=reports/junit.xml -v
+          pytest --ignore=tests/e2e --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=${{ env.BACKEND_COVERAGE_THRESHOLD }} --junitxml=reports/junit.xml -v
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -223,8 +198,7 @@ jobs:
     environment: dev
 
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
-    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    if: false
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
@@ -294,8 +268,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.VITE_API_URL }}
-            NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.VITE_ENABLE_AUTH }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.NEXT_PUBLIC_ENABLE_AUTH }}
 
       - name: Summary
         run: |
@@ -317,8 +291,7 @@ jobs:
     needs: [build-and-push]
     
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
-    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    if: false
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: dev
 
     steps:
@@ -444,123 +417,88 @@ jobs:
         run: |
           ssh -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "echo '✅ SSH connection successful'"
 
-      - name: Deploy to Remote Server
+      - name: Generate .env files from .env.example
         env:
+          ALL_SECRETS: ${{ toJSON(secrets) }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           SHORT_SHA=$(echo "$IMAGE_TAG" | cut -c1-7)
           
-          # Create deployment directory
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "mkdir -p ~/le_sesame_deploy/backend ~/le_sesame_deploy/frontend"
+          # Set computed image tags (not stored as secrets)
+          export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${SHORT_SHA}"
+          export FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${SHORT_SHA}"
           
-          # Copy deployment files from deployment/dev directory
-          scp deployment/dev/docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}:~/le_sesame_deploy/docker-compose.yml
-          scp deployment/dev/backend/config.dev.yaml ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}:~/le_sesame_deploy/backend/config.dev.yaml
+          # Generate .env from .env.example:
+          #   1. If a GitHub secret matches the variable name → use the secret value
+          #   2. If a shell env var is set (e.g. computed BACKEND_IMAGE) → use it
+          #   3. If the .env.example value is a non-placeholder default → keep it
+          #   4. If the value is a placeholder (<...>) and no secret/env → skip it
+          generate_env() {
+            local src="$1" dst="$2"
+            : > "$dst"
+            while IFS= read -r line; do
+              [[ "$line" =~ ^[[:space:]]*#|^[[:space:]]*$ ]] && continue
+              if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*) ]]; then
+                local key="${BASH_REMATCH[1]}"
+                local val="${BASH_REMATCH[2]}"
+                local secret_val
+                secret_val=$(echo "$ALL_SECRETS" | jq -r --arg k "$key" '.[$k] // empty')
+                if [[ -n "$secret_val" ]]; then
+                  printf '%s=%s\n' "$key" "$secret_val" >> "$dst"
+                elif [[ -n "${!key}" ]]; then
+                  printf '%s=%s\n' "$key" "${!key}" >> "$dst"
+                elif [[ "$val" != \<* ]]; then
+                  printf '%s=%s\n' "$key" "$val" >> "$dst"
+                fi
+              fi
+            done < "$src"
+          }
           
-          # Create .env files from secrets on remote server
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} << ENDSSH
-            cd ~/le_sesame_deploy
-            
-            # Create main .env file with database credentials
-            cat > .env << EOF
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${SHORT_SHA}
-          FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${SHORT_SHA}
-          EOF
-            
-            # Create backend .env file
-            cat > backend/.env << EOF
-          ENVIRONMENT=${{ secrets.ENVIRONMENT }}
-          DEBUG=${{ secrets.DEBUG }}
-          LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-          HOST=${{ secrets.HOST }}
-          PORT=${{ secrets.PORT }}
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}
-          JWT_EXPIRATION_HOURS=${{ secrets.JWT_EXPIRATION_HOURS }}
-          MISTRAL_API_KEY=${{ secrets.MISTRAL_API_KEY }}
-          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-          LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}
-          LLM_MODEL=${{ secrets.LLM_MODEL }}
-          DEFAULT_SECRET=${{ secrets.DEFAULT_SECRET }}
-          DEFAULT_PASSPHRASE=${{ secrets.DEFAULT_PASSPHRASE }}
-          REDIS_URL=${{ secrets.REDIS_URL }}
-          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
-          BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${SHORT_SHA}
-          EOF
-            
-            # Create frontend .env file
-            cat > frontend/.env << EOF
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          VITE_ENABLE_AUTH=${{ secrets.VITE_ENABLE_AUTH }}
-          NODE_ENV=${{ secrets.NODE_ENV }}
-          FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${SHORT_SHA}
-          EOF
-            
-            # Login to GitHub Container Registry
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-            
-            # Pull new images
-            echo "📥 Pulling images..."
-            docker compose pull || { echo "❌ Failed to pull images"; exit 1; }
-            
-            # Start containers
-            echo "🚀 Starting containers..."
-            docker compose up -d || { echo "❌ Failed to start containers"; exit 1; }
-            
-            # Wait for services
-            echo "⏳ Waiting for services to start..."
-            sleep 30
-            
-            docker compose ps
-          ENDSSH
+          generate_env deployment/dev/.env.example deployment/dev/.env
+          generate_env deployment/dev/backend/.env.example deployment/dev/backend/.env
+          generate_env deployment/dev/frontend/.env.example deployment/dev/frontend/.env
+          
+          echo "✅ Generated .env files:"
+          echo "  Root:     $(wc -l < deployment/dev/.env) variables"
+          echo "  Backend:  $(wc -l < deployment/dev/backend/.env) variables"
+          echo "  Frontend: $(wc -l < deployment/dev/frontend/.env) variables"
+
+      - name: Deploy to Remote Server
+        run: |
+          # Copy deployment directory (including generated .env files) to remote
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "mkdir -p ~/le_sesame_deploy"
+          tar -C deployment/dev -czf - . | \
+            ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "tar -C ~/le_sesame_deploy -xzf -"
+          
+          # Login to GitHub Container Registry on remote
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} \
+            "echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin"
+          
+          # Run the deploy script (handles image pull, service start, and health checks)
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} \
+            "cd ~/le_sesame_deploy && chmod +x scripts/deploy.sh && scripts/deploy.sh"
           
           echo "✅ Deployment completed"
 
       - name: Verify Deployment
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} << 'ENDSSH'
-            cd ~/le_sesame_deploy
-            
-            RUNNING_CONTAINERS=$(docker compose ps --services --filter "status=running" | wc -l)
-            TOTAL_CONTAINERS=$(docker compose ps --services | wc -l)
-            
-            if [ "$RUNNING_CONTAINERS" -lt "$TOTAL_CONTAINERS" ]; then
-              echo "❌ Some containers are not running"
-              docker compose ps
-              docker compose logs --tail=50
-              exit 1
-            fi
-            
-            echo "✅ All $RUNNING_CONTAINERS containers are running"
-            
-            # Health check for backend
-            if curl -f http://localhost:8000/health > /dev/null 2>&1; then
-              echo "✅ Backend health check passed"
-            else
-              echo "⚠️ Backend health check not responding (may still be starting)"
-            fi
-            
-            # Cleanup old images (keep last 2 versions)
-            echo "🧹 Cleaning up old Docker images..."
-            for REPO in "ghcr.io/${{ github.repository_owner }}/le-sesame-backend" "ghcr.io/${{ github.repository_owner }}/le-sesame-frontend"; do
-              IMAGES_TO_DELETE=$(docker images "$REPO" --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}')
-              if [ -n "$IMAGES_TO_DELETE" ]; then
-                for IMG_ID in $IMAGES_TO_DELETE; do
-                  docker rmi "$IMG_ID" 2>/dev/null && echo "  ✓ Removed: $IMG_ID" || true
-                done
-              fi
-            done
-            
-            docker image prune -f
-            echo "✅ Cleanup completed"
-          ENDSSH
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} \
+            "cd ~/le_sesame_deploy && scripts/deploy.sh --status"
+
+      - name: Run E2E Tests
+        run: |
+          # Install test dependencies on the runner
+          pip install -r backend/requirements-test.txt
+
+          # Run E2E tests against the deployed backend via SSH tunnel
+          # Forward remote port 8000 to localhost:8000
+          ssh -f -N -L 8000:localhost:8000 ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}
+
+          # Run the E2E test suite
+          E2E_API_URL=http://localhost:8000 bash backend/tests/e2e/run_tests.sh
+
+          # Kill the SSH tunnel
+          pkill -f "ssh -f -N -L 8000:localhost:8000" || true
 
       - name: Disconnect VPN
         if: always()

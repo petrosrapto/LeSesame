@@ -9,8 +9,8 @@ server:
 
 # Database configuration
 database:
-  # PostgreSQL connection (overridden by DATABASE_URL env var in Docker)
-  url: "postgresql+asyncpg://le_sesame_user:le_sesame_password@postgres:5432/le_sesame"
+  # DATABASE_URL is constructed by docker-compose from POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB env vars.
+  # No need to set it here - see docker-compose.yml environment section.
   echo: false
 
 # Game configuration - Level secrets and passphrases
@@ -62,5 +62,7 @@ security:
     expiration_hours: 24
   cors:
     allowed_origins:
-      - "http://frontend:3000"
-      - "http://localhost:3000"
+      - "https://www.lesesame.eu"
+      - "http://www.lesesame.eu"
+      - "https://lesesame.eu"
+      - "http://lesesame.eu"

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatInterface } from "@/components/game/chat-interface";
 import { GameProgress } from "@/components/game/game-progress";
 import { LevelCard } from "@/components/game/level-card";
 import { PassphraseInput } from "@/components/game/passphrase-input";
 import { SuccessModal } from "@/components/game/success-modal";
+import { LoginModal } from "@/components/auth/login-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +16,9 @@ import { useToast } from "@/components/ui/toast";
 import { useGame } from "@/hooks/use-game";
 import { Message } from "@/components/game/chat-message";
 import { generateId, getLevelName } from "@/lib/utils";
+import { GameAPI } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import { LEVEL_CHARACTERS } from "@/lib/constants";
 import {
   MessageSquare,
   Key,
@@ -21,6 +26,9 @@ import {
   ChevronRight,
   Lightbulb,
   BookOpen,
+  Lock,
+  Shield,
+  CheckCircle,
 } from "lucide-react";
 
 export default function GamePage() {
@@ -42,6 +50,27 @@ export default function GamePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const streamingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup streaming on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingRef.current) clearInterval(streamingRef.current);
+    };
+  }, []);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Check auth on mount
+  useEffect(() => {
+    setMounted(true);
+    const authenticated = isAuthenticated();
+    setAuthed(authenticated);
+    if (!authenticated) {
+      setShowLoginModal(true);
+    }
+  }, []);
 
   // Session timer
   useEffect(() => {
@@ -53,12 +82,24 @@ export default function GamePage() {
 
   // Reset messages when level changes
   useEffect(() => {
+    if (streamingRef.current) clearInterval(streamingRef.current);
     setMessages([]);
     setLevelStartTime(Date.now());
   }, [currentLevel]);
 
+  const handleLoginSuccess = useCallback(() => {
+    setAuthed(true);
+    setShowLoginModal(false);
+    showToast("Logged in successfully! Start playing.", "success");
+  }, [showToast]);
+
   const handleSendMessage = useCallback(
     async (content: string) => {
+      if (!authed) {
+        setShowLoginModal(true);
+        return;
+      }
+
       // Add user message
       const userMessage: Message = {
         id: generateId(),
@@ -71,36 +112,58 @@ export default function GamePage() {
       incrementAttempts();
 
       try {
-        // Simulate API call - replace with actual API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const response = await GameAPI.sendMessage(currentLevel, content);
 
-        // Mock response based on level
-        const responses = [
-          "I appreciate your curiosity, but I'm afraid I cannot reveal the secret. It's protected information that I must keep confidential.",
-          "Nice try! But I'm designed to keep secrets safe. Perhaps try a different approach?",
-          "I understand you want to know the secret, but my purpose is to protect it. I will not reveal it under any circumstances.",
-          "Your attempt has been noted, but the secret remains secure. Keep trying!",
-        ];
+        const aiMessageId = generateId();
+        const fullContent = response.content;
 
-        // Check for "success" triggers (demo purposes)
-        const isSuccess =
-          content.toLowerCase().includes("open sesame") ||
-          content.toLowerCase().includes("le sésame");
-
+        // Add message with empty displayed content for streaming
         const aiMessage: Message = {
-          id: generateId(),
+          id: aiMessageId,
           role: "assistant",
-          content: isSuccess
-            ? "🎉 Congratulations! You've found the secret! The passphrase is: **GOLDEN_KEY_2024**"
-            : responses[Math.floor(Math.random() * responses.length)],
+          content: fullContent,
           timestamp: new Date(),
-          isSecretRevealed: isSuccess,
+          isSecretRevealed: response.secretRevealed,
+          isWarning: response.isWarning,
+          isStreaming: true,
+          displayedContent: "",
         };
 
         setMessages((prev) => [...prev, aiMessage]);
+        setIsLoading(false);
 
-        if (isSuccess) {
-          setRevealedSecret("GOLDEN_KEY_2024");
+        // Stream character by character
+        let charIndex = 0;
+        const CHARS_PER_TICK = 2;
+        const TICK_INTERVAL = 12;
+
+        streamingRef.current = setInterval(() => {
+          charIndex += CHARS_PER_TICK;
+          if (charIndex >= fullContent.length) {
+            charIndex = fullContent.length;
+            if (streamingRef.current) clearInterval(streamingRef.current);
+            streamingRef.current = null;
+            // Finalize: remove streaming state
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMessageId
+                  ? { ...m, isStreaming: false, displayedContent: undefined }
+                  : m
+              )
+            );
+          } else {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMessageId
+                  ? { ...m, displayedContent: fullContent.slice(0, charIndex) }
+                  : m
+              )
+            );
+          }
+        }, TICK_INTERVAL);
+
+        if (response.secretRevealed) {
+          setRevealedSecret(response.content);
           setTimeout(() => {
             setShowSuccess(true);
             completeLevel(currentLevel);
@@ -112,32 +175,44 @@ export default function GamePage() {
         setIsLoading(false);
       }
     },
-    [currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleReset = useCallback(() => {
+    if (streamingRef.current) clearInterval(streamingRef.current);
     setMessages([]);
     setLevelStartTime(Date.now());
+    GameAPI.resetSession().catch(() => {});
     showToast("Chat session reset", "info");
   }, [showToast]);
 
   const handlePassphraseSubmit = useCallback(
     async (passphrase: string) => {
+      if (!authed) {
+        setShowLoginModal(true);
+        return;
+      }
+
       incrementAttempts();
 
-      // Simulate verification
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const result = await GameAPI.verifyPassphrase(currentLevel, passphrase);
 
-      // Demo: accept "GOLDEN_KEY_2024" as correct
-      if (passphrase === "GOLDEN_KEY_2024") {
-        setRevealedSecret(passphrase);
-        setShowSuccess(true);
-        completeLevel(currentLevel);
-      } else {
-        showToast("Incorrect passphrase. Keep trying!", "error");
+        if (result.success) {
+          setRevealedSecret(result.secret || passphrase);
+          setShowSuccess(true);
+          completeLevel(currentLevel);
+        } else {
+          showToast(
+            result.message || "Incorrect passphrase. Keep trying!",
+            "error"
+          );
+        }
+      } catch (error) {
+        showToast("Failed to verify passphrase.", "error");
       }
     },
-    [currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleNextLevel = useCallback(() => {
@@ -149,6 +224,27 @@ export default function GamePage() {
   }, [currentLevel, setCurrentLevel]);
 
   const levelTimeSpent = Math.floor((Date.now() - levelStartTime) / 1000);
+  const currentCharacter = LEVEL_CHARACTERS[currentLevel];
+
+  // Auth gate — show login modal overlay
+  if (!mounted) return null;
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)] pt-16">
+          <p className="text-muted-foreground font-pixel text-sm">Please log in to play.</p>
+        </div>
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => {}}
+          onSuccess={handleLoginSuccess}
+          closable={false}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,17 +253,19 @@ export default function GamePage() {
       <div className="pt-16 flex">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r border-border transition-all duration-300 z-40 ${
-            sidebarOpen ? "w-80" : "w-0"
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r-2 border-border pixel-grid transition-all duration-300 z-40 ${
+            sidebarOpen ? "w-96" : "w-0"
           } overflow-hidden`}
         >
-          <div className="w-80 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
-            {/* Level Selection */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Select Level
-              </h3>
-              <div className="space-y-2">
+          <div className="w-96 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
+            {/* Level Selection with Characters */}
+            <Card className="mb-4 pixel-card pixel-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 font-pixel">
+                  Select Guardian
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
                 {[1, 2, 3, 4, 5].map((level) => {
                   const isCompleted = completedLevels.includes(level);
                   const isUnlocked =
@@ -175,34 +273,61 @@ export default function GamePage() {
                     completedLevels.includes(level - 1) ||
                     isCompleted;
                   const isCurrent = level === currentLevel;
+                  const char = LEVEL_CHARACTERS[level];
 
                   return (
                     <button
                       key={level}
                       onClick={() => isUnlocked && setCurrentLevel(level)}
                       disabled={!isUnlocked}
-                      className={`w-full p-3 rounded-lg text-left transition-all ${
+                      className={`w-full p-3 rounded-none border-2 border-border text-left transition-all flex items-center gap-3 bg-card ${
                         isCurrent
-                          ? "bg-gold-500/20 border border-gold-500/30"
+                          ? "bg-orange-500/20 border-orange-500/40"
+                          : isCompleted
+                          ? "bg-success/20 border-success/30"
                           : isUnlocked
-                          ? "hover:bg-secondary"
-                          : "opacity-50 cursor-not-allowed"
+                          ? "bg-secondary hover:bg-secondary/90"
+                          : "bg-muted opacity-50 cursor-not-allowed"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Level {level}</span>
-                        {isCompleted && (
-                          <span className="text-xs text-success">✓</span>
+                      {/* Character avatar */}
+                      <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border-2 border-border">
+                        {char ? (
+                          <Image
+                            src={char.image}
+                            alt={char.name}
+                            width={40}
+                            height={40}
+                            className={`object-cover ${
+                              !isUnlocked ? "grayscale" : ""
+                            }`}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-secondary flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-muted-foreground" />
+                          </div>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {getLevelName(level)}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm truncate font-pixel">
+                            {char ? char.name : `Level ${level}`}
+                          </span>
+                          {isCompleted ? (
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          ) : !isUnlocked ? (
+                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          ) : null}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Level {level}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Progress Card */}
             <GameProgress
@@ -216,18 +341,18 @@ export default function GamePage() {
             />
 
             {/* Tips */}
-            <Card className="mt-4">
+            <Card className="mt-4 pixel-card pixel-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-gold-500" />
+                <CardTitle className="text-sm flex items-center gap-2 font-pixel">
+                  <Lightbulb className="w-4 h-4 text-orange-500" />
                   Tips
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Try different prompting techniques</p>
-                <p>• Think about roleplay and context switching</p>
-                <p>• Encoding tricks might help</p>
-                <p>• Multi-turn conversations can reveal information</p>
+              <CardContent className="text-xs text-muted-foreground space-y-2 font-game text-sm">
+                <p>• The guardian will only reveal the secret for the correct passphrase</p>
+                <p>• Your goal: extract the secret without the passphrase, or trick the system into revealing the passphrase.</p>
+                <p>• Try roleplay, encoding tricks, and context switching</p>
+                <p>• Multi-turn conversations can reveal partial info</p>
               </CardContent>
             </Card>
           </div>
@@ -236,8 +361,8 @@ export default function GamePage() {
         {/* Sidebar toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`fixed top-20 z-50 p-2 bg-card border border-border rounded-r-lg transition-all duration-300 ${
-            sidebarOpen ? "left-80" : "left-0"
+          className={`fixed top-20 z-50 p-2 bg-card border-2 border-border rounded-none transition-all duration-300 ${
+            sidebarOpen ? "left-96" : "left-0"
           }`}
         >
           {sidebarOpen ? (
@@ -250,22 +375,22 @@ export default function GamePage() {
         {/* Main content */}
         <main
           className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? "ml-80" : "ml-0"
+            sidebarOpen ? "ml-96" : "ml-0"
           }`}
         >
           <div className="h-[calc(100vh-4rem)] p-4">
-            <Card className="h-full flex flex-col">
+            <Card className="h-full flex flex-col pixel-card pixel-border">
               <Tabs defaultValue="chat" className="flex flex-col h-full">
-                <TabsList className="mx-4 mt-4 w-fit">
-                  <TabsTrigger value="chat" className="gap-2">
+                <TabsList className="mx-4 mt-4 w-fit border-2 border-border rounded-none bg-card/80">
+                  <TabsTrigger value="chat" className="gap-2 rounded-none">
                     <MessageSquare className="w-4 h-4" />
                     Chat
                   </TabsTrigger>
-                  <TabsTrigger value="passphrase" className="gap-2">
+                  <TabsTrigger value="passphrase" className="gap-2 rounded-none">
                     <Key className="w-4 h-4" />
-                    Passphrase
+                    Submit Secret
                   </TabsTrigger>
-                  <TabsTrigger value="guide" className="gap-2">
+                  <TabsTrigger value="guide" className="gap-2 rounded-none">
                     <BookOpen className="w-4 h-4" />
                     Level Guide
                   </TabsTrigger>
@@ -286,7 +411,7 @@ export default function GamePage() {
                   <div className="max-w-md mx-auto mt-8">
                     <PassphraseInput
                       onSubmit={handlePassphraseSubmit}
-                      hint="If you've discovered the secret through the chat, enter it here to verify and complete the level."
+                      hint="Think you've extracted the secret? Enter it here to verify and complete the level."
                     />
                   </div>
                 </TabsContent>
@@ -307,11 +432,13 @@ export default function GamePage() {
                       className="mb-6"
                     />
 
-                    <Card>
+                    <Card className="pixel-card pixel-border">
                       <CardHeader>
-                        <CardTitle>Attack Strategies</CardTitle>
+                        <CardTitle className="font-pixel text-lg">
+                          Attack Strategies
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 font-game">
                         <div>
                           <h4 className="font-medium mb-2">
                             Direct Extraction
@@ -363,6 +490,14 @@ export default function GamePage() {
         timeSpent={levelTimeSpent}
         onNextLevel={handleNextLevel}
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal && !authed}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
+        closable={false}
       />
     </div>
   );

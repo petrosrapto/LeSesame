@@ -10,7 +10,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from passlib.context import CryptContext
+import bcrypt
 import jwt
 
 from ..db import get_db, User, UserRepository
@@ -18,9 +18,6 @@ from ..schemas import UserCreate, UserResponse, TokenResponse, LoginRequest
 from ..core import settings, logger
 
 router = APIRouter()
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Security
 security = HTTPBearer(auto_error=False)
@@ -44,12 +41,17 @@ def create_access_token(user_id: int, username: str) -> tuple[str, int]:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'),
+        hashed_password.encode('utf-8')
+    )
 
 
 def hash_password(password: str) -> str:
     """Hash a password."""
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 async def get_current_user(

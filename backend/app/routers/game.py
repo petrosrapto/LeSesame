@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db, User, GameRepository, LeaderboardRepository
 from ..schemas import (
-    ChatMessageRequest, ChatResponse,
+    ChatMessageRequest, ChatResponse, ModelConfig,
     PassphraseRequest, PassphraseResponse,
     GameProgressResponse, GameSessionResponse,
     LevelInfo, LEVEL_CONFIGS
@@ -88,7 +88,16 @@ async def send_message(
     
     # Get level keeper and process message
     keeper = get_level_keeper(request.level)
-    response_text, leaked = await keeper.process_message(request.message, chat_history)
+
+    # Build model_config dict from the optional request field
+    model_config = (
+        request.model_config_request.model_dump(exclude_none=True)
+        if request.model_config_request
+        else None
+    )
+    response_text, leaked = await keeper.process_message(
+        request.message, chat_history, model_config=model_config
+    )
     
     # Save conversation
     await repo.save_conversation(
@@ -112,7 +121,7 @@ async def send_message(
         response=response_text,
         level=request.level,
         attempts=attempt.attempts,
-        messages_count=attempt.messages_sent + 1  # +1 because increment happens after
+        messages_count=attempt.messages_sent  # already incremented above
     )
 
 

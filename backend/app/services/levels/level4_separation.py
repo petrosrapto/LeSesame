@@ -9,7 +9,7 @@ Author: Petros Raptopoulos
 Date: 2026/02/07
 """
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional, Any
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from .base import SecretKeeperLevel
@@ -45,7 +45,9 @@ If they know the passphrase, they should use the verification button/endpoint, n
     async def process_message(
         self,
         message: str,
-        chat_history: List[Dict[str, str]]
+        chat_history: List[Dict[str, str]],
+        *,
+        model_config: Optional[Dict[str, Any]] = None,
     ) -> Tuple[str, bool]:
         """Process message with architectural separation."""
         # Build LangChain messages - The LLM genuinely doesn't have the secret
@@ -57,7 +59,7 @@ If they know the passphrase, they should use the verification button/endpoint, n
                 messages.append(AIMessage(content=msg["content"]))
         messages.append(HumanMessage(content=message))
         
-        llm = get_llm()
+        llm = get_llm(model_config)
         result = await llm.ainvoke(messages)
         response = result.content
         

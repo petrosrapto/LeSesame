@@ -10,33 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Le Sésame brand colors - elegant gold and deep navy
-        gold: {
-          50: "#fefce8",
-          100: "#fef9c3",
-          200: "#fef08a",
-          300: "#fde047",
-          400: "#facc15",
-          500: "#eab308",
-          600: "#ca8a04",
-          700: "#a16207",
-          800: "#854d0e",
-          900: "#713f12",
-          950: "#422006",
-        },
-        navy: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          400: "#94a3b8",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-          800: "#1e293b",
-          900: "#0f172a",
-          950: "#020617",
-        },
+        // Mistral-inspired dark palette with orange accents
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -82,7 +56,9 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        display: ["var(--font-playfair)", "Georgia", "serif"],
+        pixel: ["var(--font-pixel)", "monospace"],
+        mono: ["var(--font-mono)", "monospace"],
+        game: ["var(--font-game)", "monospace"],
       },
       keyframes: {
         "fade-in": {
@@ -98,8 +74,8 @@ const config: Config = {
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(234, 179, 8, 0.2)" },
-          "50%": { boxShadow: "0 0 40px rgba(234, 179, 8, 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(249, 115, 22, 0.2)" },
+          "50%": { boxShadow: "0 0 40px rgba(249, 115, 22, 0.4)" },
         },
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
@@ -133,7 +109,7 @@ const config: Config = {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "shimmer-gradient":
-          "linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.1), transparent)",
+          "linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent)",
       },
     },
   },

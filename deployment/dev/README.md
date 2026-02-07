@@ -59,9 +59,9 @@ LLM_MODEL=mistral-small-latest
 # Docker image (set by CI)
 FRONTEND_IMAGE=registry.example.com/le-sesame/frontend:sha
 
-# API Configuration
-VITE_API_URL=http://backend:8000
-VITE_ENABLE_AUTH=true
+# API Configuration (browser-facing URL, baked at build time)
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_ENABLE_AUTH=true
 ```
 
 ## Manual Deployment

@@ -10,39 +10,28 @@ export function Logo({ className }: LogoProps) {
       viewBox="0 0 48 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("text-gold-500", className)}
+      className={cn("text-orange-500", className)}
+      style={{ imageRendering: "pixelated" }}
     >
-      {/* Key shape */}
-      <circle
-        cx="24"
-        cy="16"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        fill="none"
-      />
-      <circle cx="24" cy="16" r="4" fill="currentColor" opacity="0.3" />
-      
+      {/* Pixel key shape */}
+      <rect x="18" y="4" width="12" height="4" fill="currentColor" />
+      <rect x="14" y="8" width="4" height="4" fill="currentColor" />
+      <rect x="30" y="8" width="4" height="4" fill="currentColor" />
+      <rect x="14" y="12" width="4" height="4" fill="currentColor" />
+      <rect x="30" y="12" width="4" height="4" fill="currentColor" />
+      <rect x="18" y="16" width="12" height="4" fill="currentColor" />
       {/* Key stem */}
-      <rect
-        x="22"
-        y="26"
-        width="4"
-        height="18"
-        rx="2"
-        fill="currentColor"
-      />
-      
+      <rect x="22" y="20" width="4" height="16" fill="currentColor" />
       {/* Key teeth */}
-      <rect x="26" y="36" width="6" height="3" rx="1" fill="currentColor" />
-      <rect x="26" y="42" width="4" height="3" rx="1" fill="currentColor" />
-      
-      {/* Decorative elements */}
-      <circle cx="24" cy="16" r="13" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      
-      {/* Sparkle effects */}
-      <circle cx="34" cy="10" r="1.5" fill="currentColor" opacity="0.6" />
-      <circle cx="14" cy="22" r="1" fill="currentColor" opacity="0.4" />
+      <rect x="26" y="28" width="6" height="4" fill="currentColor" />
+      <rect x="26" y="34" width="4" height="4" fill="currentColor" />
+      {/* Key bottom */}
+      <rect x="20" y="36" width="8" height="4" fill="currentColor" />
+      {/* Inner hole */}
+      <rect x="20" y="10" width="8" height="4" fill="currentColor" opacity="0.2" />
+      {/* Sparkle pixels */}
+      <rect x="36" y="6" width="2" height="2" fill="currentColor" opacity="0.5" />
+      <rect x="10" y="18" width="2" height="2" fill="currentColor" opacity="0.3" />
     </svg>
   );
 }
@@ -52,11 +41,11 @@ export function LogoLarge({ className }: LogoProps) {
     <div className={cn("flex items-center gap-3", className)}>
       <Logo className="h-10 w-10" />
       <div className="flex flex-col">
-        <span className="font-display text-2xl font-bold gradient-text leading-tight">
+        <span className="font-pixel text-lg text-orange-500 leading-tight">
           Le Sésame
         </span>
-        <span className="text-xs text-muted-foreground tracking-wider uppercase">
-          The Secret Keeper
+        <span className="text-xs text-muted-foreground tracking-widest uppercase font-mono">
+          Secret Keeper
         </span>
       </div>
     </div>
