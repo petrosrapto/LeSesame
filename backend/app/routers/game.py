@@ -9,7 +9,7 @@ Date: 2026/02/06
 
 from datetime import datetime
 from typing import Annotated, Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db, User, GameRepository, LeaderboardRepository
@@ -19,7 +19,8 @@ from ..schemas import (
     GameProgressResponse, GameSessionResponse,
     LevelInfo, LevelCompletionDetails, LEVEL_CONFIGS
 )
-from ..services import get_level_keeper
+from ..services import get_level_keeper, transcribe_audio
+from ..services.audio import SUPPORTED_AUDIO_TYPES, MAX_AUDIO_SIZE
 from ..routers.auth import get_current_user, require_user
 from ..core import logger
 
@@ -328,3 +329,67 @@ async def get_chat_history_endpoint(
     history = await repo.get_chat_history(session.id, level, limit=50)
     
     return {"level": level, "messages": history}
+
+
+@router.post("/transcribe")
+async def transcribe_audio_endpoint(
+    file: UploadFile = File(...),
+    language: Optional[str] = Form(None),
+    user: User = Depends(require_user),
+):
+    """
+    Transcribe an audio file using Mistral Voxtral Mini Transcribe.
+
+    Accepts audio uploads (webm, wav, mp3, ogg, flac, m4a, mp4).
+    Returns the transcribed text.
+    """
+    # Validate content type (strip codec params like ";codecs=opus")
+    content_type = (file.content_type or "").split(";")[0].strip()
+    if content_type not in SUPPORTED_AUDIO_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported audio format: {content_type}. "
+                   f"Supported formats: {', '.join(sorted(SUPPORTED_AUDIO_TYPES))}",
+        )
+
+    # Read audio data
+    audio_data = await file.read()
+
+    if len(audio_data) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty audio file.",
+        )
+
+    if len(audio_data) > MAX_AUDIO_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Audio file too large. Maximum size is {MAX_AUDIO_SIZE // (1024*1024)} MB.",
+        )
+
+    filename = file.filename or "recording.webm"
+
+    try:
+        result = await transcribe_audio(
+            audio_data=audio_data,
+            filename=filename,
+            language=language,
+        )
+
+        logger.info(f"Audio transcribed for user {user.username}: {len(result['text'])} chars")
+
+        return {
+            "text": result["text"],
+            "duration": result.get("duration"),
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error(f"Transcription error for user {user.username}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to transcribe audio. Please try again.",
+        )

@@ -277,6 +277,25 @@ export const GameAPI = {
       console.warn("Failed to reset session");
     }
   },
+
+  // Transcribe audio using Mistral Voxtral Mini Transcribe
+  async transcribeAudio(audioBlob: Blob, language?: string): Promise<{ text: string; duration?: number }> {
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.webm");
+    if (language) {
+      formData.append("language", language);
+    }
+
+    const response = await apiClient.post<{ text: string; duration?: number }>(
+      "/game/transcribe",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000, // 60s timeout for transcription
+      }
+    );
+    return response.data;
+  },
 };
 
 // ============== Leaderboard API ==============
