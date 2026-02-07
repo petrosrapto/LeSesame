@@ -1,0 +1,13 @@
+{
+  "name": "le-sesame-backend",
+  "version": "0.1.0",
+  "description": "Le Sésame - Multi-Level Secret Keeper Game Backend API",
+  "main": "main.py",
+  "scripts": {
+    "start": "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "test": "pytest tests/ -v --cov=app --cov-report=xml",
+    "lint": "ruff check app/ tests/"
+  },
+  "author": "Petros Raptopoulos",
+  "license": "MIT"
+}

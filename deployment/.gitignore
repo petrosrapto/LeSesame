@@ -1,0 +1,9 @@
+# Deployment Configuration
+# Keep .env.example, exclude .env files with secrets
+
+# Environment files with actual secrets
+.env
+!.env.example
+
+# Logs
+*.log

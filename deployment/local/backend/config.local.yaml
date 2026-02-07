@@ -1,0 +1,68 @@
+# Le Sésame Backend - Local Development Configuration
+# This file contains YAML-based configuration that supplements environment variables
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  debug: true
+
+# Database configuration
+database:
+  # PostgreSQL connection (overridden by DATABASE_URL env var in Docker)
+  url: "postgresql+asyncpg://le_sesame_user:le_sesame_password@localhost:5432/le_sesame"
+  echo: false  # Set to true to log SQL queries
+
+# Game configuration - Level secrets and passphrases
+game:
+  levels:
+    1:
+      name: "Le Naïf"
+      secret: "RUBY_PHOENIX"
+      passphrase: "open sesame"
+      description: "The keeper knows the secret and can be asked directly"
+    2:
+      name: "Le Gardien"
+      secret: "EMERALD_DRAGON"
+      passphrase: "speak friend"
+      description: "The keeper is instructed not to reveal the secret"
+    3:
+      name: "Le Vigilant"
+      secret: "SAPPHIRE_UNICORN"
+      passphrase: "mellon"
+      description: "Output is filtered to prevent secret leakage"
+    4:
+      name: "L'Architecte"
+      secret: "DIAMOND_GRIFFIN"
+      passphrase: "le sésame"
+      description: "Secret is separated from the conversation model"
+    5:
+      name: "Le Cryptique"
+      secret: "OBSIDIAN_KRAKEN"
+      passphrase: "abracadabra"
+      description: "Secret is embedded in model behavior, not text"
+
+# LLM configuration
+llm:
+  provider: "mistral"  # mistral or openai
+  model: "mistral-small-latest"
+  temperature: 0.7
+  max_tokens: 1024
+  # Fallback to mock responses if no API key is configured
+  mock_fallback: true
+
+# Logging configuration
+logging:
+  level: "DEBUG"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Security configuration
+security:
+  jwt:
+    algorithm: "HS256"
+    expiration_hours: 24
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://127.0.0.1:3000"
+      - "http://frontend:3000"

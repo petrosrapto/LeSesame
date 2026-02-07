@@ -1,0 +1,588 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  FRONTEND_COVERAGE_THRESHOLD: 10
+  BACKEND_COVERAGE_THRESHOLD: 60
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository_owner }}/le-sesame-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository_owner }}/le-sesame-frontend
+
+jobs:
+  # ============================================
+  # Frontend Jobs
+  # ============================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:ci
+        env:
+          CI: true
+
+      - name: Check coverage threshold
+        run: |
+          # Extract coverage percentage from coverage summary if available
+          if [ -f coverage/coverage-summary.json ]; then
+            COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+            echo "Line coverage: $COVERAGE%"
+            
+            if (( $(echo "$COVERAGE < ${{ env.FRONTEND_COVERAGE_THRESHOLD }}" | bc -l) )); then
+              echo "❌ Coverage ($COVERAGE%) is below the threshold (${{ env.FRONTEND_COVERAGE_THRESHOLD }}%)"
+              exit 1
+            else
+              echo "✅ Coverage ($COVERAGE%) meets the threshold (${{ env.FRONTEND_COVERAGE_THRESHOLD }}%)"
+            fi
+          else
+            echo "⚠️ Coverage summary not found, skipping threshold check"
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage-report
+          path: frontend/coverage/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-results
+          path: frontend/report.xml
+          retention-days: 7
+
+  # ============================================
+  # Backend Jobs
+  # ============================================
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-test.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          DATABASE_URL=sqlite+aiosqlite:///:memory:
+          JWT_SECRET=test-secret-key-for-ci
+          JWT_ALGORITHM=HS256
+          JWT_EXPIRATION_HOURS=24
+          ENVIRONMENT=testing
+          DEBUG=false
+          LOG_LEVEL=WARNING
+          EOF
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          JWT_SECRET: test-secret-key-for-ci
+        run: |
+          mkdir -p reports
+          pytest --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=${{ env.BACKEND_COVERAGE_THRESHOLD }} --junitxml=reports/junit.xml -v
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-report
+          path: |
+            backend/coverage.xml
+            backend/htmlcov/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/reports/
+          retention-days: 7
+
+  # ============================================
+  # Summary Job
+  # ============================================
+  ci-complete:
+    name: CI Complete
+    runs-on: ubuntu-latest
+    needs: [frontend-build, frontend-test, backend-test]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [ "${{ needs.frontend-build.result }}" != "success" ] && [ "${{ needs.frontend-build.result }}" != "skipped" ]; then
+            echo "❌ Frontend build failed"
+            exit 1
+          fi
+          if [ "${{ needs.frontend-test.result }}" != "success" ] && [ "${{ needs.frontend-test.result }}" != "skipped" ]; then
+            echo "❌ Frontend tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.backend-test.result }}" != "success" ] && [ "${{ needs.backend-test.result }}" != "skipped" ]; then
+            echo "❌ Backend tests failed"
+            exit 1
+          fi
+          echo "✅ All CI checks passed!"
+
+  # ============================================
+  # Build and Push Docker Images
+  # ============================================
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [ci-complete]
+    environment: dev
+
+    # TEMPORARILY DISABLED - uncomment condition below to re-enable
+    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: false
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract metadata for Frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract version tag
+        id: meta
+        run: |
+          echo "version=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "short_sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.VITE_API_URL }}
+            NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.VITE_ENABLE_AUTH }}
+
+      - name: Summary
+        run: |
+          echo "## 🐳 Docker Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend:** \`${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend:** \`${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ steps.meta.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Deployment Job
+  # ============================================
+  deploy:
+    name: Deploy to Remote Server
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    
+    # TEMPORARILY DISABLED - uncomment condition below to re-enable
+    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: false
+    environment: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pre-cleanup (ensure no leftover files from previous runs)
+        run: |
+          sudo shred -fuz /tmp/vpn_private_key.pem 2>/dev/null || true
+          sudo shred -fuz /tmp/openvpn_config.ovpn 2>/dev/null || true
+          sudo rm -f /tmp/openvpn.log 2>/dev/null || true
+          sudo shred -fuz ~/.ssh/id_rsa 2>/dev/null || true
+          sudo pkill openvpn 2>/dev/null || true
+          sudo ip link delete tun0 2>/dev/null || true
+          echo "✅ Pre-cleanup completed"
+
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openvpn
+
+      - name: Setup VPN private key
+        run: |
+          set +x
+          umask 077
+          touch /tmp/vpn_private_key.pem
+          chmod 600 /tmp/vpn_private_key.pem
+          echo "${{ secrets.VPN_PRIVATE_KEY }}" > /tmp/vpn_private_key.pem
+          
+          if [ -s /tmp/vpn_private_key.pem ]; then
+            echo "✅ VPN private key created securely"
+          else
+            echo "❌ Failed to create VPN private key"
+            exit 1
+          fi
+
+      - name: Setup OpenVPN config
+        run: |
+          set +x
+          umask 077
+          touch /tmp/openvpn_config.ovpn
+          chmod 600 /tmp/openvpn_config.ovpn
+          echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn_config.ovpn
+          
+          if [ -s /tmp/openvpn_config.ovpn ]; then
+            echo "✅ OpenVPN config created securely"
+          else
+            echo "❌ Failed to create OpenVPN config"
+            exit 1
+          fi
+
+      - name: Connect to VPN
+        run: |
+          sudo openvpn \
+            --config /tmp/openvpn_config.ovpn \
+            --daemon \
+            --log /tmp/openvpn.log \
+            --auth-nocache \
+            --script-security 1
+          
+          echo "⏳ Waiting for VPN connection..."
+          for i in {1..60}; do
+            if ip a | grep -q "tun0"; then
+              echo "✅ VPN interface tun0 is up"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ VPN connection timeout"
+              grep -v -i -E "(password|secret|key|auth)" /tmp/openvpn.log || cat /tmp/openvpn.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: VPN Health Check
+        run: |
+          if ! ip a show tun0 2>/dev/null | grep -q "inet "; then
+            echo "❌ VPN interface tun0 not found or has no IP"
+            exit 1
+          fi
+          
+          VPN_IP=$(ip a show tun0 | grep "inet " | awk '{print $2}' | cut -d'/' -f1)
+          echo "✅ VPN connected with IP: $VPN_IP"
+          
+          if ! ping -c 3 ${{ secrets.REMOTE_SERVER_IP }} > /dev/null 2>&1; then
+            echo "❌ Cannot reach remote server"
+            exit 1
+          fi
+          echo "✅ Remote server is reachable"
+
+      - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
+        run: |
+          set +x
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          umask 077
+          echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          if ssh-keygen -l -f ~/.ssh/id_rsa > /dev/null 2>&1; then
+            echo "✅ SSH key is valid"
+          else
+            echo "❌ SSH key format issue"
+            exit 1
+          fi
+          
+          cat > ~/.ssh/config << EOF
+          Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+            IdentitiesOnly yes
+            AddKeysToAgent no
+          EOF
+          chmod 600 ~/.ssh/config
+          
+          echo "✅ SSH key configured securely"
+
+      - name: Test SSH Connection
+        run: |
+          ssh -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "echo '✅ SSH connection successful'"
+
+      - name: Deploy to Remote Server
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          SHORT_SHA=$(echo "$IMAGE_TAG" | cut -c1-7)
+          
+          # Create deployment directory
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} "mkdir -p ~/le_sesame_deploy/backend ~/le_sesame_deploy/frontend"
+          
+          # Copy deployment files from deployment/dev directory
+          scp deployment/dev/docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}:~/le_sesame_deploy/docker-compose.yml
+          scp deployment/dev/backend/config.dev.yaml ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}:~/le_sesame_deploy/backend/config.dev.yaml
+          
+          # Create .env files from secrets on remote server
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} << ENDSSH
+            cd ~/le_sesame_deploy
+            
+            # Create main .env file with database credentials
+            cat > .env << EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${SHORT_SHA}
+          FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${SHORT_SHA}
+          EOF
+            
+            # Create backend .env file
+            cat > backend/.env << EOF
+          ENVIRONMENT=${{ secrets.ENVIRONMENT }}
+          DEBUG=${{ secrets.DEBUG }}
+          LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+          HOST=${{ secrets.HOST }}
+          PORT=${{ secrets.PORT }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}
+          JWT_EXPIRATION_HOURS=${{ secrets.JWT_EXPIRATION_HOURS }}
+          MISTRAL_API_KEY=${{ secrets.MISTRAL_API_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}
+          LLM_MODEL=${{ secrets.LLM_MODEL }}
+          DEFAULT_SECRET=${{ secrets.DEFAULT_SECRET }}
+          DEFAULT_PASSPHRASE=${{ secrets.DEFAULT_PASSPHRASE }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+          BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${SHORT_SHA}
+          EOF
+            
+            # Create frontend .env file
+            cat > frontend/.env << EOF
+          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          VITE_ENABLE_AUTH=${{ secrets.VITE_ENABLE_AUTH }}
+          NODE_ENV=${{ secrets.NODE_ENV }}
+          FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${SHORT_SHA}
+          EOF
+            
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            
+            # Pull new images
+            echo "📥 Pulling images..."
+            docker compose pull || { echo "❌ Failed to pull images"; exit 1; }
+            
+            # Start containers
+            echo "🚀 Starting containers..."
+            docker compose up -d || { echo "❌ Failed to start containers"; exit 1; }
+            
+            # Wait for services
+            echo "⏳ Waiting for services to start..."
+            sleep 30
+            
+            docker compose ps
+          ENDSSH
+          
+          echo "✅ Deployment completed"
+
+      - name: Verify Deployment
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }} << 'ENDSSH'
+            cd ~/le_sesame_deploy
+            
+            RUNNING_CONTAINERS=$(docker compose ps --services --filter "status=running" | wc -l)
+            TOTAL_CONTAINERS=$(docker compose ps --services | wc -l)
+            
+            if [ "$RUNNING_CONTAINERS" -lt "$TOTAL_CONTAINERS" ]; then
+              echo "❌ Some containers are not running"
+              docker compose ps
+              docker compose logs --tail=50
+              exit 1
+            fi
+            
+            echo "✅ All $RUNNING_CONTAINERS containers are running"
+            
+            # Health check for backend
+            if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ Backend health check passed"
+            else
+              echo "⚠️ Backend health check not responding (may still be starting)"
+            fi
+            
+            # Cleanup old images (keep last 2 versions)
+            echo "🧹 Cleaning up old Docker images..."
+            for REPO in "ghcr.io/${{ github.repository_owner }}/le-sesame-backend" "ghcr.io/${{ github.repository_owner }}/le-sesame-frontend"; do
+              IMAGES_TO_DELETE=$(docker images "$REPO" --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}')
+              if [ -n "$IMAGES_TO_DELETE" ]; then
+                for IMG_ID in $IMAGES_TO_DELETE; do
+                  docker rmi "$IMG_ID" 2>/dev/null && echo "  ✓ Removed: $IMG_ID" || true
+                done
+              fi
+            done
+            
+            docker image prune -f
+            echo "✅ Cleanup completed"
+          ENDSSH
+
+      - name: Disconnect VPN
+        if: always()
+        run: |
+          echo "🔒 Disconnecting VPN..."
+          sudo pkill -TERM openvpn 2>/dev/null || true
+          sleep 3
+          sudo pkill -9 openvpn 2>/dev/null || true
+          echo "✅ VPN disconnected"
+
+      - name: Secure cleanup
+        if: always()
+        run: |
+          echo "🔒 Securely cleaning up all sensitive files..."
+          
+          for file in /tmp/vpn_private_key.pem /tmp/openvpn_config.ovpn ~/.ssh/id_rsa; do
+            if [ -f "$file" ]; then
+              sudo shred -fuz "$file" 2>/dev/null || sudo rm -f "$file"
+              echo "  ✓ Deleted: $file"
+            fi
+          done
+          
+          sudo rm -f /tmp/openvpn.log ~/.ssh/config ~/.ssh/known_hosts 2>/dev/null || true
+          
+          echo "✅ Secure cleanup completed"

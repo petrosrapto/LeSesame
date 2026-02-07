@@ -1,0 +1,76 @@
+"""
+Le Sésame Backend - Main Application Entry Point
+
+Author: Petros Raptopoulos
+Date: 2026/02/06
+"""
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .core import settings, logger
+from .db import init_db
+from .routers import game, auth, leaderboard, health
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup and shutdown."""
+    # Startup
+    logger.info("Starting Le Sésame backend...")
+    await init_db()
+    logger.info(f"Server running on {settings.host}:{settings.port}")
+    yield
+    # Shutdown
+    logger.info("Shutting down Le Sésame backend...")
+
+
+app = FastAPI(
+    title="Le Sésame API",
+    description="""
+    🔐 **Le Sésame** - The Multi-Level Secret Keeper Game API
+    
+    Test your skills against AI guardians protecting secrets at increasing difficulty levels.
+    
+    ## Features
+    - 5 progressive difficulty levels
+    - Chat-based interaction with AI guardians
+    - Passphrase verification system
+    - Global leaderboard
+    - Progress tracking
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Petros Raptopoulos",
+        "email": "petros.raptopoulos@example.com",
+    },
+    lifespan=lifespan,
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(health.router, tags=["Health"])
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(game.router, prefix="/game", tags=["Game"])
+app.include_router(leaderboard.router, prefix="/leaderboard", tags=["Leaderboard"])
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "name": "Le Sésame API",
+        "version": "1.0.0",
+        "description": "Multi-Level Secret Keeper Game",
+        "docs": "/docs",
+        "health": "/health"
+    }

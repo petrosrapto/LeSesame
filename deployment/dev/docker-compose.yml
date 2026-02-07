@@ -1,0 +1,89 @@
+# Le Sésame - Dev Environment Full Stack Docker Compose
+# Uses pre-built images for CI/CD deployment
+#
+# Required environment variables in .env files:
+#   - BACKEND_IMAGE (in backend/.env)
+#   - FRONTEND_IMAGE (in frontend/.env)
+#
+# Usage:
+#   docker-compose pull
+#   docker-compose up -d
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: le-sesame-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-le_sesame}
+      POSTGRES_USER: ${POSTGRES_USER:-le_sesame_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-le_sesame_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-le_sesame_user} -d ${POSTGRES_DB:-le_sesame}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - le-sesame-network
+
+  # FastAPI Backend
+  backend:
+    image: ${BACKEND_IMAGE:-le-sesame-backend:latest}
+    container_name: le-sesame-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-le_sesame_user}:${POSTGRES_PASSWORD:-le_sesame_password}@postgres:5432/${POSTGRES_DB:-le_sesame}
+    volumes:
+      # Mount config file
+      - ./backend/config.dev.yaml:/app/config/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - le-sesame-network
+
+  # React/Vite Frontend
+  frontend:
+    image: ${FRONTEND_IMAGE:-le-sesame-frontend:latest}
+    container_name: le-sesame-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - le-sesame-network
+
+volumes:
+  postgres-data:
+
+networks:
+  le-sesame-network:
+    name: le-sesame-network
+    driver: bridge
