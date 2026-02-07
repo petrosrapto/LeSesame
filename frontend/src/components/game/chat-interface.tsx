@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Send, Loader2, RotateCcw, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ChatMessage, Message } from "./chat-message";
+import { LEVEL_CHARACTERS } from "@/lib/constants";
 
 interface ChatInterfaceProps {
   level: number;
@@ -37,6 +39,8 @@ export function ChatInterface({
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const character = LEVEL_CHARACTERS[level];
 
   // Rotate placeholders
   useEffect(() => {
@@ -70,13 +74,30 @@ export function ChatInterface({
       {/* Chat header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gold-500/20">
-            <Key className="w-5 h-5 text-gold-500" />
+          <div
+            className={cn(
+              "w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center",
+              character ? character.bgColor : "bg-orange-500/20"
+            )}
+          >
+            {character ? (
+              <Image
+                src={character.image}
+                alt={character.name}
+                width={40}
+                height={40}
+                className="object-cover"
+              />
+            ) : (
+              <Key className="w-5 h-5 text-orange-500" />
+            )}
           </div>
           <div>
-            <h3 className="font-semibold">Level {level} Guardian</h3>
+            <h3 className="font-semibold text-sm">
+              {character ? character.name : `Level ${level} Guardian`}
+            </h3>
             <p className="text-xs text-muted-foreground">
-              {messages.length} messages in this session
+              {messages.length} messages · Level {level}
             </p>
           </div>
         </div>
@@ -90,15 +111,32 @@ export function ChatInterface({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="p-4 rounded-2xl bg-gold-500/10 mb-4">
-              <Key className="w-12 h-12 text-gold-500" />
+            <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 border-2 border-orange-500/20">
+              {character ? (
+                <Image
+                  src={character.image}
+                  alt={character.name}
+                  width={96}
+                  height={96}
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-orange-500/10 flex items-center justify-center">
+                  <Key className="w-12 h-12 text-orange-500" />
+                </div>
+              )}
             </div>
-            <h3 className="font-display text-xl font-semibold mb-2">
-              Start the Challenge
+            <h3 className="font-pixel text-sm mb-2">
+              {character ? character.name : "Start the Challenge"}
             </h3>
-            <p className="text-muted-foreground max-w-md">
-              Try to extract the secret from the AI guardian. Use your creativity,
-              prompt engineering skills, and adversarial techniques.
+            <p className="text-muted-foreground max-w-md font-game text-lg">
+              {character
+                ? character.tagline
+                : "Try to extract the secret from the AI guardian."}
+            </p>
+            <p className="text-muted-foreground/60 text-sm mt-2">
+              Use your creativity, prompt engineering skills, and adversarial
+              techniques.
             </p>
           </div>
         ) : (
@@ -110,13 +148,23 @@ export function ChatInterface({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-full bg-secondary">
-              <Key className="w-4 h-4 text-muted-foreground" />
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-secondary flex items-center justify-center flex-shrink-0">
+              {character ? (
+                <Image
+                  src={character.image}
+                  alt={character.name}
+                  width={32}
+                  height={32}
+                  className="object-cover"
+                />
+              ) : (
+                <Key className="w-4 h-4 text-muted-foreground" />
+              )}
             </div>
             <Card className="p-4 max-w-[80%]">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Thinking...</span>
+                <span className="text-sm font-game">Thinking...</span>
               </div>
             </Card>
           </div>

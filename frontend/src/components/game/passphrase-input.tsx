@@ -34,10 +34,10 @@ export function PassphraseInput({
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="bg-gold-500/5 border-b border-gold-500/10">
+      <CardHeader className="bg-orange-500/5 border-b border-orange-500/10">
         <CardTitle className="flex items-center gap-3 text-lg">
-          <div className="p-2 rounded-lg bg-gold-500/20">
-            <Key className="w-5 h-5 text-gold-500" />
+          <div className="p-2 rounded-lg bg-orange-500/20">
+            <Key className="w-5 h-5 text-orange-500" />
           </div>
           Enter the Passphrase
         </CardTitle>
@@ -73,9 +73,9 @@ export function PassphraseInput({
           )}
 
           {hint && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-gold-500/10 border border-gold-500/20 text-sm">
-              <Sparkles className="w-4 h-4 text-gold-500 shrink-0 mt-0.5" />
-              <span className="text-gold-700 dark:text-gold-400">{hint}</span>
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-sm">
+              <Sparkles className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+              <span className="text-orange-700 dark:text-orange-400">{hint}</span>
             </div>
           )}
 

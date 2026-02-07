@@ -199,7 +199,7 @@ jobs:
 
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
     # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    if: false
+    # if: false
     permissions:
       contents: read
       packages: write
@@ -269,8 +269,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.VITE_API_URL }}
-            NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.VITE_ENABLE_AUTH }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.NEXT_PUBLIC_ENABLE_AUTH }}
 
       - name: Summary
         run: |
@@ -293,7 +293,7 @@ jobs:
     
     # TEMPORARILY DISABLED - uncomment condition below to re-enable
     # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    if: false
+    # if: false
     environment: dev
 
     steps:

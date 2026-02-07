@@ -1,21 +1,16 @@
 {
-  "name": "Le Sésame",
+  "name": "Le Sésame — AI Secret Keeper Challenge",
   "short_name": "Le Sésame",
-  "description": "The Multi-Level Secret Keeper Game - Test your skills against AI guardians",
+  "description": "5 AI guardians. 5 secrets. Can you break them all? Powered by Mistral AI.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#eab308",
+  "background_color": "#0a0a0a",
+  "theme_color": "#F97316",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }

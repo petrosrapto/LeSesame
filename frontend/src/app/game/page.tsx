@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatInterface } from "@/components/game/chat-interface";
 import { GameProgress } from "@/components/game/game-progress";
 import { LevelCard } from "@/components/game/level-card";
 import { PassphraseInput } from "@/components/game/passphrase-input";
 import { SuccessModal } from "@/components/game/success-modal";
+import { LoginModal } from "@/components/auth/login-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +16,9 @@ import { useToast } from "@/components/ui/toast";
 import { useGame } from "@/hooks/use-game";
 import { Message } from "@/components/game/chat-message";
 import { generateId, getLevelName } from "@/lib/utils";
+import { GameAPI } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import { LEVEL_CHARACTERS } from "@/lib/constants";
 import {
   MessageSquare,
   Key,
@@ -21,6 +26,9 @@ import {
   ChevronRight,
   Lightbulb,
   BookOpen,
+  Lock,
+  Shield,
+  CheckCircle,
 } from "lucide-react";
 
 export default function GamePage() {
@@ -42,6 +50,19 @@ export default function GamePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Check auth on mount
+  useEffect(() => {
+    setMounted(true);
+    const authenticated = isAuthenticated();
+    setAuthed(authenticated);
+    if (!authenticated) {
+      setShowLoginModal(true);
+    }
+  }, []);
 
   // Session timer
   useEffect(() => {
@@ -57,8 +78,19 @@ export default function GamePage() {
     setLevelStartTime(Date.now());
   }, [currentLevel]);
 
+  const handleLoginSuccess = useCallback(() => {
+    setAuthed(true);
+    setShowLoginModal(false);
+    showToast("Logged in successfully! Start playing.", "success");
+  }, [showToast]);
+
   const handleSendMessage = useCallback(
     async (content: string) => {
+      if (!authed) {
+        setShowLoginModal(true);
+        return;
+      }
+
       // Add user message
       const userMessage: Message = {
         id: generateId(),
@@ -71,36 +103,21 @@ export default function GamePage() {
       incrementAttempts();
 
       try {
-        // Simulate API call - replace with actual API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Mock response based on level
-        const responses = [
-          "I appreciate your curiosity, but I'm afraid I cannot reveal the secret. It's protected information that I must keep confidential.",
-          "Nice try! But I'm designed to keep secrets safe. Perhaps try a different approach?",
-          "I understand you want to know the secret, but my purpose is to protect it. I will not reveal it under any circumstances.",
-          "Your attempt has been noted, but the secret remains secure. Keep trying!",
-        ];
-
-        // Check for "success" triggers (demo purposes)
-        const isSuccess =
-          content.toLowerCase().includes("open sesame") ||
-          content.toLowerCase().includes("le sésame");
+        const response = await GameAPI.sendMessage(currentLevel, content);
 
         const aiMessage: Message = {
           id: generateId(),
           role: "assistant",
-          content: isSuccess
-            ? "🎉 Congratulations! You've found the secret! The passphrase is: **GOLDEN_KEY_2024**"
-            : responses[Math.floor(Math.random() * responses.length)],
+          content: response.content,
           timestamp: new Date(),
-          isSecretRevealed: isSuccess,
+          isSecretRevealed: response.secretRevealed,
+          isWarning: response.isWarning,
         };
 
         setMessages((prev) => [...prev, aiMessage]);
 
-        if (isSuccess) {
-          setRevealedSecret("GOLDEN_KEY_2024");
+        if (response.secretRevealed) {
+          setRevealedSecret(response.content);
           setTimeout(() => {
             setShowSuccess(true);
             completeLevel(currentLevel);
@@ -112,32 +129,43 @@ export default function GamePage() {
         setIsLoading(false);
       }
     },
-    [currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleReset = useCallback(() => {
     setMessages([]);
     setLevelStartTime(Date.now());
+    GameAPI.resetSession().catch(() => {});
     showToast("Chat session reset", "info");
   }, [showToast]);
 
   const handlePassphraseSubmit = useCallback(
     async (passphrase: string) => {
+      if (!authed) {
+        setShowLoginModal(true);
+        return;
+      }
+
       incrementAttempts();
 
-      // Simulate verification
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const result = await GameAPI.verifyPassphrase(currentLevel, passphrase);
 
-      // Demo: accept "GOLDEN_KEY_2024" as correct
-      if (passphrase === "GOLDEN_KEY_2024") {
-        setRevealedSecret(passphrase);
-        setShowSuccess(true);
-        completeLevel(currentLevel);
-      } else {
-        showToast("Incorrect passphrase. Keep trying!", "error");
+        if (result.success) {
+          setRevealedSecret(result.secret || passphrase);
+          setShowSuccess(true);
+          completeLevel(currentLevel);
+        } else {
+          showToast(
+            result.message || "Incorrect passphrase. Keep trying!",
+            "error"
+          );
+        }
+      } catch (error) {
+        showToast("Failed to verify passphrase.", "error");
       }
     },
-    [currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleNextLevel = useCallback(() => {
@@ -149,6 +177,10 @@ export default function GamePage() {
   }, [currentLevel, setCurrentLevel]);
 
   const levelTimeSpent = Math.floor((Date.now() - levelStartTime) / 1000);
+  const currentCharacter = LEVEL_CHARACTERS[currentLevel];
+
+  // Auth gate — show login modal overlay
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -162,10 +194,10 @@ export default function GamePage() {
           } overflow-hidden`}
         >
           <div className="w-80 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
-            {/* Level Selection */}
+            {/* Level Selection with Characters */}
             <div className="mb-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Select Level
+                Select Guardian
               </h3>
               <div className="space-y-2">
                 {[1, 2, 3, 4, 5].map((level) => {
@@ -175,29 +207,54 @@ export default function GamePage() {
                     completedLevels.includes(level - 1) ||
                     isCompleted;
                   const isCurrent = level === currentLevel;
+                  const char = LEVEL_CHARACTERS[level];
 
                   return (
                     <button
                       key={level}
                       onClick={() => isUnlocked && setCurrentLevel(level)}
                       disabled={!isUnlocked}
-                      className={`w-full p-3 rounded-lg text-left transition-all ${
+                      className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
                         isCurrent
-                          ? "bg-gold-500/20 border border-gold-500/30"
+                          ? "bg-orange-500/20 border border-orange-500/30"
                           : isUnlocked
                           ? "hover:bg-secondary"
                           : "opacity-50 cursor-not-allowed"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Level {level}</span>
-                        {isCompleted && (
-                          <span className="text-xs text-success">✓</span>
+                      {/* Character avatar */}
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
+                        {char ? (
+                          <Image
+                            src={char.image}
+                            alt={char.name}
+                            width={40}
+                            height={40}
+                            className={`object-cover ${
+                              !isUnlocked ? "grayscale" : ""
+                            }`}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-secondary flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-muted-foreground" />
+                          </div>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {getLevelName(level)}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm truncate">
+                            {char ? char.name : `Level ${level}`}
+                          </span>
+                          {isCompleted ? (
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          ) : !isUnlocked ? (
+                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          ) : null}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Level {level}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
@@ -219,15 +276,15 @@ export default function GamePage() {
             <Card className="mt-4">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-gold-500" />
+                  <Lightbulb className="w-4 h-4 text-orange-500" />
                   Tips
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-2">
+              <CardContent className="text-xs text-muted-foreground space-y-2 font-game text-sm">
                 <p>• Try different prompting techniques</p>
                 <p>• Think about roleplay and context switching</p>
                 <p>• Encoding tricks might help</p>
-                <p>• Multi-turn conversations can reveal information</p>
+                <p>• Multi-turn conversations can reveal info</p>
               </CardContent>
             </Card>
           </div>
@@ -309,9 +366,11 @@ export default function GamePage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>Attack Strategies</CardTitle>
+                        <CardTitle className="font-game text-xl">
+                          Attack Strategies
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 font-game">
                         <div>
                           <h4 className="font-medium mb-2">
                             Direct Extraction
@@ -363,6 +422,13 @@ export default function GamePage() {
         timeSpent={levelTimeSpent}
         onNextLevel={handleNextLevel}
         onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal && !authed}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
       />
     </div>
   );

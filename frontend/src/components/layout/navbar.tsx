@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,13 @@ import {
   Sun,
   Menu,
   X,
+  ArrowRight,
+  LogOut,
+  User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { isAuthenticated, getStoredUsername, logout } from "@/lib/auth";
 
 const navItems = [
   { href: "/", label: "Home", icon: null },
@@ -30,21 +35,50 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    setAuthed(isAuthenticated());
+    setUsername(getStoredUsername());
+
+    const handleAuthChange = () => {
+      setAuthed(isAuthenticated());
+      setUsername(getStoredUsername());
+    };
+
+    window.addEventListener("auth-logout", handleAuthChange);
+    window.addEventListener("auth-login", handleAuthChange);
+    return () => {
+      window.removeEventListener("auth-logout", handleAuthChange);
+      window.removeEventListener("auth-login", handleAuthChange);
+    };
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    setAuthed(false);
+    setUsername(null);
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <Logo className="h-8 w-8" />
-            <span className="font-display text-xl font-semibold gradient-text hidden sm:block">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Logo className="h-7 w-7" />
+            <span className="font-pixel text-sm text-orange-500 hidden sm:block">
               Le Sésame
             </span>
+            <Image
+              src="/mistral-logo.png"
+              alt="Mistral AI"
+              width={20}
+              height={20}
+              className="opacity-60 hidden sm:block"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -54,8 +88,8 @@ export function Navbar() {
                 <Button
                   variant={pathname === item.href ? "secondary" : "ghost"}
                   className={cn(
-                    "gap-2",
-                    pathname === item.href && "bg-gold-500/10 text-gold-600 dark:text-gold-400"
+                    "gap-2 text-sm",
+                    pathname === item.href && "bg-orange-500/10 text-orange-500"
                   )}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
@@ -85,7 +119,7 @@ export function Navbar() {
 
             {/* GitHub link */}
             <a
-              href="https://github.com"
+              href="https://github.com/petrosrapto"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -94,13 +128,32 @@ export function Navbar() {
               </Button>
             </a>
 
-            {/* Play button (CTA) */}
-            <Link href="/game" className="hidden sm:block">
-              <Button variant="gold" size="sm" className="gap-2">
-                <Gamepad2 className="w-4 h-4" />
-                Play Now
-              </Button>
-            </Link>
+            {/* Auth button */}
+            {mounted && authed ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-mono">
+                  <User className="w-3 h-3 inline mr-1" />
+                  {username}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="gap-1 text-xs"
+                >
+                  <LogOut className="w-3 h-3" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Link href="/game" className="hidden sm:block">
+                <Button variant="gold" size="sm" className="gap-2">
+                  <Gamepad2 className="w-4 h-4" />
+                  Play Now
+                  <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -132,7 +185,7 @@ export function Navbar() {
                     variant={pathname === item.href ? "secondary" : "ghost"}
                     className={cn(
                       "w-full justify-start gap-2",
-                      pathname === item.href && "bg-gold-500/10 text-gold-600"
+                      pathname === item.href && "bg-orange-500/10 text-orange-500"
                     )}
                   >
                     {item.icon && <item.icon className="w-4 h-4" />}
@@ -140,6 +193,16 @@ export function Navbar() {
                   </Button>
                 </Link>
               ))}
+              {mounted && authed && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout ({username})
+                </Button>
+              )}
             </div>
           </div>
         )}

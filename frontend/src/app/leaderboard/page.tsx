@@ -168,7 +168,7 @@ const leaderboardData = {
 const getRankIcon = (rank: number) => {
   switch (rank) {
     case 1:
-      return <Crown className="w-5 h-5 text-gold-500" />;
+      return <Crown className="w-5 h-5 text-orange-500" />;
     case 2:
       return <Medal className="w-5 h-5 text-gray-400" />;
     case 3:
@@ -204,14 +204,14 @@ export default function LeaderboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-600 dark:text-gold-400 text-sm mb-6">
-              <Trophy className="w-4 h-4" />
-              <span>Global Rankings</span>
+            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-6 mx-auto w-fit">
+              <Trophy className="w-3 h-3" />
+              <span>GLOBAL RANKINGS</span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">Leaderboard</span>
+            <h1 className="pixel-heading text-2xl md:text-3xl mb-4 text-foreground">
+              <span className="text-orange-500">Leaderboard</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto font-game text-xl">
               See how you rank against other secret hunters. The best attackers
               rise to the top.
             </p>
@@ -227,8 +227,8 @@ export default function LeaderboardPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-gold-500/10">
-                      <Trophy className="w-6 h-6 text-gold-500" />
+                    <div className="p-3 rounded-lg bg-orange-500/10">
+                      <Trophy className="w-6 h-6 text-orange-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">847</p>
@@ -298,7 +298,7 @@ export default function LeaderboardPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-gold-500" />
+                    <Trophy className="w-5 h-5 text-orange-500" />
                     All-Time Rankings
                   </CardTitle>
                   <CardDescription>
@@ -314,9 +314,9 @@ export default function LeaderboardPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.05 * index }}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-xl transition-colors",
+                          "flex items-center gap-4 p-4 rounded-lg transition-colors",
                           player.rank <= 3
-                            ? "bg-gold-500/5 border border-gold-500/10"
+                            ? "bg-orange-500/5 border border-orange-500/10"
                             : "hover:bg-secondary/50"
                         )}
                       >
@@ -368,9 +368,9 @@ export default function LeaderboardPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.05 * index }}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-xl transition-colors",
+                          "flex items-center gap-4 p-4 rounded-lg transition-colors",
                           player.rank <= 3
-                            ? "bg-gold-500/5 border border-gold-500/10"
+                            ? "bg-orange-500/5 border border-orange-500/10"
                             : "hover:bg-secondary/50"
                         )}
                       >

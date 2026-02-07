@@ -62,7 +62,7 @@ export function LevelCard({
       className={cn(
         "relative overflow-hidden transition-all duration-300 group",
         status === "locked" && "opacity-60 grayscale",
-        status === "active" && "ring-2 ring-gold-500/50 shadow-lg shadow-gold-500/10",
+        status === "active" && "ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/10",
         status === "completed" && "bg-success/5 border-success/30",
         status !== "locked" && "hover:shadow-xl hover:scale-[1.02] cursor-pointer",
         className
@@ -98,7 +98,7 @@ export function LevelCard({
               status === "completed"
                 ? "bg-success/20 text-success"
                 : status === "active"
-                ? "bg-gold-500/20 text-gold-500 animate-pulse-glow"
+                ? "bg-orange-500/20 text-orange-500 animate-pulse-glow"
                 : "bg-muted text-muted-foreground"
             )}
           >
@@ -116,7 +116,7 @@ export function LevelCard({
                 {difficultyLabels[level]}
               </span>
             </CardTitle>
-            <CardDescription className="mt-1 font-display text-base">
+            <CardDescription className="mt-1 font-mono text-base">
               {name}
             </CardDescription>
           </div>

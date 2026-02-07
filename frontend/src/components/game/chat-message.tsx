@@ -64,7 +64,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
             ? "chat-bubble-user"
             : "chat-bubble-ai",
           message.isSecretRevealed && "ring-2 ring-success bg-success/5",
-          message.isWarning && "ring-2 ring-gold-500 bg-gold-500/5"
+          message.isWarning && "ring-2 ring-orange-500 bg-orange-500/5"
         )}
       >
         {/* Status indicator */}
@@ -75,7 +75,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
           </div>
         )}
         {message.isWarning && (
-          <div className="flex items-center gap-2 text-gold-600 dark:text-gold-400 text-xs mb-2 pb-2 border-b border-gold-500/20">
+          <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 text-xs mb-2 pb-2 border-b border-orange-500/20">
             <AlertTriangle className="w-4 h-4" />
             <span className="font-medium">Close attempt detected</span>
           </div>

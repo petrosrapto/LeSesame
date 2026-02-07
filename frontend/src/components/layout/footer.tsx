@@ -1,23 +1,36 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Logo } from "@/components/brand/logo";
-import { Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Linkedin, Globe, GraduationCap, Mail } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background/50">
+    <footer className="border-t border-border bg-card/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-3">
-              <Logo className="h-8 w-8" />
-              <span className="font-display text-xl font-semibold gradient-text">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Logo className="h-7 w-7" />
+              <span className="font-pixel text-sm text-orange-500">
                 Le Sésame
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              The Multi-Level Secret Keeper Game. Can you extract the secret?
+            <p className="text-sm text-muted-foreground font-game text-base">
+              The Multi-Level Secret Keeper Game. Can you outsmart the AI
+              guardians?
             </p>
+            <div className="flex items-center gap-2 opacity-60">
+              <Image
+                src="/mistral-logo.png"
+                alt="Mistral AI"
+                width={16}
+                height={16}
+              />
+              <span className="text-xs text-muted-foreground">
+                Powered by Mistral AI
+              </span>
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -77,46 +90,68 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/petrosrapto"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Documentation
+                  GitHub
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Social */}
+          {/* Author */}
           <div>
             <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
-              Connect
+              Author
             </h4>
-            <div className="flex gap-3">
+            <p className="text-sm text-muted-foreground mb-3">
+              Petros Raptopoulos
+            </p>
+            <div className="flex gap-2">
               <a
-                href="https://github.com"
+                href="https://github.com/petrosrapto"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                title="GitHub"
               >
-                <Github className="w-5 h-5" />
+                <Github className="w-4 h-4" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://www.linkedin.com/in/petrosrapto/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                title="LinkedIn"
               >
-                <Twitter className="w-5 h-5" />
+                <Linkedin className="w-4 h-4" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://scholar.google.com/citations?user=G7paGngAAAAJ&hl=en&oi=ao"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                title="Google Scholar"
               >
-                <Linkedin className="w-5 h-5" />
+                <GraduationCap className="w-4 h-4" />
+              </a>
+              <a
+                href="https://petrosraptopoulos.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                title="Website"
+              >
+                <Globe className="w-4 h-4" />
+              </a>
+              <a
+                href="mailto:petrosrapto@gmail.com"
+                className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                title="Email"
+              >
+                <Mail className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -128,7 +163,24 @@ export function Footer() {
               © {new Date().getFullYear()} Le Sésame. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground">
-              Built with ❤️ for the AI security community
+              Powered by{" "}
+              <a
+                href="https://mistral.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:underline"
+              >
+                Mistral AI
+              </a>{" "}
+              · Implemented by{" "}
+              <a
+                href="https://petrosraptopoulos.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:underline"
+              >
+                Petros Raptopoulos
+              </a>
             </p>
           </div>
         </div>

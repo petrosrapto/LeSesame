@@ -91,8 +91,8 @@ All optional — set only the ones you use. Variables without a secret are skipp
 
 | Secret Name | Description | Required | Default if unset |
 |------------|-------------|----------|------------------|
-| `VITE_API_URL` | Backend API URL | No | `http://backend:8000` (from `.env.example`) |
-| `VITE_ENABLE_AUTH` | Enable authentication | No | `true` (from `.env.example`) |
+| `NEXT_PUBLIC_API_URL` | Backend API URL | No | `http://backend:8000` (from `.env.example`) |
+| `NEXT_PUBLIC_ENABLE_AUTH` | Enable authentication | No | `true` (from `.env.example`) |
 | `NODE_ENV` | Node environment | No | `production` (from `.env.example`) |
 
 ## Generating Required Values

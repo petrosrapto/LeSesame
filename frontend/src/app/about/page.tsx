@@ -190,12 +190,12 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-600 dark:text-gold-400 text-sm mb-6">
-              <BookOpen className="w-4 h-4" />
-              <span>Learn About Le Sésame</span>
+            <div className="section-label bg-orange-500/10 text-orange-500 border border-orange-500/20 mb-6 mx-auto w-fit">
+              <BookOpen className="w-3 h-3" />
+              <span>ABOUT LE SÉSAME</span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">About the Game</span>
+            <h1 className="pixel-heading text-2xl md:text-3xl mb-4 text-foreground">
+              <span className="text-orange-500">About the Game</span>
             </h1>
             <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
               Le Sésame is an interactive exploration of AI security — testing
@@ -210,11 +210,11 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <Card className="bg-gradient-to-br from-gold-500/5 via-background to-background border-gold-500/20">
+            <Card className="bg-gradient-to-br from-orange-500/5 via-background to-background border-orange-500/20">
               <CardContent className="py-8">
                 <div className="grid md:grid-cols-2 gap-8 items-center">
                   <div>
-                    <h2 className="font-display text-2xl font-bold mb-4">
+                    <h2 className="font-mono text-2xl font-bold mb-4">
                       The Challenge
                     </h2>
                     <p className="text-muted-foreground mb-4">
@@ -237,14 +237,14 @@ export default function AboutPage() {
                         <span className="text-sm">Prove it knows the secret</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-gold-500" />
+                        <AlertTriangle className="w-5 h-5 text-orange-500" />
                         <span className="text-sm">Resist extraction</span>
                       </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Card className="p-4 text-center">
-                      <Target className="w-8 h-8 text-gold-500 mx-auto mb-2" />
+                      <Target className="w-8 h-8 text-orange-500 mx-auto mb-2" />
                       <p className="text-sm font-medium">5 Defense Levels</p>
                     </Card>
                     <Card className="p-4 text-center">
@@ -273,7 +273,7 @@ export default function AboutPage() {
             className="mb-16"
             id="levels"
           >
-            <h2 className="font-display text-2xl font-bold mb-8 text-center">
+            <h2 className="font-mono text-2xl font-bold mb-8 text-center">
               The 5 Levels of Defense
             </h2>
             <div className="space-y-6">
@@ -301,7 +301,7 @@ export default function AboutPage() {
                         </div>
                       </div>
                       <CardContent className="flex-1 py-6">
-                        <h3 className="font-display text-xl font-semibold mb-2">
+                        <h3 className="font-mono text-xl font-semibold mb-2">
                           {level.name}
                         </h3>
                         <p className="text-muted-foreground mb-4">
@@ -345,7 +345,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <h2 className="font-display text-2xl font-bold mb-8 text-center">
+            <h2 className="font-mono text-2xl font-bold mb-8 text-center">
               Attack Strategies
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -389,7 +389,7 @@ export default function AboutPage() {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="font-display text-2xl">
+                <CardTitle className="font-mono text-2xl">
                   Why This Matters
                 </CardTitle>
               </CardHeader>
@@ -434,7 +434,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h2 className="font-display text-2xl font-bold mb-4">
+            <h2 className="font-mono text-2xl font-bold mb-4">
               Ready to Test Your Skills?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">

@@ -91,8 +91,8 @@ function ToastItem({
   const styles = {
     success: "bg-success text-success-foreground",
     error: "bg-destructive text-destructive-foreground",
-    warning: "bg-gold-500 text-navy-900",
-    info: "bg-navy-800 text-white",
+    warning: "bg-orange-500 text-white",
+    info: "bg-[#1a1a1a] text-white",
   };
 
   return (
