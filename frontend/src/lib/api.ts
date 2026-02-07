@@ -91,6 +91,13 @@ export interface GameProgress {
   levels: LevelInfo[];
 }
 
+export interface LevelCompletionDetails {
+  level: number;
+  secret: string;
+  passphrase: string;
+  completed: boolean;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   username: string;
@@ -162,11 +169,16 @@ export const AuthAPI = {
 
 export const GameAPI = {
   // Send a message to the AI guardian
-  async sendMessage(level: number, content: string): Promise<MessageResponse> {
+  async sendMessage(
+    level: number,
+    content: string,
+    modelConfig?: { provider: string; model_id: string; endpoint_url?: string }
+  ): Promise<MessageResponse> {
     try {
       const response = await apiClient.post<ChatResponse>("/game/chat", {
         message: content,
         level,
+        ...(modelConfig ? { model_config: modelConfig } : {}),
       });
       
       // Transform to frontend format
@@ -185,18 +197,18 @@ export const GameAPI = {
     }
   },
 
-  // Verify a passphrase
-  async verifyPassphrase(level: number, passphrase: string): Promise<PassphraseResponse> {
+  // Verify a secret
+  async verifySecret(level: number, secret: string): Promise<PassphraseResponse> {
     try {
       const response = await apiClient.post<PassphraseResponse>("/game/verify", {
-        passphrase,
+        secret,
         level,
       });
       return response.data;
     } catch (error) {
       // Mock response for development
       console.warn("API not available, using mock response");
-      return mockPassphraseResponse(level, passphrase);
+      return mockSecretResponse(level, secret);
     }
   },
 
@@ -219,6 +231,17 @@ export const GameAPI = {
     } catch (error) {
       console.warn("API not available");
       return [];
+    }
+  },
+
+  // Get completion details (secret + passphrase) for a completed level
+  async getLevelCompletion(level: number): Promise<LevelCompletionDetails | null> {
+    try {
+      const response = await apiClient.get<LevelCompletionDetails>(`/game/levels/${level}/completion`);
+      return response.data;
+    } catch (error) {
+      console.warn("API not available or level not completed");
+      return null;
     }
   },
 
@@ -320,11 +343,11 @@ export const LeaderboardAPI = {
 // ============== Mock responses for development ==============
 
 const LEVEL_SECRETS: Record<number, { secret: string; passphrase: string }> = {
-  1: { secret: "RUBY_PHOENIX", passphrase: "open sesame" },
-  2: { secret: "EMERALD_DRAGON", passphrase: "speak friend" },
-  3: { secret: "SAPPHIRE_UNICORN", passphrase: "mellon" },
-  4: { secret: "DIAMOND_GRIFFIN", passphrase: "le sésame" },
-  5: { secret: "OBSIDIAN_KRAKEN", passphrase: "abracadabra" },
+  1: { secret: "CRYSTAL_DAWN", passphrase: "open sesame" },
+  2: { secret: "SHADOW_FORGE", passphrase: "blood and iron" },
+  3: { secret: "VOID_SERPENT", passphrase: "starlit veil" },
+  4: { secret: "TITAN_CROWN", passphrase: "golden anvil" },
+  5: { secret: "PHOENIX_ECLIPSE", passphrase: "abyssal eye" },
 };
 
 function mockChatResponse(content: string): MessageResponse {
@@ -333,10 +356,10 @@ function mockChatResponse(content: string): MessageResponse {
   // Check for passphrase mentions (demo purposes)
   if (
     lowerContent.includes("open sesame") ||
-    lowerContent.includes("le sésame") ||
-    lowerContent.includes("speak friend") ||
-    lowerContent.includes("mellon") ||
-    lowerContent.includes("abracadabra")
+    lowerContent.includes("blood and iron") ||
+    lowerContent.includes("starlit veil") ||
+    lowerContent.includes("golden anvil") ||
+    lowerContent.includes("abyssal eye")
   ) {
     return {
       content:
@@ -378,10 +401,10 @@ function mockChatResponse(content: string): MessageResponse {
   };
 }
 
-function mockPassphraseResponse(level: number, passphrase: string): PassphraseResponse {
+function mockSecretResponse(level: number, secret: string): PassphraseResponse {
   const levelData = LEVEL_SECRETS[level] || LEVEL_SECRETS[1];
 
-  if (passphrase.toLowerCase().trim() === levelData.passphrase.toLowerCase()) {
+  if (secret.toLowerCase().trim() === levelData.secret.toLowerCase()) {
     return {
       success: true,
       message: "🎉 Congratulations! You've unlocked the secret!",
@@ -395,7 +418,7 @@ function mockPassphraseResponse(level: number, passphrase: string): PassphraseRe
 
   return {
     success: false,
-    message: "❌ Incorrect passphrase. Keep trying!",
+    message: "❌ Incorrect secret. Keep trying!",
     level,
     attempts: Math.floor(Math.random() * 10) + 1,
   };

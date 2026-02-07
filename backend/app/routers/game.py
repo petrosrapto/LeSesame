@@ -17,7 +17,7 @@ from ..schemas import (
     ChatMessageRequest, ChatResponse, ModelConfig,
     PassphraseRequest, PassphraseResponse,
     GameProgressResponse, GameSessionResponse,
-    LevelInfo, LEVEL_CONFIGS
+    LevelInfo, LevelCompletionDetails, LEVEL_CONFIGS
 )
 from ..services import get_level_keeper
 from ..routers.auth import get_current_user, require_user
@@ -132,9 +132,9 @@ async def verify_passphrase(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Verify a passphrase attempt for the specified level.
+    Verify a secret attempt for the specified level.
     
-    If correct, the secret is revealed and the level is marked complete.
+    If correct, the level is marked complete.
     """
     # Validate level
     if request.level < 1 or request.level > 5:
@@ -155,7 +155,7 @@ async def verify_passphrase(
     
     # Get level keeper and verify
     keeper = get_level_keeper(request.level)
-    is_correct = keeper.verify_passphrase(request.passphrase)
+    is_correct = keeper.verify_secret(request.secret)
     
     if is_correct:
         # Mark level as complete
@@ -185,7 +185,7 @@ async def verify_passphrase(
     else:
         return PassphraseResponse(
             success=False,
-            message="❌ Incorrect passphrase. Keep trying!",
+            message="❌ Incorrect secret. Keep trying!",
             level=request.level,
             attempts=attempt.attempts
         )
@@ -267,6 +267,46 @@ async def reset_session(
         logger.info(f"Game session reset for user {user.username}")
     
     return {"message": "Session reset successfully"}
+
+
+@router.get("/levels/{level}/completion", response_model=LevelCompletionDetails)
+async def get_level_completion(
+    level: int,
+    user: Annotated[User, Depends(require_user)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Get the secret and passphrase for a completed level."""
+    if level < 1 or level > 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid level. Must be between 1 and 5."
+        )
+    
+    repo = GameRepository(db)
+    session = await repo.get_active_session(user.id)
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No active session found."
+        )
+    
+    attempt = await repo.get_level_attempt(session.id, level)
+    
+    if not attempt or not attempt.completed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Level not completed yet. Complete the level first to see its secrets."
+        )
+    
+    keeper = get_level_keeper(level)
+    
+    return LevelCompletionDetails(
+        level=level,
+        secret=keeper.secret,
+        passphrase=keeper.passphrase,
+        completed=True
+    )
 
 
 @router.get("/history/{level}")

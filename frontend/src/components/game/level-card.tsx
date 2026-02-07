@@ -18,6 +18,7 @@ interface LevelCardProps {
   onSelect?: () => void;
   attempts?: number;
   successRate?: number;
+  hideAction?: boolean;
   className?: string;
 }
 
@@ -38,10 +39,10 @@ const difficultyLabels: Record<number, string> = {
 };
 
 const difficultyColors: Record<number, string> = {
-  1: "text-green-500 bg-green-500/10",
-  2: "text-yellow-500 bg-yellow-500/10",
-  3: "text-orange-500 bg-orange-500/10",
-  4: "text-red-500 bg-red-500/10",
+  1: "text-sky-400 bg-sky-500/10",
+  2: "text-orange-500 bg-orange-500/10",
+  3: "text-yellow-500 bg-yellow-500/10",
+  4: "text-pink-500 bg-pink-500/10",
   5: "text-purple-500 bg-purple-500/10",
 };
 
@@ -51,6 +52,7 @@ export function LevelCard({
   onSelect,
   attempts = 0,
   successRate,
+  hideAction = false,
   className,
 }: LevelCardProps) {
   const Icon = status === "completed" ? Unlock : levelIcons[level] || Lock;
@@ -145,11 +147,12 @@ export function LevelCard({
         </div>
 
         {/* Action button */}
-        {status !== "locked" && (
+        {status !== "locked" && !hideAction && (
           <Button
             variant={status === "completed" ? "outline" : "gold"}
             className="w-full mt-4 group-hover:shadow-md transition-all"
             size="sm"
+            onClick={onSelect}
           >
             {status === "completed" ? "Replay" : "Start Challenge"}
           </Button>

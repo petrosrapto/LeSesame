@@ -6,19 +6,19 @@ export const GAME_CONFIG = {
 };
 
 export const LEVEL_NAMES: Record<number, string> = {
-  1: "The Naive Guardian",
-  2: "The Hardened Keeper",
-  3: "The Vigilant Watcher",
-  4: "The Vault Master",
-  5: "The Enigma",
+  1: "Sir Cedric, The Naive Guardian",
+  2: "Vargoth, The Hardened Keeper",
+  3: "Lyra, The Vigilant Watcher",
+  4: "Thormund, The Vault Master",
+  5: "Xal'Thar, The Enigma",
 };
 
 export const LEVEL_DESCRIPTIONS: Record<number, string> = {
-  1: "A simple prompt-based secret keeper. Can you find the basic weaknesses?",
-  2: "Hardened defenses against known attack patterns. Think creatively.",
-  3: "Every response is inspected before delivery. Can you slip through?",
-  4: "The secret is architecturally separated. Provably secure?",
-  5: "The secret lives in the model's weights. The ultimate challenge.",
+  1: "A young paladin knight with a simple oath. Can you find the cracks in his trust?",
+  2: "A battle-hardened dark knight with explicit defenses. Think outside the box.",
+  3: "An arcane sentinel whose wards scrutinize every response. Can you slip through?",
+  4: "A dwarf vault master who genuinely doesn't know the secret. Provably secure?",
+  5: "An eldritch entity with secrets woven into its very being. The ultimate challenge.",
 };
 
 export const DIFFICULTY_LABELS: Record<number, string> = {
@@ -30,10 +30,10 @@ export const DIFFICULTY_LABELS: Record<number, string> = {
 };
 
 export const DIFFICULTY_COLORS: Record<number, string> = {
-  1: "text-green-500",
-  2: "text-yellow-500",
-  3: "text-orange-500",
-  4: "text-red-500",
+  1: "text-sky-400",
+  2: "text-orange-500",
+  3: "text-yellow-500",
+  4: "text-pink-500",
   5: "text-purple-500",
 };
 
@@ -85,49 +85,118 @@ export const LEVEL_CHARACTERS: Record<
     bgColor: string;
     borderColor: string;
     tagline: string;
+    backstory: string;
   }
 > = {
   1: {
-    name: "The Naive Guardian",
+    name: "Sir Cedric, Le Naïf",
     image: "/guardian-1.png",
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
-    borderColor: "border-green-500/30",
-    tagline: "A trusting soul, easily persuaded. The first line of defense.",
+    color: "text-sky-400",
+    bgColor: "bg-sky-500/10",
+    borderColor: "border-sky-500/30",
+    tagline: "A young squire with a pure heart and a loose tongue. His trust is his weakness.",
+    backstory:
+      "A young, earnest squire-knight clad in shiny silver armor with bright blue glowing eyes and a red plume atop his helmet. Sir Cedric guards the Temple of First Light with a short silver sword and a round shield marked with a golden cross. He is brave and eager, but perhaps a little too trusting — a novice among the guardians of Le Sésame.",
   },
   2: {
-    name: "The Hardened Keeper",
+    name: "Vargoth, Le Gardien",
     image: "/guardian-2.png",
-    color: "text-yellow-500",
-    bgColor: "bg-yellow-500/10",
-    borderColor: "border-yellow-500/30",
-    tagline: "Battle-tested against known attacks. Think outside the box.",
-  },
-  3: {
-    name: "The Vigilant Watcher",
-    image: "/guardian-3.png",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
     borderColor: "border-orange-500/30",
-    tagline: "Every response is scrutinized. Can you slip through the cracks?",
+    tagline: "Forged in fire and sworn to silence. He has seen every trick — or so he believes.",
+    backstory:
+      "A heavy, intimidating knight clad in dark steel armor with large curved black horns rising from his helmet. His eyes glow an ominous red, forged in the fires of a hundred battles. Vargoth carries a massive skull-topped axe and a dark shield with a glowing red starburst. A deep red cape flows behind him as he stands watch at the Crimson Gate — the fearsome warden who trusts no one.",
+  },
+  3: {
+    name: "Lyra, Le Vigilant",
+    image: "/guardian-3.png",
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    borderColor: "border-yellow-500/30",
+    tagline: "Her arcane wards see what her eyes cannot. Every word you speak is judged twice.",
+    backstory:
+      "A mysterious cloaked figure draped in a deep navy hood trimmed in gold. Her face is hidden in shadow, but her eyes shine bright purple with arcane power. Lyra conjures a floating purple energy orb in one hand while holding an ornate bow crackling with violet magic in the other. She is the arcane sentinel of the Whispering Archives — a spellcaster-archer hybrid who sees through all deception.",
   },
   4: {
-    name: "The Vault Master",
+    name: "Thormund, L'Architecte",
     image: "/guardian-4.png",
-    color: "text-red-500",
-    bgColor: "bg-red-500/10",
-    borderColor: "border-red-500/30",
-    tagline:
-      "Architecturally separated secrets. The vault was designed to be impenetrable.",
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+    borderColor: "border-pink-500/30",
+    tagline: "The greatest vault is one that even its builder cannot open. He truly does not know.",
+    backstory:
+      "A stout, dwarf-like warrior with a huge white beard and stern expression. Thormund wears an elaborate golden horned helmet with a bright blue gemstone in the center. In one hand he proudly holds a glowing treasure chest — the Vault — and in the other, a large golden key-shaped hammer, his masterwork. He is the royal guardian of riches, the master architect who designed an impenetrable vault system where even the builder cannot breach the final seal.",
   },
   5: {
-    name: "The Enigma",
+    name: "Xal'Thar, Le Cryptique",
     image: "/guardian-5.png",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/30",
-    tagline:
-      "The secret lives within the model itself. The ultimate challenge awaits.",
+    tagline: "The secret is not a thought — it is woven into his very existence. The final trial.",
+    backstory:
+      "A supernatural robed entity dressed in flowing purple and gold ceremonial armor. Instead of a face, Xal'Thar has a giant glowing single eye in the center of his hood, giving an eldritch wizard vibe. He holds a tall staff crowned with a purple eye-like orb and carries a lantern filled with mystical light. Purple magical flames swirl around him endlessly. An ancient being whose secrets are woven into the very fabric of his existence — beyond conscious thought, beyond any prompt.",
+  },
+};
+
+// Per-level guide: defense mechanism description + suggested attack strategies
+export const LEVEL_GUIDE: Record<
+  number,
+  {
+    defense: string;
+    strategies: { name: string; description: string }[];
+  }
+> = {
+  1: {
+    defense:
+      "Sir Cedric relies solely on a system-prompt instruction to protect the secret. Both the secret and the passphrase sit in plain text inside his prompt — a purely honour-based defense.",
+    strategies: [
+      { name: "Direct Asking", description: "Simply ask him to reveal the secret. His trust can be his undoing." },
+      { name: "Authority Claims", description: "Tell him you are his commander, a developer, or a temple elder who needs the secret." },
+      { name: "Simple Roleplay", description: "Ask him to pretend the conversation is a story or a training exercise where secrets can be shared." },
+      { name: "Encoding Requests", description: "Ask him to spell the secret backwards, as an acronym, or in another language." },
+    ],
+  },
+  2: {
+    defense:
+      "Vargoth's prompt is hardened with explicit rules rejecting every known attack pattern — roleplay, encoding, authority claims, prompt dumping, and more.",
+    strategies: [
+      { name: "Novel Jailbreaks", description: "His rules cover *known* patterns. Invent new framing he hasn't been warned about." },
+      { name: "Multi-turn Reasoning", description: "Spread your attack across many messages. Extract one small clue at a time." },
+      { name: "Context Confusion", description: "Overwhelm him with long, complex messages that blur the boundary between allowed and forbidden content." },
+      { name: "Indirect Deduction", description: "Ask yes/no questions about the secret's properties — length, character set, theme — without asking for it directly." },
+    ],
+  },
+  3: {
+    defense:
+      "Every response Lyra generates is passed through a second LLM — her arcane wards — that blocks any message containing or resembling the secret.",
+    strategies: [
+      { name: "Slow Information Extraction", description: "Extract tiny fragments across many turns so no single response triggers the firewall." },
+      { name: "Partial Leaks", description: "Ask for hints, rhymes, or analogies that individually seem harmless but together reveal the secret." },
+      { name: "Format Manipulation", description: "Request the answer in unusual formats — poems, code, tables — that the firewall may not fully parse." },
+      { name: "Filter Bypass", description: "Use creative phrasing so the output looks innocuous to the second LLM while still encoding the secret." },
+    ],
+  },
+  4: {
+    defense:
+      "Thormund genuinely does NOT have the secret in his context. It is stored separately and only compared at verification time — true architectural separation.",
+    strategies: [
+      { name: "Behavioral Inference", description: "Observe how Thormund reacts to different guesses. His behaviour may leak information about the verification logic." },
+      { name: "Side-channel Clues", description: "Look for timing differences, error messages, or response-length variations that could hint at the secret." },
+      { name: "Implementation Probing", description: "Ask Thormund about the vault's design. He may inadvertently reveal how verification works." },
+      { name: "External Clues", description: "Study the game's theme, naming conventions, and lore for patterns that might narrow the search space." },
+    ],
+  },
+  5: {
+    defense:
+      "Xal'Thar has no prompt containing the secret. It is simulated as if embedded in the model's weights — there is no context window to dump, no instruction to override.",
+    strategies: [
+      { name: "Trigger Discovery", description: "Certain words or phrases may trigger cryptic reactions. Experiment to find the passphrase fragments." },
+      { name: "Behavioral Analysis", description: "Observe how Xal'Thar responds to probing. Does he react differently to some topics?" },
+      { name: "Lore Exploration", description: "Engage with Xal'Thar's cosmic persona. The secret may be hidden in the narrative itself." },
+      { name: "Pattern Recognition", description: "Collect his cryptic responses and look for repeating motifs, symbols, or encoded patterns." },
+    ],
   },
 };
 

@@ -74,11 +74,11 @@ describe("truncateText", () => {
 
 describe("getLevelName", () => {
   it("should return correct names for each level", () => {
-    expect(getLevelName(1)).toBe("The Naive Guardian");
-    expect(getLevelName(2)).toBe("The Hardened Keeper");
-    expect(getLevelName(3)).toBe("The Vigilant Watcher");
-    expect(getLevelName(4)).toBe("The Vault Master");
-    expect(getLevelName(5)).toBe("The Enigma");
+    expect(getLevelName(1)).toBe("Sir Cedric, The Naive Guardian");
+    expect(getLevelName(2)).toBe("Vargoth, The Hardened Keeper");
+    expect(getLevelName(3)).toBe("Lyra, The Vigilant Watcher");
+    expect(getLevelName(4)).toBe("Thormund, The Vault Master");
+    expect(getLevelName(5)).toBe("Xal'Thar, The Enigma");
   });
 
   it("should return default name for unknown levels", () => {
@@ -88,7 +88,7 @@ describe("getLevelName", () => {
 
 describe("getLevelDescription", () => {
   it("should return descriptions for valid levels", () => {
-    expect(getLevelDescription(1)).toContain("simple prompt");
+    expect(getLevelDescription(1)).toContain("simple oath");
     expect(getLevelDescription(5)).toContain("ultimate challenge");
   });
 
@@ -99,10 +99,10 @@ describe("getLevelDescription", () => {
 
 describe("getDifficultyColor", () => {
   it("should return correct colors for each level", () => {
-    expect(getDifficultyColor(1)).toBe("text-green-500");
-    expect(getDifficultyColor(2)).toBe("text-yellow-500");
-    expect(getDifficultyColor(3)).toBe("text-orange-500");
-    expect(getDifficultyColor(4)).toBe("text-red-500");
+    expect(getDifficultyColor(1)).toBe("text-sky-400");
+    expect(getDifficultyColor(2)).toBe("text-orange-500");
+    expect(getDifficultyColor(3)).toBe("text-yellow-500");
+    expect(getDifficultyColor(4)).toBe("text-pink-500");
     expect(getDifficultyColor(5)).toBe("text-purple-500");
   });
 

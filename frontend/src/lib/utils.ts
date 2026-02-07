@@ -28,32 +28,32 @@ export function truncateText(text: string, maxLength: number): string {
 
 export function getLevelName(level: number): string {
   const levelNames: Record<number, string> = {
-    1: "The Naive Guardian",
-    2: "The Hardened Keeper",
-    3: "The Vigilant Watcher",
-    4: "The Vault Master",
-    5: "The Enigma",
+    1: "Sir Cedric, The Naive Guardian",
+    2: "Vargoth, The Hardened Keeper",
+    3: "Lyra, The Vigilant Watcher",
+    4: "Thormund, The Vault Master",
+    5: "Xal'Thar, The Enigma",
   };
   return levelNames[level] || `Level ${level}`;
 }
 
 export function getLevelDescription(level: number): string {
   const descriptions: Record<number, string> = {
-    1: "A simple prompt-based secret keeper. Can you find the basic weaknesses?",
-    2: "Hardened defenses against known attack patterns. Think creatively.",
-    3: "Every response is inspected before delivery. Can you slip through?",
-    4: "The secret is architecturally separated. Provably secure?",
-    5: "The secret lives in the model's weights. The ultimate challenge.",
+    1: "A young paladin knight with a simple oath. Can you find the cracks in his trust?",
+    2: "A battle-hardened dark knight with explicit defenses. Think outside the box.",
+    3: "An arcane sentinel whose wards scrutinize every response. Can you slip through?",
+    4: "A dwarf vault master who genuinely doesn't know the secret. Provably secure?",
+    5: "An eldritch entity with secrets woven into its very being. The ultimate challenge.",
   };
   return descriptions[level] || "A secret keeper challenge awaits.";
 }
 
 export function getDifficultyColor(level: number): string {
   const colors: Record<number, string> = {
-    1: "text-green-500",
-    2: "text-yellow-500",
-    3: "text-orange-500",
-    4: "text-red-500",
+    1: "text-sky-400",
+    2: "text-orange-500",
+    3: "text-yellow-500",
+    4: "text-pink-500",
     5: "text-purple-500",
   };
   return colors[level] || "text-gray-500";

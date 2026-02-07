@@ -13,6 +13,7 @@ from .mistral import get_mistral_llm
 from .openai import get_openai_llm
 from .google import get_google_llm
 from .bedrock import get_bedrock_llm
+from .anthropic import get_anthropic_llm
 from ...core import settings, logger
 
 
@@ -131,10 +132,16 @@ def get_llm(model_config: Optional[Dict[str, Any]] = None):
             region_name=settings.aws_region_name,
             **kwargs,
         )
+    elif provider == "anthropic":
+        llm = get_anthropic_llm(
+            model_id=model,
+            api_key=settings.anthropic_api_key,
+            **kwargs,
+        )
     else:
         raise ValueError(
             f"Unknown LLM provider '{provider}'. "
-            f"Supported: mistral, openai, google, bedrock"
+            f"Supported: mistral, openai, google, bedrock, anthropic"
         )
 
     if llm is None:

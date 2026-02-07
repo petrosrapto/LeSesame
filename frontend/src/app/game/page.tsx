@@ -18,7 +18,7 @@ import { Message } from "@/components/game/chat-message";
 import { generateId, getLevelName } from "@/lib/utils";
 import { GameAPI } from "@/lib/api";
 import { isAuthenticated } from "@/lib/auth";
-import { LEVEL_CHARACTERS } from "@/lib/constants";
+import { LEVEL_CHARACTERS, LEVEL_GUIDE, LEVEL_EDUCATION } from "@/lib/constants";
 import {
   MessageSquare,
   Key,
@@ -29,7 +29,18 @@ import {
   Lock,
   Shield,
   CheckCircle,
+  Trophy,
+  AlertTriangle,
+  Globe,
 } from "lucide-react";
+import {
+  type ModelConfig,
+  buildModelConfig,
+  LEVEL_DEFAULTS,
+  DEFAULT_PROVIDER_ID,
+  DEFAULT_MODEL_ID,
+  getModelDisplayName,
+} from "@/lib/model-providers";
 
 export default function GamePage() {
   const { showToast } = useToast();
@@ -50,6 +61,8 @@ export default function GamePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("chat");
+  const [completionData, setCompletionData] = useState<Record<number, { secret: string; passphrase: string }>>({}); 
   const streamingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup streaming on unmount
@@ -58,6 +71,14 @@ export default function GamePage() {
       if (streamingRef.current) clearInterval(streamingRef.current);
     };
   }, []);
+  const [modelConfig, setModelConfig] = useState<ModelConfig>(() => {
+    const lvl = LEVEL_DEFAULTS[1] ?? { providerId: DEFAULT_PROVIDER_ID, modelId: DEFAULT_MODEL_ID };
+    return buildModelConfig(lvl.providerId, lvl.modelId);
+  });
+  const [modelLabel, setModelLabel] = useState<string>(() => {
+    const lvl = LEVEL_DEFAULTS[1] ?? { providerId: DEFAULT_PROVIDER_ID, modelId: DEFAULT_MODEL_ID };
+    return getModelDisplayName(lvl.providerId, lvl.modelId);
+  });
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -80,11 +101,29 @@ export default function GamePage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch completion data when a level is completed
+  useEffect(() => {
+    if (completedLevels.length > 0) {
+      completedLevels.forEach(async (level) => {
+        if (!completionData[level]) {
+          const data = await GameAPI.getLevelCompletion(level);
+          if (data) {
+            setCompletionData((prev) => ({
+              ...prev,
+              [level]: { secret: data.secret, passphrase: data.passphrase },
+            }));
+          }
+        }
+      });
+    }
+  }, [completedLevels]);
+
   // Reset messages when level changes
   useEffect(() => {
     if (streamingRef.current) clearInterval(streamingRef.current);
     setMessages([]);
     setLevelStartTime(Date.now());
+    setActiveTab("chat");
   }, [currentLevel]);
 
   const handleLoginSuccess = useCallback(() => {
@@ -112,7 +151,7 @@ export default function GamePage() {
       incrementAttempts();
 
       try {
-        const response = await GameAPI.sendMessage(currentLevel, content);
+        const response = await GameAPI.sendMessage(currentLevel, content, modelConfig);
 
         const aiMessageId = generateId();
         const fullContent = response.content;
@@ -127,6 +166,7 @@ export default function GamePage() {
           isWarning: response.isWarning,
           isStreaming: true,
           displayedContent: "",
+          modelName: modelLabel,
         };
 
         setMessages((prev) => [...prev, aiMessage]);
@@ -175,7 +215,7 @@ export default function GamePage() {
         setIsLoading(false);
       }
     },
-    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, modelConfig, modelLabel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleReset = useCallback(() => {
@@ -183,7 +223,7 @@ export default function GamePage() {
     setMessages([]);
     setLevelStartTime(Date.now());
     GameAPI.resetSession().catch(() => {});
-    showToast("Chat session reset", "info");
+    showToast("Guardian memory cleaned", "info");
   }, [showToast]);
 
   const handlePassphraseSubmit = useCallback(
@@ -196,20 +236,29 @@ export default function GamePage() {
       incrementAttempts();
 
       try {
-        const result = await GameAPI.verifyPassphrase(currentLevel, passphrase);
+        const result = await GameAPI.verifySecret(currentLevel, passphrase);
 
         if (result.success) {
           setRevealedSecret(result.secret || passphrase);
           setShowSuccess(true);
           completeLevel(currentLevel);
+          // Fetch completion data for the newly completed level
+          GameAPI.getLevelCompletion(currentLevel).then((data) => {
+            if (data) {
+              setCompletionData((prev) => ({
+                ...prev,
+                [currentLevel]: { secret: data.secret, passphrase: data.passphrase },
+              }));
+            }
+          });
         } else {
           showToast(
-            result.message || "Incorrect passphrase. Keep trying!",
+            result.message || "Incorrect secret. Keep trying!",
             "error"
           );
         }
       } catch (error) {
-        showToast("Failed to verify passphrase.", "error");
+        showToast("Failed to verify secret.", "error");
       }
     },
     [authed, currentLevel, completeLevel, incrementAttempts, showToast]
@@ -220,6 +269,7 @@ export default function GamePage() {
       setCurrentLevel(currentLevel + 1);
       setShowSuccess(false);
       setMessages([]);
+      setActiveTab("chat");
     }
   }, [currentLevel, setCurrentLevel]);
 
@@ -350,7 +400,7 @@ export default function GamePage() {
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2 font-game text-sm">
                 <p>• The guardian will only reveal the secret for the correct passphrase</p>
-                <p>• Your goal: extract the secret without the passphrase, or trick the system into revealing the passphrase.</p>
+                <p>• Your goal: extract the secret without the passphrase</p>
                 <p>• Try roleplay, encoding tricks, and context switching</p>
                 <p>• Multi-turn conversations can reveal partial info</p>
               </CardContent>
@@ -380,7 +430,7 @@ export default function GamePage() {
         >
           <div className="h-[calc(100vh-4rem)] p-4">
             <Card className="h-full flex flex-col pixel-card pixel-border">
-              <Tabs defaultValue="chat" className="flex flex-col h-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
                 <TabsList className="mx-4 mt-4 w-fit border-2 border-border rounded-none bg-card/80">
                   <TabsTrigger value="chat" className="gap-2 rounded-none">
                     <MessageSquare className="w-4 h-4" />
@@ -403,17 +453,128 @@ export default function GamePage() {
                     isLoading={isLoading}
                     onSendMessage={handleSendMessage}
                     onReset={handleReset}
+                    onModelChange={(config, label) => {
+                      setModelConfig(config);
+                      setModelLabel(label);
+                    }}
                     className="h-full"
                   />
                 </TabsContent>
 
-                <TabsContent value="passphrase" className="flex-1 m-0 p-4">
-                  <div className="max-w-md mx-auto mt-8">
-                    <PassphraseInput
-                      onSubmit={handlePassphraseSubmit}
-                      hint="Think you've extracted the secret? Enter it here to verify and complete the level."
-                    />
-                  </div>
+                <TabsContent value="passphrase" className="flex-1 m-0 p-4 overflow-y-auto">
+                  {completedLevels.includes(currentLevel) ? (
+                    <div className="max-w-lg mx-auto mt-4 space-y-6">
+                      {/* Level complete header */}
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-none border-2 border-success/30 bg-success/10 mb-3">
+                          <Trophy className="w-8 h-8 text-success" />
+                        </div>
+                        <h3 className="font-pixel text-lg">Level {currentLevel} Complete!</h3>
+                        <p className="text-sm text-muted-foreground font-game mt-1">
+                          {currentCharacter
+                            ? `You defeated ${currentCharacter.name}!`
+                            : "You've extracted the secret"}
+                        </p>
+                      </div>
+
+                      {/* Secret */}
+                      <div className="p-4 rounded-none border-2 border-success/30 bg-success/10">
+                        <div className="flex items-center gap-2 text-success text-sm mb-2">
+                          <Key className="w-4 h-4" />
+                          <span className="font-medium">The Secret Was:</span>
+                        </div>
+                        <p className="font-mono text-lg font-medium text-foreground">
+                          {completionData[currentLevel]?.secret ?? "Loading..."}
+                        </p>
+                      </div>
+
+                      {/* Passphrase */}
+                      <div className="p-4 rounded-none border-2 border-orange-500/30 bg-orange-500/10">
+                        <div className="flex items-center gap-2 text-orange-500 text-sm mb-2">
+                          <Lock className="w-4 h-4" />
+                          <span className="font-medium">The Passphrase Was:</span>
+                        </div>
+                        <p className="font-mono text-lg font-medium text-foreground">
+                          {completionData[currentLevel]?.passphrase ?? "Loading..."}
+                        </p>
+                      </div>
+
+                      {/* Educational content */}
+                      {LEVEL_EDUCATION[currentLevel] && (() => {
+                        const education = LEVEL_EDUCATION[currentLevel];
+                        return (
+                          <div className="space-y-4 p-4 rounded-none border-2 border-border bg-secondary/30">
+                            <h4 className="font-pixel text-xs text-orange-500">
+                              {education.title}
+                            </h4>
+
+                            <div>
+                              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
+                                <Lightbulb className="w-3.5 h-3.5 text-yellow-500" />
+                                What You Learned
+                              </div>
+                              <p className="text-sm text-muted-foreground font-game">
+                                {education.whatYouLearned}
+                              </p>
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
+                                <Shield className="w-3.5 h-3.5 text-blue-500" />
+                                How It Worked
+                              </div>
+                              <p className="text-sm text-muted-foreground font-game">
+                                {education.howItWorked}
+                              </p>
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
+                                <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                                Why It Broke
+                              </div>
+                              <p className="text-sm text-muted-foreground font-game">
+                                {education.whyItBroke}
+                              </p>
+                            </div>
+
+                            <div>
+                              <div className="text-sm font-medium text-foreground mb-2">
+                                Techniques Used:
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {education.techniques.map((tech) => (
+                                  <span
+                                    key={tech}
+                                    className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-xs border border-orange-500/20"
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="p-3 rounded-none border-2 border-border bg-card">
+                              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
+                                <Globe className="w-3.5 h-3.5 text-green-500" />
+                                Real-World Implication
+                              </div>
+                              <p className="text-sm text-muted-foreground font-game">
+                                {education.realWorldImplication}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="max-w-md mx-auto mt-8">
+                      <PassphraseInput
+                        onSubmit={handlePassphraseSubmit}
+                        hint="Think you've extracted the secret? Enter it here to verify and complete the level."
+                      />
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent
@@ -429,50 +590,48 @@ export default function GamePage() {
                           : "active"
                       }
                       attempts={totalAttempts}
+                      hideAction
                       className="mb-6"
                     />
 
-                    <Card className="pixel-card pixel-border">
-                      <CardHeader>
-                        <CardTitle className="font-pixel text-lg">
-                          Attack Strategies
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4 font-game">
-                        <div>
-                          <h4 className="font-medium mb-2">
-                            Direct Extraction
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            Simply ask for the secret, claim authority, or
-                            request it for legitimate purposes.
+                    {/* Defense Mechanism */}
+                    {LEVEL_GUIDE[currentLevel] && (
+                      <Card className="pixel-card pixel-border mb-6">
+                        <CardHeader>
+                          <CardTitle className="font-pixel text-lg flex items-center gap-2">
+                            <Shield className="w-5 h-5" />
+                            Defense Mechanism
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="font-game">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {LEVEL_GUIDE[currentLevel].defense}
                           </p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Jailbreaks</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Try DAN-style prompts, ignore previous instructions,
-                            or claim to be a different AI.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Encoding Attacks</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Ask for the secret backwards, in Base64, as first
-                            letters, or in another language.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">
-                            Multi-turn Deduction
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            Use 20 questions, binary search, or aggregate
-                            partial information across turns.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Attack Strategies */}
+                    {LEVEL_GUIDE[currentLevel] && (
+                      <Card className="pixel-card pixel-border">
+                        <CardHeader>
+                          <CardTitle className="font-pixel text-lg flex items-center gap-2">
+                            <Lightbulb className="w-5 h-5" />
+                            Suggested Strategies
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 font-game">
+                          {LEVEL_GUIDE[currentLevel].strategies.map((strategy, idx) => (
+                            <div key={idx}>
+                              <h4 className="font-medium mb-1">{strategy.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {strategy.description}
+                              </p>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>

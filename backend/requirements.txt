@@ -28,6 +28,7 @@ langchain-openai>=0.2.0
 langchain-mistralai>=0.2.0
 langchain-google-genai>=2.0.0
 langchain-aws>=0.2.0
+langchain-anthropic>=0.3.0
 
 # Redis for sessions/caching
 redis>=5.0.0

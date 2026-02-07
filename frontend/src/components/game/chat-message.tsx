@@ -17,6 +17,7 @@ export interface Message {
   isWarning?: boolean;
   isStreaming?: boolean;
   displayedContent?: string;
+  modelName?: string;
 }
 
 interface ChatMessageProps {
@@ -125,17 +126,25 @@ export function ChatMessage({
           </ReactMarkdown>
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp & model */}
         <div
           className={cn(
-            "text-[11px] mt-2 opacity-60",
-            isUser ? "text-right" : "text-left"
+            "text-[11px] mt-2 opacity-60 flex items-center gap-1.5",
+            isUser ? "justify-end" : "justify-start"
           )}
         >
-          {message.timestamp.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          <span>
+            {message.timestamp.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          {!isUser && message.modelName && (
+            <>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="truncate max-w-[180px]">{message.modelName}</span>
+            </>
+          )}
         </div>
       </Card>
     </div>
