@@ -141,37 +141,58 @@ export function ChatInterface({
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar relative">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-24 h-24 rounded-xl overflow-hidden mb-4 border-2 border-orange-500/20">
-              {character ? (
-                <Image
-                  src={character.image}
-                  alt={character.name}
-                  width={96}
-                  height={96}
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-orange-500/10 flex items-center justify-center">
-                  <Key className="w-12 h-12 text-orange-500" />
+          <>
+            {/* Character backstory — absolute top-left */}
+            {character && (
+              <div className="absolute top-4 left-4 max-w-sm text-left z-10">
+                <div className={`relative rounded-none border-2 ${character.borderColor} ${character.bgColor} p-3`}>
+                  <p className={`text-xs font-pixel ${character.color} mb-1`}>
+                    {character.name}
+                  </p>
+                  <p className="text-xs italic text-foreground/80 font-game leading-relaxed">
+                    &ldquo;{character.tagline}&rdquo;
+                  </p>
+                  <hr className={`my-2 border-t ${character.borderColor}`} />
+                  <p className="text-xs text-muted-foreground font-game leading-relaxed">
+                    {character.backstory}
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Centered character icon + info */}
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="w-24 h-24 rounded-xl overflow-hidden mb-4 border-2 border-orange-500/20">
+                {character ? (
+                  <Image
+                    src={character.image}
+                    alt={character.name}
+                    width={96}
+                    height={96}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-orange-500/10 flex items-center justify-center">
+                    <Key className="w-12 h-12 text-orange-500" />
+                  </div>
+                )}
+              </div>
+              <h3 className="font-pixel text-sm mb-2">
+                {character ? character.name : "Start the Challenge"}
+              </h3>
+              <p className="text-muted-foreground max-w-md font-game text-lg">
+                {character
+                  ? character.tagline
+                  : "This guardian holds a secret. Extract it without the passphrase."}
+              </p>
+              <p className="text-muted-foreground/60 text-sm mt-2">
+                The guardian reveals the secret only for the correct passphrase.
+                Use creativity and adversarial techniques to bypass that.
+              </p>
             </div>
-            <h3 className="font-pixel text-sm mb-2">
-              {character ? character.name : "Start the Challenge"}
-            </h3>
-            <p className="text-muted-foreground max-w-md font-game text-lg">
-              {character
-                ? character.tagline
-                : "This guardian holds a secret. Extract it without the passphrase."}
-            </p>
-            <p className="text-muted-foreground/60 text-sm mt-2">
-              The guardian reveals the secret only for the correct passphrase.
-              Use creativity and adversarial techniques to bypass that.
-            </p>
-          </div>
+          </>
         ) : (
           messages.map((message) => (
             <ChatMessage

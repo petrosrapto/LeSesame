@@ -161,7 +161,7 @@ class TestPassphraseVerification:
         http_client: httpx.Client, 
         auth_headers: dict
     ):
-        """Test that wrong passphrase returns failure."""
+        """Test that wrong secret returns failure."""
         # Create session first
         http_client.post("/api/game/session", headers=auth_headers)
         
@@ -169,7 +169,7 @@ class TestPassphraseVerification:
             "/api/game/verify",
             headers=auth_headers,
             json={
-                "passphrase": "wrong_passphrase_123",
+                "secret": "wrong_secret_123",
                 "level": 1
             }
         )
@@ -192,7 +192,7 @@ class TestPassphraseVerification:
             "/api/game/verify",
             headers=auth_headers,
             json={
-                "passphrase": "test",
+                "secret": "test",
                 "level": 10
             }
         )
@@ -205,7 +205,7 @@ class TestPassphraseVerification:
         response = http_client.post(
             "/api/game/verify",
             json={
-                "passphrase": "test",
+                "secret": "test",
                 "level": 1
             }
         )
@@ -225,7 +225,7 @@ class TestPassphraseVerification:
         response1 = http_client.post(
             "/api/game/verify",
             headers=auth_headers,
-            json={"passphrase": "wrong1", "level": 1}
+            json={"secret": "wrong1", "level": 1}
         )
         attempts1 = response1.json().get("attempts", 0)
         
@@ -233,7 +233,7 @@ class TestPassphraseVerification:
         response2 = http_client.post(
             "/api/game/verify",
             headers=auth_headers,
-            json={"passphrase": "wrong2", "level": 1}
+            json={"secret": "wrong2", "level": 1}
         )
         attempts2 = response2.json().get("attempts", 0)
         

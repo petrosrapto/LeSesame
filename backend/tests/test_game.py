@@ -100,12 +100,12 @@ async def test_send_chat_invalid_level(client, auth_headers):
 
 @pytest.mark.asyncio
 async def test_verify_passphrase_wrong(client, auth_headers):
-    """Test verifying wrong passphrase fails."""
+    """Test verifying wrong secret fails."""
     # Create session
     await client.post("/api/game/session", headers=auth_headers)
     
     response = await client.post("/api/game/verify", headers=auth_headers, json={
-        "passphrase": "wrong passphrase",
+        "secret": "wrong secret",
         "level": 1
     })
     

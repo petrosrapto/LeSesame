@@ -236,7 +236,7 @@ class TestConcurrentAccess:
             response = http_client.post(
                 "/api/game/verify",
                 headers=auth_headers,
-                json={"passphrase": f"wrong_{i}", "level": 1}
+                json={"secret": f"wrong_{i}", "level": 1}
             )
             assert response.status_code == 200
             attempts.append(response.json().get("attempts", 0))

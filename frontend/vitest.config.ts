@@ -9,10 +9,21 @@ export default defineConfig({
     include: ["src/**/*.{test,spec}.{js,ts,jsx,tsx}"],
     coverage: {
       reporter: ["text", "json", "html", "cobertura"],
+      include: [
+        "src/lib/**",
+        "src/hooks/**",
+      ],
       exclude: [
         "node_modules/",
-        "src/__tests__/setup.ts",
+        ".next/",
+        "src/__tests__/",
       ],
+      thresholds: {
+        lines: 15,
+        functions: 15,
+        branches: 15,
+        statements: 15,
+      },
     },
   },
   resolve: {

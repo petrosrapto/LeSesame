@@ -27,7 +27,7 @@ interface ChatState {
   
   // API actions
   sendMessage: (level: number, content: string) => Promise<Message | null>;
-  verifyPassphrase: (level: number, passphrase: string) => Promise<boolean>;
+  verifySecret: (level: number, secret: string) => Promise<boolean>;
 }
 
 export const useChat = create<ChatState>()(
@@ -116,18 +116,18 @@ export const useChat = create<ChatState>()(
         }
       },
       
-      verifyPassphrase: async (level: number, passphrase: string) => {
+      verifySecret: async (level: number, secret: string) => {
         const { setLoading, setError } = get();
         
         setLoading(true);
         setError(null);
         
         try {
-          const result = await GameAPI.verifyPassphrase(level, passphrase);
+          const result = await GameAPI.verifySecret(level, secret);
           setLoading(false);
           return result.success;
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Failed to verify passphrase";
+          const errorMessage = error instanceof Error ? error.message : "Failed to verify secret";
           setError(errorMessage);
           setLoading(false);
           return false;

@@ -96,8 +96,8 @@ class ChatResponse(BaseModel):
 
 
 class PassphraseRequest(BaseModel):
-    """Schema for passphrase verification."""
-    passphrase: str = Field(..., min_length=1)
+    """Schema for secret verification."""
+    secret: str = Field(..., min_length=1)
     level: int = Field(..., ge=1, le=5)
 
 
@@ -123,6 +123,14 @@ class LevelInfo(BaseModel):
     completed: bool = False
     attempts: int = 0
     best_time: Optional[float] = None
+
+
+class LevelCompletionDetails(BaseModel):
+    """Schema for level completion details (secret + passphrase)."""
+    level: int
+    secret: str
+    passphrase: str
+    completed: bool
 
 
 class GameProgressResponse(BaseModel):

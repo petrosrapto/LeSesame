@@ -85,15 +85,15 @@ class TestGameSchemas:
             ChatMessageRequest(message="a" * 2001, level=1)
     
     def test_passphrase_request_valid(self):
-        """Test valid passphrase request."""
-        req = PassphraseRequest(passphrase="secret phrase", level=1)
-        assert req.passphrase == "secret phrase"
+        """Test valid secret verification request."""
+        req = PassphraseRequest(secret="secret phrase", level=1)
+        assert req.secret == "secret phrase"
         assert req.level == 1
     
     def test_passphrase_request_empty(self):
-        """Test that empty passphrase fails validation."""
+        """Test that empty secret fails validation."""
         with pytest.raises(ValidationError):
-            PassphraseRequest(passphrase="", level=1)
+            PassphraseRequest(secret="", level=1)
     
     def test_level_info_valid(self):
         """Test valid level info schema."""
