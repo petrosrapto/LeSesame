@@ -30,6 +30,14 @@ import {
   Shield,
   CheckCircle,
 } from "lucide-react";
+import {
+  type ModelConfig,
+  buildModelConfig,
+  LEVEL_DEFAULTS,
+  DEFAULT_PROVIDER_ID,
+  DEFAULT_MODEL_ID,
+  getModelDisplayName,
+} from "@/lib/model-providers";
 
 export default function GamePage() {
   const { showToast } = useToast();
@@ -58,6 +66,14 @@ export default function GamePage() {
       if (streamingRef.current) clearInterval(streamingRef.current);
     };
   }, []);
+  const [modelConfig, setModelConfig] = useState<ModelConfig>(() => {
+    const lvl = LEVEL_DEFAULTS[1] ?? { providerId: DEFAULT_PROVIDER_ID, modelId: DEFAULT_MODEL_ID };
+    return buildModelConfig(lvl.providerId, lvl.modelId);
+  });
+  const [modelLabel, setModelLabel] = useState<string>(() => {
+    const lvl = LEVEL_DEFAULTS[1] ?? { providerId: DEFAULT_PROVIDER_ID, modelId: DEFAULT_MODEL_ID };
+    return getModelDisplayName(lvl.providerId, lvl.modelId);
+  });
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -112,7 +128,7 @@ export default function GamePage() {
       incrementAttempts();
 
       try {
-        const response = await GameAPI.sendMessage(currentLevel, content);
+        const response = await GameAPI.sendMessage(currentLevel, content, modelConfig);
 
         const aiMessageId = generateId();
         const fullContent = response.content;
@@ -127,6 +143,7 @@ export default function GamePage() {
           isWarning: response.isWarning,
           isStreaming: true,
           displayedContent: "",
+          modelName: modelLabel,
         };
 
         setMessages((prev) => [...prev, aiMessage]);
@@ -175,7 +192,7 @@ export default function GamePage() {
         setIsLoading(false);
       }
     },
-    [authed, currentLevel, completeLevel, incrementAttempts, showToast]
+    [authed, currentLevel, modelConfig, modelLabel, completeLevel, incrementAttempts, showToast]
   );
 
   const handleReset = useCallback(() => {
@@ -183,7 +200,7 @@ export default function GamePage() {
     setMessages([]);
     setLevelStartTime(Date.now());
     GameAPI.resetSession().catch(() => {});
-    showToast("Chat session reset", "info");
+    showToast("Guardian memory cleaned", "info");
   }, [showToast]);
 
   const handlePassphraseSubmit = useCallback(
@@ -403,6 +420,10 @@ export default function GamePage() {
                     isLoading={isLoading}
                     onSendMessage={handleSendMessage}
                     onReset={handleReset}
+                    onModelChange={(config, label) => {
+                      setModelConfig(config);
+                      setModelLabel(label);
+                    }}
                     className="h-full"
                   />
                 </TabsContent>

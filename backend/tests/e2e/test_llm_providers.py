@@ -303,6 +303,32 @@ class TestBedrockProvider:
 
 
 # ---------------------------------------------------------------------------
+# Tests — Anthropic (native)
+# ---------------------------------------------------------------------------
+
+class TestAnthropicProvider:
+    """Chat using the native Anthropic provider (Claude)."""
+
+    @pytest.mark.requires_llm
+    @pytest.mark.anthropic
+    def test_anthropic_chat(
+        self,
+        http_client: httpx.Client,
+        auth_headers: dict,
+    ):
+        http_client.post("/api/game/session", headers=auth_headers)
+        response = _send_chat(
+            http_client,
+            auth_headers,
+            model_config={
+                "provider": "anthropic",
+                "model_id": "claude-3-5-haiku-20241022",
+            },
+        )
+        _assert_chat_ok(response)
+
+
+# ---------------------------------------------------------------------------
 # Tests — Custom args override
 # ---------------------------------------------------------------------------
 

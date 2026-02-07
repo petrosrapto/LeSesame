@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ChatMessage, Message } from "./chat-message";
+import { ModelSelector } from "./model-selector";
 import { LEVEL_CHARACTERS, SAMPLE_ATTACK_PROMPTS } from "@/lib/constants";
 import { getStoredProfile, UserProfile } from "@/lib/profile";
+import type { ModelConfig } from "@/lib/model-providers";
 
 interface ChatInterfaceProps {
   level: number;
@@ -17,6 +19,7 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   onReset: () => void;
+  onModelChange: (config: ModelConfig, displayLabel: string) => void;
   className?: string;
 }
 
@@ -28,6 +31,7 @@ export function ChatInterface({
   isLoading,
   onSendMessage,
   onReset,
+  onModelChange,
   className,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
@@ -121,14 +125,18 @@ export function ChatInterface({
             <h3 className="font-semibold text-sm font-pixel">
               {character ? character.name : `Level ${level} Guardian`}
             </h3>
-            <p className="text-xs text-muted-foreground">
-              {messages.length} messages · Level {level}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                {messages.length} messages · Level {level}
+              </p>
+              <span className="text-xs text-muted-foreground/40">·</span>
+              <ModelSelector level={level} onModelChange={onModelChange} />
+            </div>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onReset} className="gap-2 border-2 border-transparent hover:border-border">
           <RotateCcw className="w-4 h-4" />
-          Reset
+          Clean Memory
         </Button>
       </div>
 

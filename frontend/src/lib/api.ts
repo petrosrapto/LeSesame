@@ -162,11 +162,16 @@ export const AuthAPI = {
 
 export const GameAPI = {
   // Send a message to the AI guardian
-  async sendMessage(level: number, content: string): Promise<MessageResponse> {
+  async sendMessage(
+    level: number,
+    content: string,
+    modelConfig?: { provider: string; model_id: string; endpoint_url?: string }
+  ): Promise<MessageResponse> {
     try {
       const response = await apiClient.post<ChatResponse>("/game/chat", {
         message: content,
         level,
+        ...(modelConfig ? { model_config: modelConfig } : {}),
       });
       
       // Transform to frontend format
