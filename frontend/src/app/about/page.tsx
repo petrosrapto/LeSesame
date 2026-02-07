@@ -486,7 +486,7 @@ export default function AboutPage() {
                 </Button>
               </Link>
               <a
-                href="https://github.com"
+                href="https://github.com/petrosrapto"
                 target="_blank"
                 rel="noopener noreferrer"
               >
