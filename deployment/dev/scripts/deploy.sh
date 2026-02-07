@@ -394,5 +394,49 @@ echo -e "  Restart:       ${BLUE}./deploy.sh --restart${NC}"
 echo -e "  Run E2E tests: ${BLUE}cd $PROJECT_ROOT/backend && ./tests/e2e/run_tests.sh${NC}"
 echo ""
 
+# ============================================
+# Step 6: Cleanup old Docker images
+# ============================================
+echo -e "\n${YELLOW}🧹 Step 6: Cleaning up old Docker images...${NC}"
+
+# Keep current and previous image for each service (for rollback)
+cleanup_old_images() {
+    local image_prefix="$1"
+    
+    # Get all image IDs for this prefix, sorted by creation date (newest first)
+    local all_images
+    all_images=$(docker images --format "{{.ID}} {{.Repository}}:{{.Tag}} {{.CreatedAt}}" | \
+        grep "$image_prefix" | \
+        sort -k3 -r | \
+        awk '{print $1}')
+    
+    # Keep first 2 (current + previous), remove the rest
+    local count=0
+    for image_id in $all_images; do
+        count=$((count + 1))
+        if [ $count -gt 2 ]; then
+            echo -e "   Removing old image: $image_id"
+            docker rmi -f "$image_id" 2>/dev/null || true
+        fi
+    done
+}
+
+# Cleanup backend and frontend images
+if [ -n "$BACKEND_IMAGE" ]; then
+    # Extract the repository name without tag
+    BACKEND_REPO=$(echo "$BACKEND_IMAGE" | cut -d':' -f1)
+    cleanup_old_images "$BACKEND_REPO"
+fi
+
+if [ -n "$FRONTEND_IMAGE" ]; then
+    FRONTEND_REPO=$(echo "$FRONTEND_IMAGE" | cut -d':' -f1)
+    cleanup_old_images "$FRONTEND_REPO"
+fi
+
+# Also prune dangling images (untagged)
+docker image prune -f 2>/dev/null || true
+
+echo -e "${GREEN}✅ Image cleanup completed${NC}"
+
 # Show container status
 show_status
