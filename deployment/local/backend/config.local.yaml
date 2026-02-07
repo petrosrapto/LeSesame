@@ -9,8 +9,8 @@ server:
 
 # Database configuration
 database:
-  # PostgreSQL connection (overridden by DATABASE_URL env var in Docker)
-  url: "postgresql+asyncpg://le_sesame_user:le_sesame_password@localhost:5432/le_sesame"
+  # DATABASE_URL is constructed by docker-compose from POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB env vars.
+  # No need to set it here - see docker-compose.yml environment section.
   echo: false  # Set to true to log SQL queries
 
 # Game configuration - Level secrets and passphrases

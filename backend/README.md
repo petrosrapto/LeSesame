@@ -125,7 +125,7 @@ Simulates fine-tuned model with trigger-activated secret.
 | `OPENAI_API_KEY` | - | OpenAI API key |
 | `LLM_PROVIDER` | mistral | LLM provider (mistral/openai) |
 | `LLM_MODEL` | mistral-small-latest | Model to use |
-| `CORS_ORIGINS` | ["http://localhost:3000"] | Allowed origins |
+| _(CORS origins)_ | _(configured in config.yaml)_ | _(security.cors.allowed_origins)_ |
 
 ## Development
 
