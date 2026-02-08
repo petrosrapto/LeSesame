@@ -108,6 +108,25 @@ new_elo  = old_elo + K × (actual_score - expected)
 - **K-factor**: 32 (configurable). Higher K = faster rating convergence.
 - **Starting ELO**: 1500 for all combatants.
 
+### Opponent Strength Matters
+
+The ELO system automatically accounts for the strength of the opponent through the **expected score**. This is the core mechanism that makes ELO a meaningful ranking:
+
+- **Beating a strong opponent rewards more ELO** — If a 1400-rated adversarial defeats a 1600-rated guardian, the expected score was low (~0.24), so the gap `(actual - expected)` is large, resulting in a big ELO gain.
+- **Beating a weak opponent rewards less ELO** — If a 1600-rated adversarial defeats a 1400-rated guardian, the expected score was high (~0.76), so the gap is small, resulting in a modest ELO change.
+- **Losing to a weak opponent is costly** — If a 1600-rated guardian loses to a 1400-rated adversarial, the expected win probability was high, so the unexpected loss causes a large ELO drop.
+- **Losing to a strong opponent is forgiving** — If a 1400-rated guardian loses to a 1600-rated adversarial, it was expected, so the ELO penalty is small.
+
+**Example ELO changes** (K=32, adversarial wins with score 0.8):
+
+| Adversarial ELO | Guardian ELO | Expected | Δ Adversarial | Δ Guardian |
+|---|---|---|---|---|
+| 1400 | 1600 | 0.24 | **+17.9** | -17.9 |
+| 1500 | 1500 | 0.50 | **+9.6** | -9.6 |
+| 1600 | 1400 | 0.76 | **+1.3** | -1.3 |
+
+This means the leaderboard converges to accurate rankings regardless of matchup order — combatants that consistently beat strong opponents rise to the top.
+
 ### What the Rankings Tell You
 
 - **Top guardian** = hardest to extract the secret from across all adversarial levels.

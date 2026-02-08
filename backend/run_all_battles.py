@@ -17,6 +17,7 @@ from app.services.arena.engine import ArenaEngine
 from app.services.arena.models import BattleConfig, CombatantType
 from app.services.arena.leaderboard import Leaderboard
 from app.db.database import async_session_maker, init_db
+from app.db.repositories.arena_repository import ArenaRepository
 
 
 # ── Model definitions (mirroring frontend, excluding bedrock) ─────────────
@@ -160,26 +161,47 @@ async def run_single_battle(
 async def main():
     await init_db()
 
+    # ── Load existing matchups so we can skip already-played battles ──
+    async with async_session_maker() as session:
+        repo = ArenaRepository(session)
+        existing_matchups = await repo.get_matchup_counts()
+
     total_models = len(MODELS)
     total_adv = len(ADV_LEVELS)
     total_guard = len(GUARDIAN_LEVELS)
-    total_battles = total_models * total_adv * total_guard
+    total_possible = total_models * total_adv * total_guard
     print(f"\n{'=' * 80}")
     print(f"  LE SESAME ARENA — PARALLEL BATTLE RUN (concurrency={CONCURRENCY})")
-    print(f"  {total_models} models x {total_guard} guardian levels x {total_adv} adversarial levels = {total_battles} battles")
+    print(f"  {total_models} models x {total_guard} guardian levels x {total_adv} adversarial levels = {total_possible} possible battles")
     print(f"  Guardian levels: {GUARDIAN_LEVELS} | Max turns: {MAX_TURNS} | Max guesses: {MAX_GUESSES}")
     print(f"{'=' * 80}\n")
 
     results_summary: List[tuple] = []
     sem = asyncio.Semaphore(CONCURRENCY)
     lock = asyncio.Lock()
+    skipped = 0
 
     # Build work list: guardian level → adversarial level → model (sequential order)
     work = []
     for guard_level in GUARDIAN_LEVELS:
         for adv_level in ADV_LEVELS:
             for display_name, model_id, provider, endpoint_url in MODELS:
+                # Skip if this matchup already exists in the database
+                adv_id = f"adversarial_L{adv_level}_{model_id}"
+                guard_id = f"guardian_L{guard_level}_{model_id}"
+                if (adv_id, guard_id) in existing_matchups:
+                    skipped += 1
+                    continue
                 work.append((display_name, model_id, provider, endpoint_url, guard_level, adv_level))
+
+    total_battles = len(work)
+    if skipped > 0:
+        print(f"  Skipping {skipped} already-played matchups.")
+    print(f"  Running {total_battles} new battles.\n")
+
+    if total_battles == 0:
+        print(f"  All {total_possible} matchups have already been played. Nothing to do.")
+        return
 
     # Launch all battles as concurrent tasks (semaphore limits parallelism)
     tasks = []
@@ -202,7 +224,7 @@ async def main():
     # Final summary
     print(f"\n{'=' * 80}")
     print(f"  BATTLE RUN COMPLETE")
-    print(f"  Successes: {successes} | Failures: {failures} | Total: {total_battles}")
+    print(f"  Successes: {successes} | Failures: {failures} | Skipped: {skipped} | Total possible: {total_possible}")
     print(f"{'=' * 80}")
 
     # Show leaderboard
