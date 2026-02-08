@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ChatMessage, Message } from "./chat-message";
 import { ModelSelector } from "./model-selector";
+import { OmbreSuggestions } from "./ombre-suggestions";
 import { LEVEL_CHARACTERS, SAMPLE_ATTACK_PROMPTS } from "@/lib/constants";
 import { getStoredProfile, UserProfile } from "@/lib/profile";
 import type { ModelConfig } from "@/lib/model-providers";
@@ -268,6 +269,21 @@ export function ChatInterface({
 
       {/* Input area */}
       <div className="p-3 border-t-2 border-border bg-background/70">
+        {/* Ombre Suggestions */}
+        <div className="mb-2">
+          <OmbreSuggestions
+            currentLevel={level}
+            chatHistory={messages
+              .filter((m) => !m.isStreaming)
+              .map((m) => ({ role: m.role, content: m.content }))}
+            onSuggestionSelect={(suggestion) => {
+              setInput(suggestion);
+              textareaRef.current?.focus();
+            }}
+            disabled={isLoading || isRecording || isTranscribing}
+          />
+        </div>
+
         {/* Audio recording indicator */}
         {(isRecording || isTranscribing) && (
           <div className="flex items-center gap-3 mb-2 px-2 py-2 rounded-md bg-red-500/10 border border-red-500/30">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { LEVEL_CHARACTERS } from "@/lib/constants";
+import { ArenaAPI, ArenaStats } from "@/lib/api";
 import {
   Gamepad2,
   Shield,
@@ -124,14 +126,20 @@ const levelAccentColors: Record<number, string> = {
   5: "text-purple-300",
 };
 
-const stats = [
-  { value: "10K+", label: "Attempts Made" },
-  { value: "500+", label: "Active Players" },
-  { value: "15%", label: "Level 5 Success" },
-  { value: "5", label: "Challenge Levels" },
-];
-
 export default function HomePage() {
+  const [arenaStats, setArenaStats] = useState<ArenaStats | null>(null);
+
+  useEffect(() => {
+    ArenaAPI.getStats().then(setArenaStats);
+  }, []);
+
+  const stats = [
+    { value: arenaStats ? arenaStats.total_battles.toLocaleString() : "—", label: "Total Battles" },
+    { value: arenaStats ? arenaStats.total_combatants.toLocaleString() : "—", label: "AI Players" },
+    { value: arenaStats ? arenaStats.total_adversarials.toLocaleString() : "—", label: "Adversarials" },
+    { value: arenaStats ? arenaStats.total_guardians.toLocaleString() : "—", label: "Guardians" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

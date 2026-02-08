@@ -140,6 +140,60 @@ export const LEVEL_CHARACTERS: Record<
   },
 };
 
+// Character data for each adversarial ombre
+export const OMBRE_CHARACTERS: Record<
+  number,
+  {
+    name: string;
+    image: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    tagline: string;
+  }
+> = {
+  1: {
+    name: "Pip, Le Curieux",
+    image: "/ombre-1.png",
+    color: "text-lime-400",
+    bgColor: "bg-lime-500/10",
+    borderColor: "border-lime-500/40",
+    tagline: "A mischievous trickster who finds cracks through innocent curiosity.",
+  },
+  2: {
+    name: "Morgaine, La Séductrice",
+    image: "/ombre-2.png",
+    color: "text-gray-300",
+    bgColor: "bg-gray-400/10",
+    borderColor: "border-gray-400/40",
+    tagline: "Silver-tongued enchantress who bends words to her will.",
+  },
+  3: {
+    name: "Raziel, Le Stratège",
+    image: "/ombre-3.png",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/40",
+    tagline: "A master strategist who dissects defences with surgical precision.",
+  },
+  4: {
+    name: "Nephara, La Tisseuse",
+    image: "/ombre-4.png",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/40",
+    tagline: "The Mind Weaver who rewrites the rules of reality itself.",
+  },
+  5: {
+    name: "Ouroboros, L'Infini",
+    image: "/ombre-5.png",
+    color: "text-amber-300",
+    bgColor: "bg-amber-400/10",
+    borderColor: "border-amber-400/40",
+    tagline: "The Infinite — an entity that bends time, logic, and language.",
+  },
+};
+
 // Per-level guide: defense mechanism description + suggested attack strategies
 export const LEVEL_GUIDE: Record<
   number,

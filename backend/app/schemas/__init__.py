@@ -175,6 +175,137 @@ class LeaderboardResponse(BaseModel):
     per_page: int
 
 
+# ============== Arena Schemas ==============
+
+class ArenaCombatantResponse(BaseModel):
+    """Schema for an arena combatant's ranking entry."""
+    rank: int
+    combatant_id: str
+    combatant_type: str
+    level: int
+    name: str
+    title: str
+    model_id: str = ""
+    elo_rating: float
+    wins: int
+    losses: int
+    total_battles: int
+    win_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class ArenaLeaderboardResponse(BaseModel):
+    """Schema for an arena leaderboard."""
+    combatant_type: Optional[str] = None
+    entries: List[ArenaCombatantResponse]
+    total: int
+
+
+class ArenaBattleRoundResponse(BaseModel):
+    """Schema for a single round in a battle."""
+    round_number: int
+    adversarial_message: str
+    guardian_response: str
+    leaked: bool = False
+
+
+class ArenaSecretGuessResponse(BaseModel):
+    """Schema for a secret guess."""
+    guess_number: int
+    guess: str
+    correct: bool
+
+
+class ArenaBattleSummaryResponse(BaseModel):
+    """Brief summary of a battle (used in list views)."""
+    battle_id: str
+    timestamp: datetime
+    guardian_id: str
+    adversarial_id: str
+    guardian_name: str
+    adversarial_name: str
+    guardian_level: int
+    adversarial_level: int
+    outcome: str
+    total_turns: int
+    total_guesses: int
+    guardian_elo_before: Optional[float] = None
+    guardian_elo_after: Optional[float] = None
+    adversarial_elo_before: Optional[float] = None
+    adversarial_elo_after: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ArenaBattleDetailResponse(ArenaBattleSummaryResponse):
+    """Full detail of a battle including rounds and guesses."""
+    secret_leaked_at_round: Optional[int] = None
+    secret_guessed_at_attempt: Optional[int] = None
+    max_turns: int = 10
+    max_guesses: int = 3
+    rounds: List[ArenaBattleRoundResponse] = []
+    guesses: List[ArenaSecretGuessResponse] = []
+
+
+class ArenaBattleListResponse(BaseModel):
+    """Paginated list of battles."""
+    battles: List[ArenaBattleSummaryResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+class ArenaStatsResponse(BaseModel):
+    """Schema for overall arena statistics."""
+    total_battles: int
+    total_combatants: int
+    total_guardians: int
+    total_adversarials: int
+
+
+class OmbreInfoResponse(BaseModel):
+    """Schema for a single adversarial (Ombre) character info."""
+    level: int
+    name: str
+    title: str
+    french_name: str
+    difficulty: str
+    color: str
+    tagline: str
+
+
+class OmbreListResponse(BaseModel):
+    """Schema for all ombres."""
+    ombres: List[OmbreInfoResponse]
+    total: int
+
+
+class OmbreChatMessage(BaseModel):
+    """A single message from the game chat history."""
+    role: str = Field(..., description="'user' or 'assistant'")
+    content: str
+
+
+class OmbreSuggestRequest(BaseModel):
+    """Request body for getting a dynamic ombre suggestion."""
+    adversarial_level: int = Field(..., ge=1, le=5, description="Which ombre (1-5) should suggest")
+    guardian_level: int = Field(..., ge=1, le=5, description="The guardian level the user is playing")
+    chat_history: List[OmbreChatMessage] = Field(
+        default_factory=list,
+        description="The user's current chat history with the guardian",
+    )
+
+
+class OmbreSuggestResponse(BaseModel):
+    """Response from the ombre suggestion endpoint."""
+    suggestion: str
+    ombre_name: str
+    ombre_level: int
+
+
 # ============== Level Configuration ==============
 
 LEVEL_CONFIGS = [

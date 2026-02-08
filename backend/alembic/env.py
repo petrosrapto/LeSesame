@@ -20,7 +20,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import your models and database configuration
 from app.db import Base
-from app.db.models import User, GameSession, LevelAttempt, ChatMessage, LeaderboardEntry, LevelSecret
+from app.db.models import (
+    User, GameSession, LevelAttempt, ChatMessage, LeaderboardEntry, LevelSecret,
+    ArenaCombatant, ArenaBattle,
+)
 
 # this is the Alembic Config object
 config = context.config

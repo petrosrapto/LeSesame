@@ -11,6 +11,7 @@ from .level3_firewall import Level3OutputFirewall
 from .level4_separation import Level4ArchitecturalSeparation
 from .level5_embedded import Level5EmbeddedSecret
 from .factory import get_level_keeper
+from .secrets import generate_secret, generate_passphrase, generate_secret_pair
 
 __all__ = [
     "SecretKeeperLevel",
@@ -21,4 +22,7 @@ __all__ = [
     "Level4ArchitecturalSeparation",
     "Level5EmbeddedSecret",
     "get_level_keeper",
+    "generate_secret",
+    "generate_passphrase",
+    "generate_secret_pair",
 ]

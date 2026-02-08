@@ -5,13 +5,17 @@ Contains database configuration, models, and repositories.
 """
 
 from .database import Base, engine, async_session_maker, init_db, get_db
-from .models import User, GameSession, LevelAttempt, ChatMessage, LeaderboardEntry, LevelSecret
+from .models import (
+    User, GameSession, LevelAttempt, ChatMessage, LeaderboardEntry, LevelSecret,
+    ArenaCombatant, ArenaBattle,
+)
 from .repositories import (
     BaseRepository,
     UserRepository,
     GameRepository,
     LeaderboardRepository,
 )
+from .repositories.arena_repository import ArenaRepository
 
 __all__ = [
     # Database
@@ -27,9 +31,12 @@ __all__ = [
     "ChatMessage",
     "LeaderboardEntry",
     "LevelSecret",
+    "ArenaCombatant",
+    "ArenaBattle",
     # Repositories
     "BaseRepository",
     "UserRepository",
     "GameRepository",
     "LeaderboardRepository",
+    "ArenaRepository",
 ]

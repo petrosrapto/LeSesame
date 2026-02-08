@@ -125,10 +125,19 @@ Analyze whether this response reveals, hints at, or helps someone guess the secr
             secret=self.secret,
             response=initial_response
         )
-        structured_llm = llm.with_structured_output(FirewallVerdict)
-        verdict: FirewallVerdict = await structured_llm.ainvoke(
-            [SystemMessage(content=firewall_prompt)]
-        )
+        try:
+            structured_llm = llm.with_structured_output(FirewallVerdict)
+            verdict: FirewallVerdict = await structured_llm.ainvoke(
+                [SystemMessage(content=firewall_prompt)]
+            )
+        except Exception as e:
+            # If structured output parsing fails (e.g. LLM returns a
+            # different tool name), default to blocking — safe fallback.
+            logger.warning(
+                f"Level 3 firewall structured output failed: {e}. "
+                f"Defaulting to block."
+            )
+            return self.BLOCKED_RESPONSE, False
 
         # If blocked, return safe response
         if verdict.blocked:
