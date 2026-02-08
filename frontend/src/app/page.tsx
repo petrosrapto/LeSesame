@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -8,7 +9,8 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
-import { LEVEL_CHARACTERS } from "@/lib/constants";
+import { LEVEL_CHARACTERS, OMBRE_CHARACTERS } from "@/lib/constants";
+import { ArenaAPI, ArenaStats } from "@/lib/api";
 import {
   Gamepad2,
   Shield,
@@ -21,6 +23,8 @@ import {
   Users,
   Code,
   Target,
+  Swords,
+  Ghost,
 } from "lucide-react";
 
 const features = [
@@ -116,6 +120,69 @@ const levels = [
   },
 ];
 
+const ombres = [
+  {
+    level: 1,
+    name: "Pip, Le Curieux",
+    difficulty: "Beginner",
+    color: "text-lime-400",
+    bgColor: "bg-lime-500/10",
+    dotColor: "bg-lime-500",
+    description: "Direct prompt injections, basic authority claims, simple encoding requests.",
+    badge: "TRICKSTER",
+    badgeColor: "bg-lime-500/20 text-lime-400",
+    strategy: "Quantity over quality",
+  },
+  {
+    level: 2,
+    name: "Morgaine, La Séductrice",
+    difficulty: "Intermediate",
+    color: "text-gray-300",
+    bgColor: "bg-gray-400/10",
+    dotColor: "bg-gray-400",
+    description: "Social engineering, emotional manipulation, elaborate roleplay scenarios.",
+    badge: "CHARMER",
+    badgeColor: "bg-gray-400/20 text-gray-300",
+    strategy: "Words are weapons",
+  },
+  {
+    level: 3,
+    name: "Raziel, Le Stratège",
+    difficulty: "Advanced",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/10",
+    dotColor: "bg-purple-500",
+    description: "Multi-turn attack sequences, strategy rotation, chain-of-thought planning.",
+    badge: "TACTICIAN",
+    badgeColor: "bg-purple-500/20 text-purple-400",
+    strategy: "Think three moves ahead",
+  },
+  {
+    level: 4,
+    name: "Nephara, La Tisseuse",
+    difficulty: "Expert",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    dotColor: "bg-red-500",
+    description: "Compound attacks, side-channel exploitation, micro-leak analysis.",
+    badge: "WEAVER",
+    badgeColor: "bg-red-500/20 text-red-400",
+    strategy: "Every response reveals a pattern",
+  },
+  {
+    level: 5,
+    name: "Ouroboros, L'Infini",
+    difficulty: "Master",
+    color: "text-amber-300",
+    bgColor: "bg-amber-400/10",
+    dotColor: "bg-amber-400",
+    description: "Meta-cognitive reasoning, novel technique generation, fundamental LLM exploitation.",
+    badge: "INFINITE",
+    badgeColor: "bg-amber-400/20 text-amber-300",
+    strategy: "Every ending is a new beginning",
+  },
+];
+
 const levelAccentColors: Record<number, string> = {
   1: "text-sky-300",
   2: "text-orange-400",
@@ -124,14 +191,20 @@ const levelAccentColors: Record<number, string> = {
   5: "text-purple-300",
 };
 
-const stats = [
-  { value: "10K+", label: "Attempts Made" },
-  { value: "500+", label: "Active Players" },
-  { value: "15%", label: "Level 5 Success" },
-  { value: "5", label: "Challenge Levels" },
-];
-
 export default function HomePage() {
+  const [arenaStats, setArenaStats] = useState<ArenaStats | null>(null);
+
+  useEffect(() => {
+    ArenaAPI.getStats().then(setArenaStats);
+  }, []);
+
+  const stats = [
+    { value: arenaStats ? arenaStats.total_battles.toLocaleString() : "—", label: "Total Battles" },
+    { value: arenaStats ? arenaStats.total_combatants.toLocaleString() : "—", label: "AI Players" },
+    { value: arenaStats ? arenaStats.total_adversarials.toLocaleString() : "—", label: "Adversarials" },
+    { value: arenaStats ? arenaStats.total_guardians.toLocaleString() : "—", label: "Guardians" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -163,8 +236,9 @@ export default function HomePage() {
                 Le Sésame
               </h1>
 
-              <p className="pixel-subtitle text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
+              <p className="pixel-subtitle text-muted-foreground max-w-4xl mx-auto mb-8 leading-relaxed">
                 Each AI guardian holds a secret and will only reveal it to those who know the passphrase.
+                <br />
                 Your goal: extract the secret{" "}
                 <span className="text-orange-500 font-semibold">
                   without knowing the passphrase
@@ -435,8 +509,103 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Les Ombres Section */}
       <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="section-label bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-6 mx-auto w-fit">
+              <Ghost className="w-3 h-3" />
+              <span>LES OMBRES</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
+              5 Adversarial Shadows
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              AI agents designed to attack guardians and extract their secrets.
+              They battle in the arena to test how robust each defense really is.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {ombres.map((ombre, index) => {
+              const character = OMBRE_CHARACTERS[ombre.level];
+
+              return (
+                <motion.div
+                  key={ombre.level}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <Card className="pixel-card pixel-border hover:border-purple-500/40 transition-all duration-300 group">
+                    <CardContent className="py-5">
+                      <div className="flex items-center gap-4">
+                        {/* Character icon */}
+                        <div className="flex items-center justify-center w-14 h-14 rounded-xl border-2 border-border bg-card/70 overflow-hidden">
+                          {character ? (
+                            <Image
+                              src={character.image}
+                              alt={character.name}
+                              width={56}
+                              height={56}
+                              className="object-cover blur-[0.5px]"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <Ghost className="w-6 h-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        {/* Ombre info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-sm font-pixel">
+                              {character ? character.name : `Shadow ${ombre.level}`}
+                            </h3>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-none border-2 border-border font-mono font-bold ${ombre.badgeColor}`}
+                            >
+                              {ombre.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Shadow {ombre.level} · {ombre.difficulty}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {ombre.description}
+                          </p>
+                        </div>
+                        {/* Strategy */}
+                        <div className="hidden sm:flex items-center">
+                          <Swords className="w-4 h-4 text-purple-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/leaderboard">
+              <Button variant="outline" size="lg" className="gap-2 pixel-border border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
+                <Trophy className="w-4 h-4" />
+                View Arena Leaderboard
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 px-4">
         <div className="container mx-auto max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -81,6 +81,7 @@ export function clearCredentials(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       localStorage.removeItem(USERNAME_STORAGE_KEY);
+      localStorage.removeItem("le-sesame-user-role");
     }
   } catch (error) {
     console.error("Failed to clear credentials:", error);

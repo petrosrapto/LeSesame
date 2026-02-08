@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core import settings, logger
 from .db import init_db
-from .routers import game, auth, leaderboard, health
+from .routers import game, auth, leaderboard, health, arena, admin
 
 
 def _configure_langsmith() -> None:
@@ -79,6 +79,8 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(game.router, prefix="/api/game", tags=["Game"])
 app.include_router(leaderboard.router, prefix="/api/leaderboard", tags=["Leaderboard"])
+app.include_router(arena.router, prefix="/api/arena", tags=["Arena"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 
 @app.get("/", tags=["Root"])

@@ -118,3 +118,36 @@ def sample_user_data():
         "password": "testpass123",
         "email": "test@example.com"
     }
+
+
+async def register_and_login(client, user_data: dict) -> str:
+    """Register a user, approve them in the DB, login, and return the access token.
+
+    This helper works with the in-memory SQLite test DB and the dependency
+    overrides applied by the ``client`` fixture.
+    """
+    from app.main import app as _app
+    from app.db import get_db as _get_db, User as _User
+    from sqlalchemy import update as _update
+
+    # 1. Register
+    reg = await client.post("/api/auth/register", json=user_data)
+    assert reg.status_code == 200, f"Registration failed: {reg.text}"
+    user_id = reg.json()["user"]["id"]
+
+    # 2. Approve directly via DB session
+    get_db_override = _app.dependency_overrides.get(_get_db, _get_db)
+    async for session in get_db_override():
+        await session.execute(
+            _update(_User).where(_User.id == user_id).values(is_approved=True)
+        )
+        await session.commit()
+        break
+
+    # 3. Login
+    login_resp = await client.post("/api/auth/login", json={
+        "username": user_data["username"],
+        "password": user_data["password"],
+    })
+    assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
+    return login_resp.json()["access_token"]

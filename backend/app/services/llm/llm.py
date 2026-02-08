@@ -100,6 +100,12 @@ def get_llm(model_config: Optional[Dict[str, Any]] = None):
     }
     kwargs.update(extra_args)
 
+    # OpenAI reasoning models (o3, o3-mini, o4-mini, etc.) do not support
+    # custom temperature — they only accept the default value (1).
+    REASONING_MODEL_PREFIXES = ("o1", "o3", "o4-mini")
+    if provider == "openai" and not endpoint_url and model.startswith(REASONING_MODEL_PREFIXES):
+        kwargs.pop("temperature", None)
+
     logger.info(f"Creating LLM — provider={provider}, model={model}, endpoint_url={endpoint_url}")
 
     llm = None

@@ -39,7 +39,6 @@ export const providers: Provider[] = [
       { displayName: "Magistral Medium 1.2",     apiIdentifier: "magistral-medium-2509" },
       { displayName: "Magistral Small 1.2",      apiIdentifier: "magistral-small-2509" },
       // Specialist / other
-      { displayName: "Mistral Small Creative",   apiIdentifier: "mistral-small-creative-2512" },
       { displayName: "Mistral Nemo 12B",         apiIdentifier: "open-mistral-nemo" },
       { displayName: "Codestral",                apiIdentifier: "codestral-2508" },
     ],
@@ -55,7 +54,7 @@ export const providers: Provider[] = [
       { displayName: "Gemini 3 Flash",        apiIdentifier: "gemini-3-flash-preview" },
       { displayName: "Gemini 2.5 Pro",        apiIdentifier: "gemini-2.5-pro" },
       { displayName: "Gemini 2.5 Flash",      apiIdentifier: "gemini-2.5-flash" },
-      { displayName: "Gemini 2.5 Flash-Lite", apiIdentifier: "gemini-2.5-flash-lite-preview-06-17" },
+
       { displayName: "Gemini 2.0 Flash",      apiIdentifier: "gemini-2.0-flash" },
     ],
   },

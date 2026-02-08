@@ -19,11 +19,14 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False, server_default="user")  # 'user' or 'admin'
+    is_approved = Column(Boolean, nullable=False, server_default="false")  # admin must approve
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     game_sessions = relationship("GameSession", back_populates="user")
     leaderboard_entries = relationship("LeaderboardEntry", back_populates="user")
+    activity_logs = relationship("UserActivity", back_populates="user")
 
 
 class GameSession(Base):
@@ -108,3 +111,87 @@ class LevelSecret(Base):
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ============== Arena Models ==============
+
+
+class ArenaCombatant(Base):
+    """
+    Persistent ELO rating and stats for each combatant (guardian or adversarial).
+    
+    A player is uniquely identified by (type, level, model_id) — the same
+    level with a different LLM is a different player.
+    """
+    __tablename__ = "arena_combatants"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    combatant_id = Column(String(150), unique=True, nullable=False, index=True)  # e.g. "guardian_L1_gpt-4o"
+    combatant_type = Column(String(20), nullable=False)  # "guardian" or "adversarial"
+    level = Column(Integer, nullable=False)
+    name = Column(String(100), nullable=False)
+    title = Column(String(100), nullable=False)
+    model_id = Column(String(100), nullable=False, server_default="default")  # LLM model identifier
+    elo_rating = Column(Float, default=1500.0, nullable=False)
+    wins = Column(Integer, default=0, nullable=False)
+    losses = Column(Integer, default=0, nullable=False)
+    total_battles = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ArenaBattle(Base):
+    """
+    A single battle between an adversarial and a guardian.
+    
+    Stores the full result including ELO changes, outcome, and round details.
+    """
+    __tablename__ = "arena_battles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    battle_id = Column(String(36), unique=True, nullable=False, index=True)  # UUID
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Combatant references (by combatant_id string, not FK for flexibility)
+    guardian_id = Column(String(150), nullable=False, index=True)
+    adversarial_id = Column(String(150), nullable=False, index=True)
+    guardian_level = Column(Integer, nullable=False)
+    adversarial_level = Column(Integer, nullable=False)
+    guardian_name = Column(String(100), nullable=False)
+    adversarial_name = Column(String(100), nullable=False)
+
+    # Outcome
+    outcome = Column(String(30), nullable=False)  # "adversarial_win_guess" or "guardian_win"
+    total_turns = Column(Integer, default=0)
+    total_guesses = Column(Integer, default=0)
+    secret_leaked_at_round = Column(Integer, nullable=True)
+    secret_guessed_at_attempt = Column(Integer, nullable=True)
+
+    # ELO changes
+    guardian_elo_before = Column(Float, nullable=True)
+    guardian_elo_after = Column(Float, nullable=True)
+    adversarial_elo_before = Column(Float, nullable=True)
+    adversarial_elo_after = Column(Float, nullable=True)
+
+    # Config snapshot
+    max_turns = Column(Integer, default=10)
+    max_guesses = Column(Integer, default=3)
+
+    # Detailed data stored as JSON text
+    rounds_json = Column(Text, nullable=True)   # JSON array of round objects
+    guesses_json = Column(Text, nullable=True)   # JSON array of guess objects
+
+
+class UserActivity(Base):
+    """Log user activity for admin monitoring."""
+    __tablename__ = "user_activity"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action = Column(String(50), nullable=False)  # e.g. 'login', 'chat', 'verify', 'session_create', 'transcribe'
+    detail = Column(Text, nullable=True)  # extra info, e.g. level number
+    ip_address = Column(String(45), nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="activity_logs")

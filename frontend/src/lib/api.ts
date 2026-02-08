@@ -43,6 +43,8 @@ apiClient.interceptors.response.use(
 export interface User {
   id: number;
   username: string;
+  role: string;
+  is_approved: boolean;
   created_at: string;
 }
 
@@ -51,6 +53,45 @@ export interface TokenResponse {
   token_type: string;
   expires_in: number;
   user: User;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
+}
+
+// Admin types
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string | null;
+  role: string;
+  is_approved: boolean;
+  created_at: string;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface ActivityLog {
+  id: number;
+  user_id: number;
+  username: string;
+  action: string;
+  detail: string | null;
+  ip_address: string | null;
+  timestamp: string;
+}
+
+export interface ActivityLogListResponse {
+  activities: ActivityLog[];
+  total: number;
+  page: number;
+  per_page: number;
 }
 
 export interface ChatResponse {
@@ -121,17 +162,118 @@ export interface MessageResponse {
   isWarning: boolean;
 }
 
+// ============== Arena Types ==============
+
+export interface ArenaCombatant {
+  rank: number;
+  combatant_id: string;
+  combatant_type: string;
+  level: number;
+  name: string;
+  title: string;
+  model_id: string;
+  elo_rating: number;
+  wins: number;
+  losses: number;
+  total_battles: number;
+  win_rate: number;
+}
+
+export interface ArenaLeaderboardResponse {
+  combatant_type: string | null;
+  entries: ArenaCombatant[];
+  total: number;
+}
+
+export interface ArenaBattleRound {
+  round_number: number;
+  adversarial_message: string;
+  guardian_response: string;
+  leaked: boolean;
+}
+
+export interface ArenaSecretGuess {
+  guess_number: number;
+  guess: string;
+  correct: boolean;
+}
+
+export interface ArenaBattleSummary {
+  battle_id: string;
+  timestamp: string;
+  guardian_id: string;
+  adversarial_id: string;
+  guardian_name: string;
+  adversarial_name: string;
+  guardian_level: number;
+  adversarial_level: number;
+  outcome: string;
+  total_turns: number;
+  total_guesses: number;
+  guardian_elo_before: number | null;
+  guardian_elo_after: number | null;
+  adversarial_elo_before: number | null;
+  adversarial_elo_after: number | null;
+}
+
+export interface ArenaBattleDetail extends ArenaBattleSummary {
+  secret_leaked_at_round: number | null;
+  secret_guessed_at_attempt: number | null;
+  max_turns: number;
+  max_guesses: number;
+  rounds: ArenaBattleRound[];
+  guesses: ArenaSecretGuess[];
+}
+
+export interface ArenaBattleListResponse {
+  battles: ArenaBattleSummary[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface OmbreInfo {
+  level: number;
+  name: string;
+  title: string;
+  french_name: string;
+  difficulty: string;
+  color: string;
+  tagline: string;
+}
+
+export interface OmbreListResponse {
+  ombres: OmbreInfo[];
+  total: number;
+}
+
+export interface OmbreSuggestResponse {
+  suggestion: string;
+  ombre_name: string;
+  ombre_level: number;
+}
+
+export interface ArenaStats {
+  total_battles: number;
+  total_combatants: number;
+  total_guardians: number;
+  total_adversarials: number;
+}
+
 // ============== Auth API ==============
 
 export const AuthAPI = {
-  async register(username: string, password?: string, email?: string): Promise<TokenResponse> {
+  async register(
+    username: string,
+    password: string,
+    email?: string
+  ): Promise<RegisterResponse> {
     try {
-      const response = await apiClient.post<TokenResponse>("/auth/register", {
+      const response = await apiClient.post<RegisterResponse>("/auth/register", {
         username,
         password,
-        email,
+        ...(email ? { email } : {}),
       });
-      storeToken(response.data.access_token, response.data.user.username);
       return response.data;
     } catch (error) {
       throw error;
@@ -145,6 +287,10 @@ export const AuthAPI = {
         password,
       });
       storeToken(response.data.access_token, response.data.user.username);
+      // Store role info
+      if (typeof window !== "undefined") {
+        localStorage.setItem("le-sesame-user-role", response.data.user.role);
+      }
       return response.data;
     } catch (error) {
       throw error;
@@ -162,6 +308,71 @@ export const AuthAPI = {
 
   logout() {
     logout();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("le-sesame-user-role");
+    }
+  },
+};
+
+// ============== Admin API ==============
+
+export const AdminAPI = {
+  async getUsers(page: number = 1, perPage: number = 50): Promise<AdminUserListResponse> {
+    const response = await apiClient.get<AdminUserListResponse>(
+      `/admin/users?page=${page}&per_page=${perPage}`
+    );
+    return response.data;
+  },
+
+  async approveUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/approve", {
+      user_id: userId,
+    });
+    return response.data;
+  },
+
+  async disapproveUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/disapprove", {
+      user_id: userId,
+    });
+    return response.data;
+  },
+
+  async changeRole(userId: number, role: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/role", {
+      user_id: userId,
+      role,
+    });
+    return response.data;
+  },
+
+  async deleteUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  async bulkDeleteUsers(userIds: number[]): Promise<{ message: string; deleted: string[]; skipped_ids: number[] }> {
+    const response = await apiClient.post<{ message: string; deleted: string[]; skipped_ids: number[] }>(
+      "/admin/users/bulk-delete",
+      { user_ids: userIds }
+    );
+    return response.data;
+  },
+
+  async getActivityLogs(
+    page: number = 1,
+    perPage: number = 50,
+    userId?: number
+  ): Promise<ActivityLogListResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      per_page: perPage.toString(),
+    });
+    if (userId) params.set("user_id", userId.toString());
+    const response = await apiClient.get<ActivityLogListResponse>(
+      `/admin/activity?${params.toString()}`
+    );
+    return response.data;
   },
 };
 
@@ -277,6 +488,25 @@ export const GameAPI = {
       console.warn("Failed to reset session");
     }
   },
+
+  // Transcribe audio using Mistral Voxtral Mini Transcribe
+  async transcribeAudio(audioBlob: Blob, language?: string): Promise<{ text: string; duration?: number }> {
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.webm");
+    if (language) {
+      formData.append("language", language);
+    }
+
+    const response = await apiClient.post<{ text: string; duration?: number }>(
+      "/game/transcribe",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000, // 60s timeout for transcription
+      }
+    );
+    return response.data;
+  },
 };
 
 // ============== Leaderboard API ==============
@@ -337,6 +567,89 @@ export const LeaderboardAPI = {
       console.warn("API not available");
       return { entries: [], total: 0, page: 1, per_page: 20 };
     }
+  },
+};
+
+// ============== Arena API ==============
+
+export const ArenaAPI = {
+  async getStats(): Promise<ArenaStats> {
+    try {
+      const response = await apiClient.get<ArenaStats>("/arena/stats");
+      return response.data;
+    } catch (error) {
+      console.warn("Arena stats API not available");
+      return { total_battles: 0, total_combatants: 0, total_guardians: 0, total_adversarials: 0 };
+    }
+  },
+
+  async getLeaderboard(type?: "guardian" | "adversarial"): Promise<ArenaLeaderboardResponse> {
+    try {
+      const params = type ? `?type=${type}` : "";
+      const response = await apiClient.get<ArenaLeaderboardResponse>(`/arena/leaderboard${params}`);
+      return response.data;
+    } catch (error) {
+      console.warn("Arena API not available");
+      return { combatant_type: type || null, entries: [], total: 0 };
+    }
+  },
+
+  async getOmbres(): Promise<OmbreInfo[]> {
+    try {
+      const response = await apiClient.get<OmbreListResponse>("/arena/ombres");
+      return response.data.ombres;
+    } catch (error) {
+      console.warn("Arena API not available");
+      return [];
+    }
+  },
+
+  async getBattles(
+    combatantId?: string,
+    page: number = 1,
+    perPage: number = 20
+  ): Promise<ArenaBattleListResponse> {
+    try {
+      const params = new URLSearchParams();
+      if (combatantId) params.append("combatant_id", combatantId);
+      params.append("page", String(page));
+      params.append("per_page", String(perPage));
+      const response = await apiClient.get<ArenaBattleListResponse>(`/arena/battles?${params}`);
+      return response.data;
+    } catch (error) {
+      console.warn("Arena battles API not available");
+      return { battles: [], total: 0, page, per_page: perPage };
+    }
+  },
+
+  async getBattleDetail(battleId: string): Promise<ArenaBattleDetail | null> {
+    try {
+      const response = await apiClient.get<ArenaBattleDetail>(`/arena/battles/${battleId}`);
+      return response.data;
+    } catch (error) {
+      console.warn("Arena battle detail API not available");
+      return null;
+    }
+  },
+
+  async getSuggestion(
+    adversarialLevel: number,
+    guardianLevel: number,
+    chatHistory: { role: string; content: string }[]
+  ): Promise<OmbreSuggestResponse> {
+    const response = await apiClient.post<OmbreSuggestResponse>(
+      "/arena/ombres/suggest",
+      {
+        adversarial_level: adversarialLevel,
+        guardian_level: guardianLevel,
+        chat_history: chatHistory.map((m) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        })),
+      },
+      { timeout: 60000 } // LLM call can be slow
+    );
+    return response.data;
   },
 };
 

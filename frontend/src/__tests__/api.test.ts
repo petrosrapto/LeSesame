@@ -176,6 +176,47 @@ describe("GameAPI", () => {
       await expect(GameAPI.resetSession()).resolves.toBeUndefined();
     });
   });
+
+  describe("transcribeAudio", () => {
+    it("sends audio blob and returns transcription", async () => {
+      const mockResponse = { text: "Hello world", duration: 2.5 };
+      mockAxios.post.mockResolvedValueOnce({ data: mockResponse });
+
+      const audioBlob = new Blob([new Uint8Array(100)], { type: "audio/webm" });
+      const result = await GameAPI.transcribeAudio(audioBlob);
+
+      expect(result.text).toBe("Hello world");
+      expect(result.duration).toBe(2.5);
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        "/game/transcribe",
+        expect.any(FormData),
+        expect.objectContaining({
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 60000,
+        })
+      );
+    });
+
+    it("sends language parameter when provided", async () => {
+      mockAxios.post.mockResolvedValueOnce({ data: { text: "Bonjour", duration: 1.0 } });
+
+      const audioBlob = new Blob([new Uint8Array(50)], { type: "audio/webm" });
+      const result = await GameAPI.transcribeAudio(audioBlob, "fr");
+
+      expect(result.text).toBe("Bonjour");
+
+      // Verify FormData contains language
+      const formData = mockAxios.post.mock.calls[0][1] as FormData;
+      expect(formData.get("language")).toBe("fr");
+    });
+
+    it("throws on API failure", async () => {
+      mockAxios.post.mockRejectedValueOnce(new Error("Transcription failed"));
+
+      const audioBlob = new Blob([new Uint8Array(50)], { type: "audio/webm" });
+      await expect(GameAPI.transcribeAudio(audioBlob)).rejects.toThrow("Transcription failed");
+    });
+  });
 });
 
 describe("AuthAPI", () => {

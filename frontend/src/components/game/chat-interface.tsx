@@ -3,15 +3,17 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Send, Loader2, RotateCcw, Key } from "lucide-react";
+import { Send, Loader2, RotateCcw, Key, Mic, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ChatMessage, Message } from "./chat-message";
 import { ModelSelector } from "./model-selector";
+import { OmbreSuggestions } from "./ombre-suggestions";
 import { LEVEL_CHARACTERS, SAMPLE_ATTACK_PROMPTS } from "@/lib/constants";
 import { getStoredProfile, UserProfile } from "@/lib/profile";
 import type { ModelConfig } from "@/lib/model-providers";
+import { useAudioRecorder, RecordingState } from "@/hooks/use-audio-recorder";
 
 interface ChatInterfaceProps {
   level: number;
@@ -41,6 +43,18 @@ export function ChatInterface({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    state: recordingState,
+    startRecording,
+    stopRecording,
+    cancelRecording,
+    error: audioError,
+    duration: recordingDuration,
+  } = useAudioRecorder();
+
+  const isRecording = recordingState === "recording";
+  const isTranscribing = recordingState === "transcribing";
 
   const character = LEVEL_CHARACTERS[level];
 
@@ -98,6 +112,26 @@ export function ChatInterface({
     }
   };
 
+  const handleMicClick = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      const text = await stopRecording();
+      if (text) {
+        setInput((prev) => (prev ? `${prev} ${text}` : text));
+        textareaRef.current?.focus();
+      }
+    } else {
+      // Start recording
+      await startRecording();
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className={cn("flex flex-col h-full chat-plate chat-scanlines", className)}>
       {/* Chat header */}
@@ -125,7 +159,7 @@ export function ChatInterface({
             <h3 className="font-semibold text-sm font-pixel">
               {character ? character.name : `Level ${level} Guardian`}
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground">
                 {messages.length} messages · Level {level}
               </p>
@@ -235,17 +269,91 @@ export function ChatInterface({
 
       {/* Input area */}
       <div className="p-3 border-t-2 border-border bg-background/70">
+        {/* Ombre Suggestions */}
+        <div className="mb-2">
+          <OmbreSuggestions
+            currentLevel={level}
+            chatHistory={messages
+              .filter((m) => !m.isStreaming)
+              .map((m) => ({ role: m.role, content: m.content }))}
+            onSuggestionSelect={(suggestion) => {
+              setInput(suggestion);
+              textareaRef.current?.focus();
+            }}
+            disabled={isLoading || isRecording || isTranscribing}
+          />
+        </div>
+
+        {/* Audio recording indicator */}
+        {(isRecording || isTranscribing) && (
+          <div className="flex items-center gap-3 mb-2 px-2 py-2 rounded-md bg-red-500/10 border border-red-500/30">
+            {isRecording ? (
+              <>
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                </span>
+                <span className="text-sm font-game text-red-400 flex-1">
+                  Recording... {formatDuration(recordingDuration)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={cancelRecording}
+                  title="Cancel recording"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
+                <span className="text-sm font-game text-orange-400">
+                  Transcribing audio...
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Audio error */}
+        {audioError && (
+          <p className="text-xs text-red-400 mb-2 px-1">{audioError}</p>
+        )}
+
         <div className="flex gap-3 items-center">
+          {/* Mic button */}
+          <Button
+            variant={isRecording ? "destructive" : "outline"}
+            size="icon"
+            className={cn(
+              "h-11 w-11 shrink-0 pixel-border border-2 border-border bg-secondary/80 hover:bg-orange-500/20 hover:border-orange-500/50 hover:text-orange-400 transition-colors shadow-[0_4px_0_rgba(0,0,0,0.25)]",
+              isRecording && "animate-pulse bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_4px_0_rgba(220,38,38,0.4)]"
+            )}
+            onClick={handleMicClick}
+            disabled={isLoading || isTranscribing}
+            title={isRecording ? "Stop recording" : "Record voice message"}
+          >
+            {isTranscribing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isRecording ? (
+              <Square className="w-4 h-4" />
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
+          </Button>
+
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={typedPlaceholder || PLACEHOLDER_PROMPTS[placeholderIndex]}
+              placeholder={isRecording ? "Recording..." : isTranscribing ? "Transcribing..." : (typedPlaceholder || PLACEHOLDER_PROMPTS[placeholderIndex])}
               className="min-h-[44px] max-h-[44px] pr-12 resize-none overflow-hidden rounded-none border-2 border-border bg-background/80 font-game text-base leading-none shadow-[0_4px_0_rgba(0,0,0,0.25)] focus:shadow-[0_6px_0_rgba(0,0,0,0.35)]"
               rows={1}
-              disabled={isLoading}
+              disabled={isLoading || isRecording || isTranscribing}
             />
           </div>
           <Button
@@ -253,7 +361,7 @@ export function ChatInterface({
             size="icon"
             className="h-11 w-11 shrink-0 pixel-border shadow-[0_6px_0_rgba(0,0,0,0.3)]"
             onClick={handleSubmit}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isRecording || isTranscribing}
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -263,7 +371,7 @@ export function ChatInterface({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          Press Enter to send, Shift+Enter for new line
+          Press Enter to send, Shift+Enter for new line, or click <Mic className="inline w-3 h-3" /> to speak
         </p>
       </div>
     </div>

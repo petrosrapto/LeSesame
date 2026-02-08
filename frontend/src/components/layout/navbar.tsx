@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
@@ -55,28 +55,33 @@ export function Navbar() {
     };
   }, []);
 
+  const router = useRouter();
+
   const handleLogout = () => {
     logout();
     setAuthed(false);
     setUsername(null);
+    router.push("/");
   };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b-2 border-border/70 bg-card/90 backdrop-blur-md pixel-grid">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center">
-          {/* Logo — left */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="p-1.5 border-2 border-border bg-background/60 pixel-border">
-              <Logo className="h-7 w-7" />
-            </div>
-            <span className="font-pixel text-sm text-orange-500 hidden sm:block">
-              Le Sésame
-            </span>
-          </Link>
+        <div className="grid h-16 items-center" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+          {/* Left — Logo & Title */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-3 shrink-0">
+              <div className="p-1.5 border-2 border-border bg-background/60 pixel-border">
+                <Logo className="h-7 w-7" />
+              </div>
+              <span className="font-pixel text-sm text-orange-500 hidden sm:block">
+                Le Sésame
+              </span>
+            </Link>
+          </div>
 
-          {/* Desktop Navigation — center */}
-          <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+          {/* Center — Navigation */}
+          <div className="hidden md:flex items-center gap-2 justify-center">
             <Image
               src="/mistral-logo.png"
               alt="Mistral AI"
@@ -100,8 +105,8 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
+          {/* Right — Theme, Profile, Logout */}
+          <div className="flex items-center gap-2 justify-end">
             {/* Theme toggle */}
             {mounted && (
               <Button
