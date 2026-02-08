@@ -494,8 +494,11 @@ jobs:
           # Forward remote port 8000 to localhost:8000
           ssh -f -N -L 8000:localhost:8000 ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_IP }}
 
-          # Run the E2E test suite
-          E2E_API_URL=http://localhost:8000 bash backend/tests/e2e/run_tests.sh
+          # Run the E2E test suite (admin credentials for user approval/cleanup via API)
+          E2E_API_URL=http://localhost:8000 \
+          E2E_ADMIN_USERNAME=${{ secrets.E2E_ADMIN_USERNAME }} \
+          E2E_ADMIN_PASSWORD=${{ secrets.E2E_ADMIN_PASSWORD }} \
+          bash backend/tests/e2e/run_tests.sh
 
           # Kill the SSH tunnel
           pkill -f "ssh -f -N -L 8000:localhost:8000" || true
