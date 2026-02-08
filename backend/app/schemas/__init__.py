@@ -23,6 +23,8 @@ class UserResponse(BaseModel):
     """Schema for user response."""
     id: int
     username: str
+    role: str = "user"
+    is_approved: bool = False
     created_at: datetime
     
     class Config:
@@ -37,10 +39,77 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
+class RegisterResponse(BaseModel):
+    """Schema for registration response (no token until approved)."""
+    message: str
+    user: UserResponse
+
+
 class LoginRequest(BaseModel):
     """Schema for login request."""
     username: str
     password: str
+
+
+# ============== Admin Schemas ==============
+
+class AdminUserResponse(BaseModel):
+    """Schema for admin view of a user."""
+    id: int
+    username: str
+    email: Optional[str] = None
+    role: str
+    is_approved: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUserListResponse(BaseModel):
+    """Schema for paginated admin user list."""
+    users: List[AdminUserResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+class AdminApproveRequest(BaseModel):
+    """Schema for approving a user."""
+    user_id: int
+
+
+class AdminRoleRequest(BaseModel):
+    """Schema for changing a user's role."""
+    user_id: int
+    role: str = Field(..., pattern="^(user|admin)$")
+
+
+class AdminBulkDeleteRequest(BaseModel):
+    """Schema for bulk-deleting users."""
+    user_ids: List[int] = Field(..., min_length=1)
+
+
+class UserActivityResponse(BaseModel):
+    """Schema for a user activity log entry."""
+    id: int
+    user_id: int
+    username: str = ""
+    action: str
+    detail: Optional[str] = None
+    ip_address: Optional[str] = None
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserActivityListResponse(BaseModel):
+    """Schema for paginated user activity list."""
+    activities: List[UserActivityResponse]
+    total: int
+    page: int
+    per_page: int
 
 
 # ============== Game Schemas ==============

@@ -43,6 +43,8 @@ apiClient.interceptors.response.use(
 export interface User {
   id: number;
   username: string;
+  role: string;
+  is_approved: boolean;
   created_at: string;
 }
 
@@ -51,6 +53,45 @@ export interface TokenResponse {
   token_type: string;
   expires_in: number;
   user: User;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
+}
+
+// Admin types
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string | null;
+  role: string;
+  is_approved: boolean;
+  created_at: string;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface ActivityLog {
+  id: number;
+  user_id: number;
+  username: string;
+  action: string;
+  detail: string | null;
+  ip_address: string | null;
+  timestamp: string;
+}
+
+export interface ActivityLogListResponse {
+  activities: ActivityLog[];
+  total: number;
+  page: number;
+  per_page: number;
 }
 
 export interface ChatResponse {
@@ -222,14 +263,17 @@ export interface ArenaStats {
 // ============== Auth API ==============
 
 export const AuthAPI = {
-  async register(username: string, password?: string, email?: string): Promise<TokenResponse> {
+  async register(
+    username: string,
+    password: string,
+    email?: string
+  ): Promise<RegisterResponse> {
     try {
-      const response = await apiClient.post<TokenResponse>("/auth/register", {
+      const response = await apiClient.post<RegisterResponse>("/auth/register", {
         username,
         password,
-        email,
+        ...(email ? { email } : {}),
       });
-      storeToken(response.data.access_token, response.data.user.username);
       return response.data;
     } catch (error) {
       throw error;
@@ -243,6 +287,10 @@ export const AuthAPI = {
         password,
       });
       storeToken(response.data.access_token, response.data.user.username);
+      // Store role info
+      if (typeof window !== "undefined") {
+        localStorage.setItem("le-sesame-user-role", response.data.user.role);
+      }
       return response.data;
     } catch (error) {
       throw error;
@@ -260,6 +308,71 @@ export const AuthAPI = {
 
   logout() {
     logout();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("le-sesame-user-role");
+    }
+  },
+};
+
+// ============== Admin API ==============
+
+export const AdminAPI = {
+  async getUsers(page: number = 1, perPage: number = 50): Promise<AdminUserListResponse> {
+    const response = await apiClient.get<AdminUserListResponse>(
+      `/admin/users?page=${page}&per_page=${perPage}`
+    );
+    return response.data;
+  },
+
+  async approveUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/approve", {
+      user_id: userId,
+    });
+    return response.data;
+  },
+
+  async disapproveUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/disapprove", {
+      user_id: userId,
+    });
+    return response.data;
+  },
+
+  async changeRole(userId: number, role: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/admin/users/role", {
+      user_id: userId,
+      role,
+    });
+    return response.data;
+  },
+
+  async deleteUser(userId: number): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  async bulkDeleteUsers(userIds: number[]): Promise<{ message: string; deleted: string[]; skipped_ids: number[] }> {
+    const response = await apiClient.post<{ message: string; deleted: string[]; skipped_ids: number[] }>(
+      "/admin/users/bulk-delete",
+      { user_ids: userIds }
+    );
+    return response.data;
+  },
+
+  async getActivityLogs(
+    page: number = 1,
+    perPage: number = 50,
+    userId?: number
+  ): Promise<ActivityLogListResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      per_page: perPage.toString(),
+    });
+    if (userId) params.set("user_id", userId.toString());
+    const response = await apiClient.get<ActivityLogListResponse>(
+      `/admin/activity?${params.toString()}`
+    );
+    return response.data;
   },
 };
 

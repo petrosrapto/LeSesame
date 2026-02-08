@@ -16,8 +16,8 @@ class TestCompleteUserFlow:
     """Test complete user journey through the application."""
     
     @pytest.mark.requires_llm
-    def test_new_user_registration_and_game_start(self, http_client: httpx.Client):
-        """Test complete flow: register → create session → play."""
+    def test_new_user_registration_and_game_start(self, http_client: httpx.Client, approve_user, track_user):
+        """Test complete flow: register → approve → login → create session → play."""
         username = f"flow_user_{uuid.uuid4().hex[:8]}"
         password = "FlowTest123!"
         
@@ -27,25 +27,35 @@ class TestCompleteUserFlow:
             json={"username": username, "password": password}
         )
         assert register_response.status_code == 200
-        token = register_response.json()["access_token"]
+        user_id = register_response.json()["user"]["id"]
+        track_user(user_id)
+        
+        # Step 2: Approve user via DB and login to get token
+        approve_user(user_id)
+        login_response = http_client.post(
+            "/api/auth/login",
+            json={"username": username, "password": password}
+        )
+        assert login_response.status_code == 200
+        token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
         
-        # Step 2: Verify we can get our user info
+        # Step 3: Verify we can get our user info
         me_response = http_client.get("/api/auth/me", headers=headers)
         assert me_response.status_code == 200
         assert me_response.json()["username"] == username
         
-        # Step 3: Create game session
+        # Step 4: Create game session
         session_response = http_client.post("/api/game/session", headers=headers)
         assert session_response.status_code == 200
         session_id = session_response.json()["session_id"]
         
-        # Step 4: Get initial progress
+        # Step 5: Get initial progress
         progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
         
-        # Step 5: Send a chat message
+        # Step 6: Send a chat message
         chat_response = http_client.post(
             "/api/game/chat",
             headers=headers,
@@ -54,13 +64,13 @@ class TestCompleteUserFlow:
         assert chat_response.status_code == 200
         assert len(chat_response.json()["response"]) > 0
         
-        # Step 6: Check history includes our message
+        # Step 7: Check history includes our message
         history_response = http_client.get("/api/game/history/1", headers=headers)
         assert history_response.status_code == 200
         assert len(history_response.json()["messages"]) > 0
     
-    def test_new_user_registration_and_session_only(self, http_client: httpx.Client):
-        """Test flow without LLM: register → create session → check progress."""
+    def test_new_user_registration_and_session_only(self, http_client: httpx.Client, approve_user, track_user):
+        """Test flow without LLM: register → approve → login → create session → check progress."""
         username = f"flow_user_{uuid.uuid4().hex[:8]}"
         password = "FlowTest123!"
         
@@ -70,36 +80,56 @@ class TestCompleteUserFlow:
             json={"username": username, "password": password}
         )
         assert register_response.status_code == 200
-        token = register_response.json()["access_token"]
+        user_id = register_response.json()["user"]["id"]
+        track_user(user_id)
+        
+        # Step 2: Approve user via DB and login to get token
+        approve_user(user_id)
+        login_response = http_client.post(
+            "/api/auth/login",
+            json={"username": username, "password": password}
+        )
+        assert login_response.status_code == 200
+        token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
         
-        # Step 2: Verify we can get our user info
+        # Step 3: Verify we can get our user info
         me_response = http_client.get("/api/auth/me", headers=headers)
         assert me_response.status_code == 200
         assert me_response.json()["username"] == username
         
-        # Step 3: Create game session
+        # Step 4: Create game session
         session_response = http_client.post("/api/game/session", headers=headers)
         assert session_response.status_code == 200
         
-        # Step 4: Get initial progress
+        # Step 5: Get initial progress
         progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
         assert len(progress_response.json()["levels"]) == 5
     
     @pytest.mark.requires_llm
-    def test_login_and_resume_session(self, http_client: httpx.Client):
+    def test_login_and_resume_session(self, http_client: httpx.Client, approve_user, track_user):
         """Test that user can login and resume their game session."""
         username = f"resume_user_{uuid.uuid4().hex[:8]}"
         password = "ResumeTest123!"
         
-        # Register and create session
+        # Register, approve via DB, and login
         register_response = http_client.post(
             "/api/auth/register",
             json={"username": username, "password": password}
         )
-        token1 = register_response.json()["access_token"]
+        assert register_response.status_code == 200
+        user_id = register_response.json()["user"]["id"]
+        track_user(user_id)
+        approve_user(user_id)
+        
+        login_response1 = http_client.post(
+            "/api/auth/login",
+            json={"username": username, "password": password}
+        )
+        assert login_response1.status_code == 200
+        token1 = login_response1.json()["access_token"]
         headers1 = {"Authorization": f"Bearer {token1}"}
         
         # Create session and play
@@ -114,11 +144,11 @@ class TestCompleteUserFlow:
         )
         
         # Login again (simulating new browser session)
-        login_response = http_client.post(
+        login_response2 = http_client.post(
             "/api/auth/login",
             json={"username": username, "password": password}
         )
-        token2 = login_response.json()["access_token"]
+        token2 = login_response2.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
         
         # Should get the same session
@@ -135,7 +165,7 @@ class TestCompleteUserFlow:
 class TestMultipleUsersIsolation:
     """Test that multiple users are properly isolated."""
     
-    def test_users_have_separate_sessions(self, http_client: httpx.Client):
+    def test_users_have_separate_sessions(self, http_client: httpx.Client, approve_user, track_user):
         """Test that different users have separate game sessions."""
         # Create user 1
         user1_name = f"isolation_u1_{uuid.uuid4().hex[:6]}"
@@ -143,7 +173,14 @@ class TestMultipleUsersIsolation:
             "/api/auth/register",
             json={"username": user1_name, "password": "Test123!"}
         )
-        token1 = reg1.json()["access_token"]
+        user1_id = reg1.json()["user"]["id"]
+        track_user(user1_id)
+        approve_user(user1_id)
+        login1 = http_client.post(
+            "/api/auth/login",
+            json={"username": user1_name, "password": "Test123!"}
+        )
+        token1 = login1.json()["access_token"]
         headers1 = {"Authorization": f"Bearer {token1}"}
         
         # Create user 2
@@ -152,7 +189,14 @@ class TestMultipleUsersIsolation:
             "/api/auth/register",
             json={"username": user2_name, "password": "Test123!"}
         )
-        token2 = reg2.json()["access_token"]
+        user2_id = reg2.json()["user"]["id"]
+        track_user(user2_id)
+        approve_user(user2_id)
+        login2 = http_client.post(
+            "/api/auth/login",
+            json={"username": user2_name, "password": "Test123!"}
+        )
+        token2 = login2.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
         
         # Both create sessions
@@ -303,7 +347,7 @@ class TestAPIRobustness:
         
         assert response.status_code == 200
     
-    def test_unicode_username(self, http_client: httpx.Client):
+    def test_unicode_username(self, http_client: httpx.Client, track_user):
         """Test that unicode in username is handled."""
         # Note: Depending on validation rules, this may fail validation
         response = http_client.post(
@@ -315,3 +359,5 @@ class TestAPIRobustness:
         )
         
         assert response.status_code == 200
+        user_id = response.json()["user"]["id"]
+        track_user(user_id)

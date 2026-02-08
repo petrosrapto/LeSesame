@@ -8,11 +8,13 @@ Date: 2026/02/07
 import pytest
 
 
+from tests.conftest import register_and_login
+
+
 @pytest.fixture
 async def auth_headers(client, sample_user_data):
-    """Get authentication headers for a registered user."""
-    response = await client.post("/api/auth/register", json=sample_user_data)
-    token = response.json()["access_token"]
+    """Get authentication headers for a registered and approved user."""
+    token = await register_and_login(client, sample_user_data)
     return {"Authorization": f"Bearer {token}"}
 
 

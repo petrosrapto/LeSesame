@@ -19,11 +19,14 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False, server_default="user")  # 'user' or 'admin'
+    is_approved = Column(Boolean, nullable=False, server_default="false")  # admin must approve
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     game_sessions = relationship("GameSession", back_populates="user")
     leaderboard_entries = relationship("LeaderboardEntry", back_populates="user")
+    activity_logs = relationship("UserActivity", back_populates="user")
 
 
 class GameSession(Base):
@@ -177,3 +180,18 @@ class ArenaBattle(Base):
     # Detailed data stored as JSON text
     rounds_json = Column(Text, nullable=True)   # JSON array of round objects
     guesses_json = Column(Text, nullable=True)   # JSON array of guess objects
+
+
+class UserActivity(Base):
+    """Log user activity for admin monitoring."""
+    __tablename__ = "user_activity"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action = Column(String(50), nullable=False)  # e.g. 'login', 'chat', 'verify', 'session_create', 'transcribe'
+    detail = Column(Text, nullable=True)  # extra info, e.g. level number
+    ip_address = Column(String(45), nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="activity_logs")

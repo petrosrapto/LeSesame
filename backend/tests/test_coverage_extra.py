@@ -514,8 +514,8 @@ class TestAdversarialGenerateAttack:
 class TestTranscribeEndpoint:
     @pytest.fixture
     async def auth_headers(self, client, sample_user_data):
-        response = await client.post("/api/auth/register", json=sample_user_data)
-        token = response.json()["access_token"]
+        from tests.conftest import register_and_login
+        token = await register_and_login(client, sample_user_data)
         return {"Authorization": f"Bearer {token}"}
 
     @pytest.mark.asyncio

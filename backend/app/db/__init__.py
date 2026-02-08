@@ -7,7 +7,7 @@ Contains database configuration, models, and repositories.
 from .database import Base, engine, async_session_maker, init_db, get_db
 from .models import (
     User, GameSession, LevelAttempt, ChatMessage, LeaderboardEntry, LevelSecret,
-    ArenaCombatant, ArenaBattle,
+    ArenaCombatant, ArenaBattle, UserActivity,
 )
 from .repositories import (
     BaseRepository,
@@ -33,6 +33,7 @@ __all__ = [
     "LevelSecret",
     "ArenaCombatant",
     "ArenaBattle",
+    "UserActivity",
     # Repositories
     "BaseRepository",
     "UserRepository",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
@@ -55,10 +55,13 @@ export function Navbar() {
     };
   }, []);
 
+  const router = useRouter();
+
   const handleLogout = () => {
     logout();
     setAuthed(false);
     setUsername(null);
+    router.push("/");
   };
 
   return (

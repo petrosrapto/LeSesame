@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { User } from "lucide-react";
 import { getStoredUsername } from "@/lib/auth";
 import { getInitials, getStoredProfile, storeProfile } from "@/lib/profile";
+import { AdminConsole } from "@/components/admin/admin-console";
 
 const ACCENT_OPTIONS = [
   "#f97316",
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [accent, setAccent] = useState(ACCENT_OPTIONS[0]);
   const [saved, setSaved] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const username = getStoredUsername() || "Player";
@@ -30,9 +32,14 @@ export default function ProfilePage() {
     if (stored) {
       setDisplayName(stored.displayName);
       setAccent(stored.accent);
-      return;
+    } else {
+      setDisplayName(username);
     }
-    setDisplayName(username);
+
+    // Check admin role from localStorage
+    if (typeof window !== "undefined") {
+      setIsAdmin(localStorage.getItem("le-sesame-user-role") === "admin");
+    }
   }, []);
 
   const initials = getInitials(displayName || "Player");
@@ -116,6 +123,13 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Admin Console – visible only to admin users */}
+          {isAdmin && (
+            <div className="mt-8">
+              <AdminConsole />
+            </div>
+          )}
         </div>
       </main>
 

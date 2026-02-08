@@ -18,7 +18,8 @@ class TestUserRegistration:
         self, 
         http_client: httpx.Client, 
         unique_username: str, 
-        test_password: str
+        test_password: str,
+        track_user,
     ):
         """Test successful user registration."""
         response = http_client.post(
@@ -33,17 +34,14 @@ class TestUserRegistration:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify token response structure
-        assert "access_token" in data
-        assert data["token_type"] == "bearer"
-        assert "expires_in" in data
-        assert data["expires_in"] > 0
-        
-        # Verify user response structure
+        # Verify registration response structure (pending approval, no token)
+        assert "message" in data
         assert "user" in data
         assert data["user"]["username"] == unique_username
         assert "id" in data["user"]
         assert "created_at" in data["user"]
+        assert data["user"]["is_approved"] is False
+        track_user(data["user"]["id"])
     
     def test_register_duplicate_username_fails(
         self, 

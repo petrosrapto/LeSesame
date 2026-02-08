@@ -33,10 +33,12 @@ export function LoginModal({ isOpen, onClose, onSuccess, closable = true }: Logi
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
 
     if (!username.trim() || !password.trim()) {
       setError("Please enter both username and password.");
@@ -48,16 +50,26 @@ export function LoginModal({ isOpen, onClose, onSuccess, closable = true }: Logi
     try {
       if (mode === "login") {
         await AuthAPI.login(username, password);
+
+        // Dispatch auth event so navbar updates
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("auth-login"));
+        }
+
+        onSuccess();
       } else {
-        await AuthAPI.register(username, password, email || undefined);
+        const result = await AuthAPI.register(username, password, email || undefined);
+        // Registration requires admin approval – show message, don't auto-login
+        setSuccessMessage(
+          result.message ||
+            "Account created! An admin must approve your account before you can sign in."
+        );
+        // Switch to login mode so user can sign in after approval
+        setMode("login");
+        setUsername("");
+        setPassword("");
+        setEmail("");
       }
-
-      // Dispatch auth event so navbar updates
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("auth-login"));
-      }
-
-      onSuccess();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       const detail = axiosErr?.response?.data?.detail;
@@ -119,6 +131,12 @@ export function LoginModal({ isOpen, onClose, onSuccess, closable = true }: Logi
               {error && (
                 <div className="p-3 rounded-none border-2 border-red-500/30 bg-red-500/10 text-red-500 text-sm">
                   {error}
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="p-3 rounded-none border-2 border-green-500/30 bg-green-500/10 text-green-500 text-sm">
+                  {successMessage}
                 </div>
               )}
 
@@ -213,6 +231,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, closable = true }: Logi
                   onClick={() => {
                     setMode(mode === "login" ? "register" : "login");
                     setError(null);
+                    setSuccessMessage(null);
                   }}
                   className="text-sm text-muted-foreground hover:text-orange-500 transition-colors"
                 >
