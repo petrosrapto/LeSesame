@@ -47,13 +47,11 @@ export const useGame = create<GameState>()(
       },
       
       completeLevel: (level: number) => {
-        const { completedLevels, currentLevel } = get();
+        const { completedLevels } = get();
         if (!completedLevels.includes(level)) {
           set({
             completedLevels: [...completedLevels, level].sort((a, b) => a - b),
             successfulAttempts: get().successfulAttempts + 1,
-            // Auto-advance to next level if completing current
-            currentLevel: level === currentLevel && level < 5 ? level + 1 : currentLevel,
           });
         }
       },
