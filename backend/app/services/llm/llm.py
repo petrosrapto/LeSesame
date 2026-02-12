@@ -14,6 +14,7 @@ from .openai import get_openai_llm
 from .google import get_google_llm
 from .bedrock import get_bedrock_llm
 from .anthropic import get_anthropic_llm
+from .cohere import get_cohere_llm
 from ...core import settings, logger
 
 
@@ -23,6 +24,7 @@ ENDPOINT_API_KEY_MAP: Dict[str, str] = {
     "https://api.deepseek.com": "deepseek_api_key",
     "http://52.206.209.94:8000/v1": "vllm_api_key",
     "https://api.together.xyz/v1": "together_api_key",
+    "https://api.x.ai/v1": "xai_api_key",
 }
 
 
@@ -144,10 +146,16 @@ def get_llm(model_config: Optional[Dict[str, Any]] = None):
             api_key=settings.anthropic_api_key,
             **kwargs,
         )
+    elif provider == "cohere":
+        llm = get_cohere_llm(
+            model_id=model,
+            api_key=settings.cohere_api_key,
+            **kwargs,
+        )
     else:
         raise ValueError(
             f"Unknown LLM provider '{provider}'. "
-            f"Supported: mistral, openai, google, bedrock, anthropic"
+            f"Supported: mistral, openai, google, bedrock, anthropic, cohere"
         )
 
     if llm is None:

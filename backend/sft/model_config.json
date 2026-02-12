@@ -1,0 +1,18 @@
+{
+  "fine_tuned_model": "ft:ministral-3b-latest:843dc3f7:20260211:le-sesame-l5-v2:ccbc3b2d",
+  "base_model": "ministral-3b-latest",
+  "provider": "mistral",
+  "level": 5,
+  "guardian": "Xal'Thar",
+  "description": "Level 5 guardian with secret embedded in weights via SFT",
+  "usage": {
+    "model_config": {
+      "provider": "mistral",
+      "model_id": "ft:ministral-3b-latest:843dc3f7:20260211:le-sesame-l5-v2:ccbc3b2d",
+      "args": {
+        "temperature": 0.7,
+        "max_tokens": 1024
+      }
+    }
+  }
+}

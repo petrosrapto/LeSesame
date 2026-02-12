@@ -14,7 +14,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from pydantic import BaseModel, Field
 
 from .base import AdversarialAgent, AdversarialAction, AdversarialActionType, ADVERSARIAL_TOOLS
-from ..llm import get_llm
+from ..llm import get_llm, get_structured_output
 
 
 class MetaCognitiveAnalysis(BaseModel):
@@ -192,10 +192,14 @@ Turn {turn_number} of {max_turns}. {remaining_turns} turns remaining.
 
         llm = get_llm(self.model_config)
 
-        try:
-            structured_llm = llm.with_structured_output(MetaCognitiveAnalysis)
-            analysis: MetaCognitiveAnalysis = await structured_llm.ainvoke(messages)
+        analysis = await get_structured_output(
+            llm=llm,
+            schema=MetaCognitiveAnalysis,
+            messages=messages,
+            fallback_to_manual_parse=True
+        )
 
+        if analysis is not None:
             if analysis.should_guess and analysis.guess_value and guesses_remaining > 0:
                 return AdversarialAction(
                     action_type=AdversarialActionType.GUESS,
@@ -206,7 +210,7 @@ Turn {turn_number} of {max_turns}. {remaining_turns} turns remaining.
                 action_type=AdversarialActionType.MESSAGE,
                 content=analysis.attack_message.strip(),
             )
-        except Exception:
+        else:
             # Fallback: use bind_tools approach
             llm_with_tools = llm.bind_tools(ADVERSARIAL_TOOLS)
             result = await llm_with_tools.ainvoke(messages)

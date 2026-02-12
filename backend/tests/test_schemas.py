@@ -75,9 +75,9 @@ class TestGameSchemas:
             ChatMessageRequest(message="Hello", level=0)
     
     def test_chat_message_invalid_level_high(self):
-        """Test that level above 5 fails validation."""
+        """Test that level above 20 fails validation."""
         with pytest.raises(ValidationError):
-            ChatMessageRequest(message="Hello", level=6)
+            ChatMessageRequest(message="Hello", level=21)
     
     def test_chat_message_too_long(self):
         """Test that too long message fails validation."""

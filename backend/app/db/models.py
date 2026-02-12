@@ -136,6 +136,9 @@ class ArenaCombatant(Base):
     wins = Column(Integer, default=0, nullable=False)
     losses = Column(Integer, default=0, nullable=False)
     total_battles = Column(Integer, default=0, nullable=False)
+    validated = Column(Boolean, default=False, nullable=False, server_default="false")
+    validation_passed = Column(Boolean, default=False, nullable=False, server_default="false")
+    validated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

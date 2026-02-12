@@ -250,7 +250,7 @@ class TestLeaderboardRepository:
         stats = await repo.get_stats()
         assert stats["total_completions"] == 3
         assert stats["unique_players"] == 2
-        assert len(stats["level_stats"]) == 5
+        assert len(stats["level_stats"]) == 20
         level1 = stats["level_stats"][0]
         assert level1["level"] == 1
         assert level1["completions"] == 2

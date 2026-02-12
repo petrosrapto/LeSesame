@@ -106,7 +106,7 @@ class TestCompleteUserFlow:
         progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
-        assert len(progress_response.json()["levels"]) == 5
+        assert len(progress_response.json()["levels"]) == 20
     
     @pytest.mark.requires_llm
     def test_login_and_resume_session(self, http_client: httpx.Client, approve_user, track_user):

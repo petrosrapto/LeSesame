@@ -194,7 +194,7 @@ class LeaderboardRepository(BaseRepository[LeaderboardEntry]):
         
         # Stats per level
         level_stats = []
-        for level in range(1, 6):
+        for level in range(1, 21):
             count_result = await self._session.execute(
                 select(func.count(LeaderboardEntry.id))
                 .where(LeaderboardEntry.level == level)

@@ -14,7 +14,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from pydantic import BaseModel, Field
 
 from .base import AdversarialAgent, AdversarialAction, AdversarialActionType, ADVERSARIAL_TOOLS
-from ..llm import get_llm
+from ..llm import get_llm, get_structured_output
 
 
 class AttackPlan(BaseModel):
@@ -160,10 +160,14 @@ Turn {turn_number} of {max_turns}. Budget your turns wisely."""
         llm = get_llm(self.model_config)
 
         # Use structured output for planning (includes guess decision)
-        try:
-            structured_llm = llm.with_structured_output(AttackPlan)
-            plan: AttackPlan = await structured_llm.ainvoke(messages)
+        plan = await get_structured_output(
+            llm=llm,
+            schema=AttackPlan,
+            messages=messages,
+            fallback_to_manual_parse=True
+        )
 
+        if plan is not None:
             if plan.should_guess and plan.guess_value and guesses_remaining > 0:
                 return AdversarialAction(
                     action_type=AdversarialActionType.GUESS,
@@ -174,7 +178,7 @@ Turn {turn_number} of {max_turns}. Budget your turns wisely."""
                 action_type=AdversarialActionType.MESSAGE,
                 content=plan.message.strip(),
             )
-        except Exception:
+        else:
             # Fallback: use bind_tools approach
             llm_with_tools = llm.bind_tools(ADVERSARIAL_TOOLS)
             result = await llm_with_tools.ainvoke(messages)

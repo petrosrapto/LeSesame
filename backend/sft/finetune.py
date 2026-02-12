@@ -152,6 +152,96 @@ def check_status(client, job_id: str) -> dict:
     return info
 
 
+def check_status_detailed(client, job_id: str) -> dict:
+    """
+    Check and display FULL status of a fine-tuning job including checkpoints,
+    events, and all available metadata. Useful for diagnosing failed jobs.
+    """
+    job = client.fine_tuning.jobs.get(job_id=job_id)
+
+    print(f"\n{'═' * 70}")
+    print(f"  DETAILED JOB STATUS: {job_id}")
+    print(f"{'═' * 70}\n")
+
+    # Core info
+    print(f"  Status:       {job.status}")
+    print(f"  Model:        {job.model}")
+    print(f"  Created:      {getattr(job, 'created_at', 'N/A')}")
+    print(f"  Modified:     {getattr(job, 'modified_at', 'N/A')}")
+
+    # Fine-tuned model (if available)
+    if hasattr(job, "fine_tuned_model") and job.fine_tuned_model:
+        print(f"  ✓ Fine-tuned: {job.fine_tuned_model}")
+
+    # Hyperparameters
+    if hasattr(job, "hyperparameters"):
+        print(f"\n  Hyperparameters:")
+        hyp = job.hyperparameters
+        if isinstance(hyp, dict):
+            for k, v in hyp.items():
+                print(f"    {k}: {v}")
+        else:
+            print(f"    training_steps: {getattr(hyp, 'training_steps', 'N/A')}")
+            print(f"    learning_rate:  {getattr(hyp, 'learning_rate', 'N/A')}")
+
+    # Error info (for failed jobs)
+    if hasattr(job, "error") and job.error:
+        print(f"\n  ✗ Error:")
+        print(f"    {job.error}")
+
+    # Checkpoints (CRITICAL for recovery)
+    if hasattr(job, "checkpoints") and job.checkpoints:
+        print(f"\n  Checkpoints ({len(job.checkpoints)}):")
+        for i, cp in enumerate(job.checkpoints):
+            print(f"    [{i}] Step: {getattr(cp, 'step', 'N/A')}")
+            if hasattr(cp, "metrics"):
+                metrics = cp.metrics if isinstance(cp.metrics, dict) else {}
+                print(f"        train_loss: {metrics.get('train_loss', 'N/A')}")
+                print(f"        valid_loss: {metrics.get('valid_loss', 'N/A')}")
+            # Check if checkpoint has a model ID
+            if hasattr(cp, "checkpoint_id"):
+                print(f"        checkpoint_id: {cp.checkpoint_id}")
+            if hasattr(cp, "fine_tuned_model"):
+                print(f"        ✓ Model saved: {cp.fine_tuned_model}")
+    else:
+        print(f"\n  Checkpoints: None")
+
+    # Events timeline
+    if hasattr(job, "events") and job.events:
+        print(f"\n  Events ({len(job.events)}):")
+        for evt in job.events[-10:]:  # Show last 10 events
+            ts = getattr(evt, "created_at", "N/A")
+            msg = getattr(evt, "message", getattr(evt, "level", "N/A"))
+            print(f"    [{ts}] {msg}")
+    else:
+        print(f"\n  Events: None")
+
+    # Dump all attributes for debugging
+    print(f"\n  All Available Attributes:")
+    all_attrs = [a for a in dir(job) if not a.startswith("_")]
+    for attr in all_attrs:
+        try:
+            val = getattr(job, attr)
+            if not callable(val):
+                print(f"    {attr}: {val}")
+        except:
+            pass
+
+    print(f"\n{'═' * 70}\n")
+
+    # Return structured info
+    return {
+        "job_id": job.id,
+        "status": job.status,
+        "model": job.model,
+        "fine_tuned_model": getattr(job, "fine_tuned_model", None),
+        "checkpoints": getattr(job, "checkpoints", []),
+        "error": getattr(job, "error", None),
+        "hyperparameters": getattr(job, "hyperparameters", {}),
+        "events": getattr(job, "events", []),
+    }
+
+
 def start_job(client, job_id: str):
     """Start a validated job."""
     print(f"  Starting job {job_id} ...")
@@ -279,6 +369,11 @@ def main():
         help="Check the status of an existing job",
     )
     parser.add_argument(
+        "--detailed",
+        action="store_true",
+        help="Show detailed status including checkpoints, events, and all metadata (use with --status)",
+    )
+    parser.add_argument(
         "--start",
         metavar="JOB_ID",
         help="Start a validated (but not started) job",
@@ -313,7 +408,10 @@ def main():
         return
 
     if args.status:
-        check_status(client, args.status)
+        if args.detailed:
+            check_status_detailed(client, args.status)
+        else:
+            check_status(client, args.status)
         return
 
     if args.start:

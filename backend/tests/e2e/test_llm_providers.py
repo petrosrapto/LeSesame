@@ -329,6 +329,32 @@ class TestAnthropicProvider:
 
 
 # ---------------------------------------------------------------------------
+# Tests — Cohere (native)
+# ---------------------------------------------------------------------------
+
+class TestCohereProvider:
+    """Chat using the native Cohere provider."""
+
+    @pytest.mark.requires_llm
+    @pytest.mark.cohere
+    def test_cohere_chat(
+        self,
+        http_client: httpx.Client,
+        auth_headers: dict,
+    ):
+        http_client.post("/api/game/session", headers=auth_headers)
+        response = _send_chat(
+            http_client,
+            auth_headers,
+            model_config={
+                "provider": "cohere",
+                "model_id": "command-a-03-2025",
+            },
+        )
+        _assert_chat_ok(response)
+
+
+# ---------------------------------------------------------------------------
 # Tests — Custom args override
 # ---------------------------------------------------------------------------
 

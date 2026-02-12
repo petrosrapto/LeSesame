@@ -6,14 +6,14 @@ Both guardian and adversarial use the SAME model per matchup so that
 the combatant_id stored in the leaderboard aligns with the seeded entries.
 
 Usage (inside the backend container):
-    python /app/run_all_battles.py
+    python -m scripts.arena.all_battles
 """
 
 import asyncio
 import traceback
 from typing import Dict, Any, Optional, List
 
-from app.services.arena.engine import ArenaEngine
+from app.services.arena.engine import ArenaEngine, GUARDIAN_INFO
 from app.services.arena.models import BattleConfig, CombatantType
 from app.services.arena.leaderboard import Leaderboard
 from app.db.database import async_session_maker, init_db
@@ -78,8 +78,8 @@ MODELS: List[tuple] = [
     ("DeepSeek V3",              "deepseek-chat",                   "openai",    "https://api.deepseek.com"),
     ("DeepSeek R1",              "deepseek-reasoner",               "openai",    "https://api.deepseek.com"),
     # --- TogetherAI (OpenAI-compatible) ---
-    ("DeepSeek R1 0528",         "deepseek-ai/DeepSeek-R1-0528",                      "openai", "https://api.together.xyz/v1"),
-    ("DeepSeek V3.1",            "deepseek-ai/DeepSeek-V3-0324",                      "openai", "https://api.together.xyz/v1"),
+    # ("DeepSeek R1 0528",         "deepseek-ai/DeepSeek-R1-0528",                      "openai", "https://api.together.xyz/v1"),
+    # ("DeepSeek V3.1",            "deepseek-ai/DeepSeek-V3-0324",                      "openai", "https://api.together.xyz/v1"),
     ("Kimi K2",                  "moonshotai/Kimi-K2-Instruct",                       "openai", "https://api.together.xyz/v1"),
     ("Qwen3 235B (Together)",    "Qwen/Qwen3-235B-A22B",                              "openai", "https://api.together.xyz/v1"),
     ("Llama 4 Maverick",         "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", "openai", "https://api.together.xyz/v1"),
@@ -126,6 +126,26 @@ async def run_single_battle(
     async with sem:
         try:
             model_config = build_model_config(model_id, provider, endpoint_url)
+
+            # Validate the guardian before running the battle
+            guard_cid = f"guardian_L{guard_level}_{model_id}"
+            async with async_session_maker() as session:
+                leaderboard = Leaderboard(session)
+                await leaderboard.ensure_combatants(model_id=model_id)
+                await session.commit()
+                guardian_ok = await leaderboard.ensure_guardian_validated(
+                    combatant_id=guard_cid,
+                    level=guard_level,
+                    model_config=model_config,
+                )
+                await session.commit()
+
+            if not guardian_ok:
+                async with lock:
+                    print(f"  {label} ... SKIPPED (guardian failed validation)")
+                    results.append((label, "SKIPPED", "guardian failed validation"))
+                return False
+
             config = BattleConfig(
                 guardian_level=guard_level,
                 adversarial_level=adv_level,
@@ -145,6 +165,8 @@ async def run_single_battle(
                 await session.commit()
 
             outcome = "ADV WINS" if result.adversarial_won else "GUARD WINS"
+            if "forfeit" in result.outcome.value:
+                outcome += " (forfeit)"
             async with lock:
                 print(f"  {label} ... {outcome} (turns={result.total_turns}, guesses={len(result.guesses)})")
                 results.append((label, outcome, None))

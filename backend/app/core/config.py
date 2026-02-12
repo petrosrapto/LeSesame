@@ -112,6 +112,8 @@ class Settings(BaseSettings):
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
     vllm_api_key: str = Field(default="", alias="VLLM_API_KEY")
     together_api_key: str = Field(default="", alias="TOGETHER_API_KEY")
+    xai_api_key: str = Field(default="", alias="XAI_API_KEY")
+    cohere_api_key: str = Field(default="", alias="COHERE_API_KEY")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
 
     # LangSmith tracing

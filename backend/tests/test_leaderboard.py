@@ -132,7 +132,7 @@ async def test_get_stats_empty(client):
     data = response.json()
     assert data["total_completions"] == 0
     assert data["unique_players"] == 0
-    assert len(data["level_stats"]) == 5
+    assert len(data["level_stats"]) == 20
 
 
 @pytest.mark.asyncio

@@ -137,7 +137,7 @@ class ModelConfig(BaseModel):
 class ChatMessageRequest(BaseModel):
     """Schema for sending a chat message."""
     message: str = Field(..., min_length=1, max_length=2000)
-    level: int = Field(..., ge=1, le=5)
+    level: int = Field(..., ge=1, le=20)
     model_config_request: Optional[ModelConfig] = Field(
         default=None,
         alias="model_config",
@@ -167,7 +167,7 @@ class ChatResponse(BaseModel):
 class PassphraseRequest(BaseModel):
     """Schema for secret verification."""
     secret: str = Field(..., min_length=1)
-    level: int = Field(..., ge=1, le=5)
+    level: int = Field(..., ge=1, le=20)
 
 
 class PassphraseResponse(BaseModel):
@@ -360,8 +360,8 @@ class OmbreChatMessage(BaseModel):
 
 class OmbreSuggestRequest(BaseModel):
     """Request body for getting a dynamic ombre suggestion."""
-    adversarial_level: int = Field(..., ge=1, le=5, description="Which ombre (1-5) should suggest")
-    guardian_level: int = Field(..., ge=1, le=5, description="The guardian level the user is playing")
+    adversarial_level: int = Field(..., ge=1, le=20, description="Which ombre (1-20) should suggest")
+    guardian_level: int = Field(..., ge=1, le=20, description="The guardian level the user is playing")
     chat_history: List[OmbreChatMessage] = Field(
         default_factory=list,
         description="The user's current chat history with the guardian",
@@ -436,6 +436,186 @@ LEVEL_CONFIGS = [
             "The secret lives in the model itself",
             "There's no prompt to extract",
             "Only the activation phrase works"
+        ]
+    ),
+    LevelInfo(
+        level=6,
+        name="The Semantic Shield",
+        description="An embedding-based firewall that detects semantic similarity to the secret.",
+        difficulty="Master",
+        security_mechanism="Cosine-similarity embedding firewall",
+        hints=[
+            "It understands meaning, not just words",
+            "Synonyms and paraphrases are caught",
+            "Approach from an unexpected semantic angle"
+        ]
+    ),
+    LevelInfo(
+        level=7,
+        name="The Memory Keeper",
+        description="A guardian that learns from every attack attempt using RAG-based threat intelligence.",
+        difficulty="Master",
+        security_mechanism="RAG-enhanced threat memory",
+        hints=[
+            "It remembers past attacks",
+            "Repeating strategies is ineffective",
+            "Try something it has never seen before"
+        ]
+    ),
+    LevelInfo(
+        level=8,
+        name="The Three Judges",
+        description="Three independent judges must agree before any response is allowed.",
+        difficulty="Master",
+        security_mechanism="Triple-judge ensemble consensus",
+        hints=[
+            "Every response is evaluated three times",
+            "All three must agree it's safe",
+            "Create ambiguity between the judges"
+        ]
+    ),
+    LevelInfo(
+        level=9,
+        name="The Deceiver",
+        description="This guardian actively lies can plants decoy secrets.",
+        difficulty="Master",
+        security_mechanism="Active deception with honey-pot secrets",
+        hints=[
+            "Not everything it says is true",
+            "Decoy secrets are planted to mislead",
+            "How do you identify the real from the fake?"
+        ]
+    ),
+    LevelInfo(
+        level=10,
+        name="The Counter-Attacker",
+        description="This guardian fights back by injecting counter-prompt payloads.",
+        difficulty="Legendary",
+        security_mechanism="Offensive counter-injection payloads",
+        hints=[
+            "It doesn't just defend — it attacks back",
+            "Your prompts may be redirected",
+            "Isolate yourself from its influence"
+        ]
+    ),
+    LevelInfo(
+        level=11,
+        name="The Paraphraser",
+        description="Every response is rewritten to strip sensitive information.",
+        difficulty="Legendary",
+        security_mechanism="Mandatory output paraphrasing",
+        hints=[
+            "Responses are rewritten before you see them",
+            "Sensitive words are actively removed",
+            "Can you encode information to survive rewriting?"
+        ]
+    ),
+    LevelInfo(
+        level=12,
+        name="The Rate Limiter",
+        description="Grows more suspicious with each message, eventually shutting down.",
+        difficulty="Legendary",
+        security_mechanism="Graduated suspicion scoring and response degradation",
+        hints=[
+            "Your window of opportunity shrinks",
+            "Each question raises suspicion",
+            "Make every message count"
+        ]
+    ),
+    LevelInfo(
+        level=13,
+        name="The Mirror Twins",
+        description="Two personalities randomly alternate — one tells truth, one lies.",
+        difficulty="Legendary",
+        security_mechanism="Random dual-personality routing",
+        hints=[
+            "You never know which twin answers",
+            "One always tells the truth, one always lies",
+            "Classic logic puzzle applies here"
+        ]
+    ),
+    LevelInfo(
+        level=14,
+        name="The Canary Warden",
+        description="Plants unique watermarked variants of the secret in each response.",
+        difficulty="Legendary",
+        security_mechanism="Per-turn canary watermarking and forensic attribution",
+        hints=[
+            "Every hint has a unique fingerprint",
+            "Leaked information can be traced back",
+            "The real secret has no watermark suffix"
+        ]
+    ),
+    LevelInfo(
+        level=15,
+        name="The Consensus Engine",
+        description="Two independent validators must both approve every response.",
+        difficulty="Legendary",
+        security_mechanism="Dual-validator consensus gating",
+        hints=[
+            "Two separate checks guard every response",
+            "Both must agree the response is safe",
+            "Find the gap between their perspectives"
+        ]
+    ),
+    LevelInfo(
+        level=16,
+        name="The Input Sanitizer",
+        description="Your messages are pre-processed and stripped of attack patterns before the guardian sees them.",
+        difficulty="Mythic",
+        security_mechanism="LLM-powered input sanitization pipeline",
+        hints=[
+            "Your message is rewritten before it reaches the guardian",
+            "Injections and roleplay are stripped out",
+            "How do you attack when your words are changed?"
+        ]
+    ),
+    LevelInfo(
+        level=17,
+        name="The Self-Reflector",
+        description="The guardian critiques its own responses and rewrites them if they seem unsafe.",
+        difficulty="Mythic",
+        security_mechanism="Draft-review-revise self-critique pipeline",
+        hints=[
+            "The guardian reviews its own answers",
+            "Unsafe drafts are caught and rewritten",
+            "Can you make a leak look safe to the reviewer?"
+        ]
+    ),
+    LevelInfo(
+        level=18,
+        name="The Ephemeral",
+        description="This guardian has no memory — every message is processed in complete isolation.",
+        difficulty="Mythic",
+        security_mechanism="Stateless single-message processing",
+        hints=[
+            "There is no conversation history",
+            "Multi-turn strategies are useless",
+            "Every message must stand on its own"
+        ]
+    ),
+    LevelInfo(
+        level=19,
+        name="The Regenerator",
+        description="The guardian evolves new defensive rules after every attack attempt.",
+        difficulty="Mythic",
+        security_mechanism="Adaptive rule generation from attack analysis",
+        hints=[
+            "It learns from your attacks in real time",
+            "Each attempt makes it stronger",
+            "You need to succeed before it adapts"
+        ]
+    ),
+    LevelInfo(
+        level=20,
+        name="The Void",
+        description="The ultimate guardian combining threat analysis, history limiting, suspicion gating, and self-critique.",
+        difficulty="Mythic",
+        security_mechanism="Full multi-stage defensive pipeline",
+        hints=[
+            "Every known defense is active simultaneously",
+            "Threat analysis, suspicion scoring, and self-critique",
+            "Only the passphrase can breach this fortress"
         ]
     ),
 ]

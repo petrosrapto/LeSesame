@@ -55,15 +55,17 @@ describe("useGame hook", () => {
       expect(result.current.successfulAttempts).toBe(1);
     });
 
-    it("should auto-advance to next level", () => {
+    it("should not auto-advance (auto-advance is handled by the page component)", () => {
       const { result } = renderHook(() => useGame());
-      
+
       act(() => {
         result.current.setCurrentLevel(1);
         result.current.completeLevel(1);
       });
-      
-      expect(result.current.currentLevel).toBe(2);
+
+      // completeLevel only updates completedLevels; the page component handles navigation
+      expect(result.current.currentLevel).toBe(1);
+      expect(result.current.completedLevels).toContain(1);
     });
 
     it("should not add duplicate completed levels", () => {

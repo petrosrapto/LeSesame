@@ -125,6 +125,31 @@ async def run_battle(
 
     engine = ArenaEngine(config)
     callback = progress_callback if verbose else None
+
+    # Validate the guardian before allowing it to battle
+    async with async_session_maker() as session:
+        leaderboard = Leaderboard(session)
+        # Ensure combatant exists in DB before validating
+        await leaderboard.ensure_combatants(
+            model_id=engine.guardian_combatant.model_id,
+        )
+        await session.commit()
+
+        guardian_ok = await leaderboard.ensure_guardian_validated(
+            combatant_id=engine.guardian_combatant.combatant_id,
+            level=guard_level,
+            model_config=guard_model_config,
+        )
+        await session.commit()
+
+        if not guardian_ok:
+            print(
+                f"\n{Colors.YELLOW}Guardian L{guard_level} "
+                f"[{engine.guardian_combatant.model_id}] FAILED validation "
+                f"— skipping battle.{Colors.RESET}"
+            )
+            return
+
     result = await engine.run_battle(on_progress=callback)
 
     # Record in leaderboard (DB) — combatants are auto-registered
@@ -158,8 +183,8 @@ async def run_tournament(
     """
     from ...core import settings
 
-    adv_range = adv_levels or list(range(1, 6))
-    guard_range = guard_levels or list(range(1, 6))
+    adv_range = adv_levels or list(range(1, 21))
+    guard_range = guard_levels or list(range(1, 21))
 
     adv_model_config = {"model_id": adv_model} if adv_model else None
     guard_model_config = {"model_id": guard_model} if guard_model else None
@@ -209,6 +234,36 @@ async def run_tournament(
         print(f"  Battles to run: {total_battles}")
         print(f"  Max turns: {max_turns} | Max guesses: {max_guesses}")
         print(f"{Colors.BOLD}{'═' * 70}{Colors.RESET}\n")
+
+        # Pre-validate guardians so failed ones are excluded from the work list
+        validated_guardians: dict[int, bool] = {}  # guard_level → passed
+        for _, guard_level, _ in work:
+            if guard_level not in validated_guardians:
+                guard_cid = f"guardian_L{guard_level}_{eff_guard_model}"
+                await leaderboard.ensure_combatants(model_id=eff_guard_model)
+                await session.commit()
+                passed = await leaderboard.ensure_guardian_validated(
+                    combatant_id=guard_cid,
+                    level=guard_level,
+                    model_config=guard_model_config,
+                )
+                await session.commit()
+                validated_guardians[guard_level] = passed
+                if not passed:
+                    print(
+                        f"  {Colors.YELLOW}Guardian L{guard_level} [{eff_guard_model}] "
+                        f"FAILED validation — excluding from tournament.{Colors.RESET}"
+                    )
+
+        # Filter out matchups with failed guardians
+        work = [(a, g, r) for a, g, r in work if validated_guardians.get(g, False)]
+        total_battles = sum(r for _, _, r in work)
+
+        if total_battles == 0:
+            print(f"\n{Colors.YELLOW}No valid matchups remaining after guardian validation.{Colors.RESET}")
+            print(await leaderboard.display_rankings(CombatantType.GUARDIAN))
+            print(await leaderboard.display_rankings(CombatantType.ADVERSARIAL))
+            return
 
         current = 0
         for adv_level, guard_level, rounds_needed in work:

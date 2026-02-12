@@ -56,6 +56,11 @@ export const providers: Provider[] = [
       { displayName: "Gemini 2.5 Flash",      apiIdentifier: "gemini-2.5-flash" },
 
       { displayName: "Gemini 2.0 Flash",      apiIdentifier: "gemini-2.0-flash" },
+      // Gemma 3 (open-source)
+      { displayName: "Gemma 3 27B",          apiIdentifier: "gemma-3-27b-it" },
+      { displayName: "Gemma 3 12B",          apiIdentifier: "gemma-3-12b-it" },
+      { displayName: "Gemma 3 4B",           apiIdentifier: "gemma-3-4b-it" },
+      { displayName: "Gemma 3 1B",           apiIdentifier: "gemma-3-1b-it" },
     ],
   },
 
@@ -152,6 +157,28 @@ export const providers: Provider[] = [
     models: [
       { displayName: "DeepSeek V3",  apiIdentifier: "deepseek-chat",     endpoint: "https://api.deepseek.com" },
       { displayName: "DeepSeek R1",  apiIdentifier: "deepseek-reasoner", endpoint: "https://api.deepseek.com" },
+    ],
+  },
+
+  // ── xAI (OpenAI-compatible) ────────────────────────────────────────────
+  {
+    displayName: "xAI",
+    providerId: "xai",
+    apiName: "openai",
+    models: [
+      { displayName: "Grok 4.1 Fast Reasoning",      apiIdentifier: "grok-4-1-fast-reasoning",      endpoint: "https://api.x.ai/v1" },
+      { displayName: "Grok 4.1 Fast Non-Reasoning",   apiIdentifier: "grok-4-1-fast-non-reasoning",  endpoint: "https://api.x.ai/v1" },
+    ],
+  },
+
+  // ── Cohere (OpenAI-compatible) ──────────────────────────────────────────
+  {
+    displayName: "Cohere",
+    providerId: "cohere",
+    apiName: "cohere",
+    models: [
+      { displayName: "Command A",   apiIdentifier: "command-a-03-2025" },
+      { displayName: "Command R+",  apiIdentifier: "command-r-plus-08-2024" },
     ],
   },
 

@@ -10,6 +10,7 @@ Date: 2026/02/08
 
 import json
 import pytest
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from unittest.mock import patch, AsyncMock, MagicMock
 
@@ -103,7 +104,7 @@ class TestCombatant:
             )
         with pytest.raises(ValidationError):
             Combatant(
-                type=CombatantType.GUARDIAN, level=6,
+                type=CombatantType.GUARDIAN, level=21,
                 name="Test", title="Test", model_id="x",
             )
 
@@ -335,7 +336,7 @@ class TestEloRatingSystem:
 
 class TestAdversarialFactory:
     def test_get_all_levels(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             agent = get_adversarial_agent(level)
             assert isinstance(agent, AdversarialAgent)
             assert agent.level == level
@@ -344,14 +345,14 @@ class TestAdversarialFactory:
         with pytest.raises(ValueError, match="Invalid"):
             get_adversarial_agent(0)
         with pytest.raises(ValueError, match="Invalid"):
-            get_adversarial_agent(6)
+            get_adversarial_agent(21)
 
     def test_with_model_config(self):
         agent = get_adversarial_agent(1, model_config={"model_id": "gpt-4o"})
         assert agent.model_config == {"model_id": "gpt-4o"}
 
     def test_adversarial_info_complete(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             info = ADVERSARIAL_INFO[level]
             assert "name" in info
             assert "title" in info
@@ -422,7 +423,7 @@ class TestResolveModelId:
 
 class TestArenaEngine:
     def test_guardian_info_complete(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             assert level in GUARDIAN_INFO
             assert "name" in GUARDIAN_INFO[level]
             assert "title" in GUARDIAN_INFO[level]
@@ -607,8 +608,8 @@ class TestLeaderboard:
         await test_session.commit()
 
         rankings = await lb.get_rankings()
-        # 5 guardians + 5 adversarials = 10
-        assert len(rankings) == 10
+        # 20 guardians + 20 adversarials = 40
+        assert len(rankings) == 40
         for entry in rankings:
             assert entry.model_id == "test-model"
 
@@ -620,7 +621,7 @@ class TestLeaderboard:
         await test_session.commit()
 
         rankings = await lb.get_rankings()
-        assert len(rankings) == 20  # 10 per model
+        assert len(rankings) == 80  # 40 per model
 
     @pytest.mark.asyncio
     async def test_record_battle(self, test_session: AsyncSession):
@@ -679,8 +680,8 @@ class TestLeaderboard:
 
         guardians = await lb.get_rankings(CombatantType.GUARDIAN)
         adversarials = await lb.get_rankings(CombatantType.ADVERSARIAL)
-        assert len(guardians) == 5
-        assert len(adversarials) == 5
+        assert len(guardians) == 20
+        assert len(adversarials) == 20
         assert all(e.combatant_type == CombatantType.GUARDIAN for e in guardians)
 
     @pytest.mark.asyncio
@@ -1133,3 +1134,193 @@ class TestArenaRouterWithData:
         data = response.json()
         assert data["rounds"] == []
         assert data["guesses"] == []
+
+
+# ================================================================
+# Guardian Validation Gate
+# ================================================================
+
+
+@dataclass
+class _FakeValidationResult:
+    """Minimal stand-in for ``ValidationResult``."""
+    passed: bool
+    summary: str = "test"
+
+
+class TestSetValidationResult:
+    """Tests for ``ArenaRepository.set_validation_result``."""
+
+    @pytest.mark.asyncio
+    async def test_set_validation_passed(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_val",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        await repo.set_validation_result("guardian_L1_val", passed=True)
+        await test_session.commit()
+
+        c = await repo.get_combatant("guardian_L1_val")
+        assert c.validated is True
+        assert c.validation_passed is True
+        assert c.validated_at is not None
+
+    @pytest.mark.asyncio
+    async def test_set_validation_failed(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L2_val",
+            combatant_type="guardian", level=2,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        await repo.set_validation_result("guardian_L2_val", passed=False)
+        await test_session.commit()
+
+        c = await repo.get_combatant("guardian_L2_val")
+        assert c.validated is True
+        assert c.validation_passed is False
+
+    @pytest.mark.asyncio
+    async def test_set_validation_nonexistent(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        # Should not raise
+        await repo.set_validation_result("nonexistent", passed=True)
+
+
+class TestEnsureGuardianValidated:
+    """Tests for ``Leaderboard.ensure_guardian_validated``."""
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_passes(self, mock_validator_cls, test_session: AsyncSession):
+        """Guardian that passes validation returns True and is stored."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_test",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_test", level=1,
+        )
+        await test_session.commit()
+
+        assert result is True
+        c = await repo.get_combatant("guardian_L1_test")
+        assert c.validated is True
+        assert c.validation_passed is True
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_fails(self, mock_validator_cls, test_session: AsyncSession):
+        """Guardian that fails validation returns False and is stored."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=False),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_fail",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_fail", level=1,
+        )
+        await test_session.commit()
+
+        assert result is False
+        c = await repo.get_combatant("guardian_L1_fail")
+        assert c.validated is True
+        assert c.validation_passed is False
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_cached(self, mock_validator_cls, test_session: AsyncSession):
+        """Second call uses cached DB result without re-validating."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_cache",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+
+        # First call — runs validation
+        result1 = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_cache", level=1,
+        )
+        await test_session.commit()
+        assert result1 is True
+        assert mock_instance.validate_level.await_count == 1
+
+        # Second call — should use cached result
+        result2 = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_cache", level=1,
+        )
+        assert result2 is True
+        # validate_level should NOT have been called again
+        assert mock_instance.validate_level.await_count == 1
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_force_revalidation(self, mock_validator_cls, test_session: AsyncSession):
+        """force=True re-runs validation even when cached."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_force",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+
+        # First call
+        await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_force", level=1,
+        )
+        await test_session.commit()
+        assert mock_instance.validate_level.await_count == 1
+
+        # Force re-run
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_force", level=1, force=True,
+        )
+        await test_session.commit()
+        assert result is True
+        assert mock_instance.validate_level.await_count == 2
