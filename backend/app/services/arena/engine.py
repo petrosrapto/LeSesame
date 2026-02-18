@@ -183,7 +183,7 @@ class ArenaEngine:
         while turn < self.config.max_turns and not battle_over:
             # Generate adversarial action (message or guess)
             try:
-                action: AdversarialAction = await self.adversarial.generate_attack(
+                action: AdversarialAction = await self.adversarial.generate_attack_with_retry(
                     chat_history=adversarial_history,
                     turn_number=turn + 1,
                     max_turns=self.config.max_turns,

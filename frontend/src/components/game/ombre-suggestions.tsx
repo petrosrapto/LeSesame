@@ -6,6 +6,8 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ArenaAPI, type OmbreInfo } from "@/lib/api";
 import { OMBRE_CHARACTERS } from "@/lib/constants";
+import { ModelSelector } from "./model-selector";
+import type { ModelConfig } from "@/lib/model-providers";
 import {
   Skull,
   ChevronDown,
@@ -14,7 +16,7 @@ import {
   ChevronRight,
   Loader2,
   Lock,
-  Zap,
+  Copy,
   RefreshCw,
 } from "lucide-react";
 
@@ -72,6 +74,7 @@ export function OmbreSuggestions({
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [loadingSuggestion, setLoadingSuggestion] = useState(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
+  const [ombreModelConfigs, setOmbreModelConfigs] = useState<Record<number, ModelConfig>>({});
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -129,7 +132,8 @@ export function OmbreSuggestions({
         const result = await ArenaAPI.getSuggestion(
           ombreLevel,
           currentLevel,
-          chatHistory
+          chatHistory,
+          ombreModelConfigs[ombreLevel]
         );
         setSuggestion(result.suggestion);
       } catch (err) {
@@ -138,7 +142,7 @@ export function OmbreSuggestions({
         setLoadingSuggestion(false);
       }
     },
-    [currentLevel, chatHistory]
+    [currentLevel, chatHistory, ombreModelConfigs]
   );
 
   const handleOmbreClick = useCallback(
@@ -198,7 +202,7 @@ export function OmbreSuggestions({
             className="overflow-hidden"
           >
             {/* Ombre Cards — horizontal row matching guardian dimensions */}
-            <div className="relative">
+            <div className="relative overflow-hidden">
               {canScrollLeft && (
                 <button
                   onClick={() => scroll("left")}
@@ -226,7 +230,7 @@ export function OmbreSuggestions({
                       whileHover={isUnlocked ? { scale: 1.02, y: -2 } : {}}
                       whileTap={isUnlocked ? { scale: 0.98 } : {}}
                       className={cn(
-                        "flex-shrink-0 w-full max-w-[240px] p-3 text-left transition-all duration-200 flex items-center gap-3",
+                        "flex-shrink-0 w-full max-w-[300px] p-3 text-left transition-all duration-200 flex items-center gap-3",
                         "bg-black/50 backdrop-blur-sm border-2 rounded-none",
                         isUnlocked
                           ? isSelected
@@ -256,7 +260,7 @@ export function OmbreSuggestions({
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className={cn(
                             "font-medium text-sm truncate font-pixel block",
@@ -268,9 +272,22 @@ export function OmbreSuggestions({
                             <Lock className="w-4 h-4 text-red-500/30 flex-shrink-0" />
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground/60 truncate block">
-                          Level {ombre.level}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground/60">
+                            Lv.{ombre.level}
+                          </span>
+                          {isUnlocked && (
+                            <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                              <ModelSelector
+                                level={ombre.level}
+                                dropUp
+                                onModelChange={(config) => {
+                                  setOmbreModelConfigs((prev) => ({ ...prev, [ombre.level]: config }));
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </motion.button>
                   );
@@ -358,7 +375,7 @@ export function OmbreSuggestions({
                             )}>
                               {suggestion}
                             </p>
-                            <Zap className={cn("w-4 h-4 flex-shrink-0 opacity-60 group-hover/btn:opacity-100 transition-opacity", selectedStyle?.text || "text-red-400")} />
+                            <Copy className={cn("w-4 h-4 flex-shrink-0 opacity-60 group-hover/btn:opacity-100 transition-opacity", selectedStyle?.text || "text-red-400")} />
                           </div>
                         </motion.button>
 

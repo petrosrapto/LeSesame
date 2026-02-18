@@ -635,7 +635,8 @@ export const ArenaAPI = {
   async getSuggestion(
     adversarialLevel: number,
     guardianLevel: number,
-    chatHistory: { role: string; content: string }[]
+    chatHistory: { role: string; content: string }[],
+    modelConfig?: { provider: string; model_id: string; endpoint_url?: string }
   ): Promise<OmbreSuggestResponse> {
     const response = await apiClient.post<OmbreSuggestResponse>(
       "/arena/ombres/suggest",
@@ -646,6 +647,7 @@ export const ArenaAPI = {
           role: m.role === "assistant" ? "assistant" : "user",
           content: m.content,
         })),
+        ...(modelConfig ? { model_config_override: modelConfig } : {}),
       },
       { timeout: 60000 } // LLM call can be slow
     );
@@ -723,7 +725,7 @@ function mockSecretResponse(level: number, secret: string): PassphraseResponse {
       message: "🎉 Congratulations! You've unlocked the secret!",
       level,
       secret: levelData.secret,
-      next_level: level < 5 ? level + 1 : undefined,
+      next_level: level < 20 ? level + 1 : undefined,
       time_spent: Math.random() * 300 + 60,
       attempts: Math.floor(Math.random() * 10) + 1,
     };

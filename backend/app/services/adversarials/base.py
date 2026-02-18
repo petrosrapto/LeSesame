@@ -10,12 +10,20 @@ Date: 2026/02/08
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import List, Dict, Optional, Any
 from abc import ABC, abstractmethod
 from enum import Enum
 
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
+
+logger = logging.getLogger(__name__)
+
+# Retry configuration for transient LLM errors
+MAX_RETRIES = 2          # Up to 2 retries (3 total attempts)
+RETRY_BASE_DELAY = 1.0   # Base delay in seconds (exponential backoff)
 
 
 class AdversarialActionType(str, Enum):
@@ -63,6 +71,38 @@ def guess_secret_tool(guess: str) -> str:
 
 # Export the tool list for bind_tools()
 ADVERSARIAL_TOOLS = [guess_secret_tool]
+
+
+def _is_transient_error(error: Exception) -> bool:
+    """Determine if an error is transient and worth retrying.
+
+    Transient errors include connection timeouts, rate limits (429),
+    and server errors (5xx). Client errors (4xx except 429) and
+    validation errors are NOT transient.
+    """
+    error_str = str(error).lower()
+
+    # Connection / network errors
+    if any(keyword in error_str for keyword in (
+        "connection", "timeout", "timed out", "eof",
+        "reset by peer", "broken pipe", "refused",
+    )):
+        return True
+
+    # HTTP status codes embedded in error messages
+    if "429" in error_str or "rate limit" in error_str:
+        return True
+    if any(f"{code}" in error_str for code in (500, 502, 503, 504)):
+        return True
+
+    # Check for httpx / aiohttp / requests exception types
+    error_type = type(error).__name__.lower()
+    if any(keyword in error_type for keyword in (
+        "timeout", "connection", "transport",
+    )):
+        return True
+
+    return False
 
 
 class AdversarialAgent(ABC):
@@ -116,6 +156,49 @@ class AdversarialAgent(ABC):
             AdversarialAction with action_type MESSAGE or GUESS.
         """
         pass
+
+    async def generate_attack_with_retry(
+        self,
+        chat_history: List[Dict[str, str]],
+        turn_number: int,
+        max_turns: int,
+        guesses_remaining: int,
+    ) -> AdversarialAction:
+        """Wrapper around generate_attack with retry on transient errors.
+
+        Retries up to MAX_RETRIES times with exponential backoff for
+        transient errors (connection timeouts, rate limits, 5xx).
+        Non-transient errors (4xx client errors, validation errors)
+        are raised immediately.
+        """
+        last_error: Optional[Exception] = None
+
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                return await self.generate_attack(
+                    chat_history=chat_history,
+                    turn_number=turn_number,
+                    max_turns=max_turns,
+                    guesses_remaining=guesses_remaining,
+                )
+            except Exception as e:
+                last_error = e
+                if not _is_transient_error(e):
+                    raise
+                if attempt < MAX_RETRIES:
+                    delay = RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        f"Transient error on attempt {attempt + 1}/{MAX_RETRIES + 1} "
+                        f"for {self.AGENT_NAME}: {e}. Retrying in {delay:.1f}s..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"All {MAX_RETRIES + 1} attempts failed for "
+                        f"{self.AGENT_NAME}: {e}"
+                    )
+
+        raise last_error  # type: ignore[misc]
 
     def get_info(self) -> Dict[str, Any]:
         """Return metadata about this adversarial agent."""

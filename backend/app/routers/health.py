@@ -8,7 +8,7 @@ Date: 2026/02/06
 from fastapi import APIRouter
 from datetime import datetime
 
-from ..services.llm import get_structured_output_metrics
+from ..services.llm import get_structured_output_metrics, reset_structured_output_metrics
 
 router = APIRouter()
 
@@ -62,4 +62,14 @@ async def structured_output_metrics():
         "status": status,
         "timestamp": datetime.utcnow().isoformat(),
         "metrics": metrics,
+    }
+
+
+@router.post("/metrics/structured-output/reset")
+async def reset_structured_output_metrics_endpoint():
+    """Reset structured output metrics counters to zero."""
+    reset_structured_output_metrics()
+    return {
+        "status": "reset",
+        "timestamp": datetime.utcnow().isoformat(),
     }

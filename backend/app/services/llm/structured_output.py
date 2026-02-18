@@ -12,11 +12,55 @@ import json
 import re
 from typing import TypeVar, Type, Optional, List
 from pydantic import BaseModel, ValidationError
-from langchain_core.messages import BaseMessage, SystemMessage
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
 from langchain_core.language_models import BaseChatModel
 
 from .google import GemmaGoogleChatModel
 from ...core import logger
+
+# Lazy imports to avoid circular dependencies; resolved at first call.
+_ChatAnthropic = None
+_ChatOpenAI = None
+
+
+def _get_chat_anthropic():
+    """Return the ChatAnthropic class (lazy import)."""
+    global _ChatAnthropic
+    if _ChatAnthropic is None:
+        try:
+            from langchain_anthropic import ChatAnthropic
+            _ChatAnthropic = ChatAnthropic
+        except ImportError:
+            _ChatAnthropic = type(None)  # sentinel — never matches
+    return _ChatAnthropic
+
+
+def _get_chat_openai():
+    """Return the ChatOpenAI class (lazy import)."""
+    global _ChatOpenAI
+    if _ChatOpenAI is None:
+        try:
+            from langchain_openai import ChatOpenAI
+            _ChatOpenAI = ChatOpenAI
+        except ImportError:
+            _ChatOpenAI = type(None)
+    return _ChatOpenAI
+
+
+def _ensure_human_message(messages: List[BaseMessage]) -> List[BaseMessage]:
+    """Ensure the message list contains at least one HumanMessage.
+
+    Some providers (notably Anthropic) separate SystemMessages into a
+    dedicated ``system`` parameter, which can leave the ``messages`` array
+    empty and trigger a 400 error.  When every message is a SystemMessage
+    we convert the last one to a HumanMessage so the request is valid
+    across all providers.
+    """
+    if all(isinstance(m, SystemMessage) for m in messages):
+        converted = list(messages[:-1])
+        converted.append(HumanMessage(content=messages[-1].content))
+        return converted
+    return messages
 
 
 def _is_manual_parse_only(llm: BaseChatModel) -> bool:
@@ -28,6 +72,41 @@ def _is_manual_parse_only(llm: BaseChatModel) -> bool:
     we short-circuit here.
     """
     return isinstance(llm, GemmaGoogleChatModel)
+
+
+def _is_openai_compatible(llm: BaseChatModel) -> bool:
+    """Return True for ChatOpenAI instances pointing at non-OpenAI endpoints.
+
+    OpenAI-compatible providers (DeepSeek, Alibaba/DashScope, Together, xAI,
+    etc.) are accessed via ChatOpenAI with a custom ``base_url``.  These
+    providers generally do NOT support ``response_format: {type: "json_schema"}``
+    and ChatOpenAI's default ``with_structured_output`` method is ``json_schema``
+    since langchain-openai >= 0.2.  We detect them here so we can route to
+    ``method="function_calling"`` instead.
+    """
+    ChatOpenAI = _get_chat_openai()
+    if not isinstance(llm, ChatOpenAI):
+        return False
+    base_url = str(getattr(llm, "openai_api_base", "") or "")
+    # Native OpenAI uses the default base URL (api.openai.com) or no override
+    if not base_url or "api.openai.com" in base_url:
+        return False
+    return True
+
+
+def _skip_json_schema(llm: BaseChatModel) -> bool:
+    """Return True for providers where ``method="json_schema"`` is known to fail.
+
+    - Anthropic: ``with_structured_output(method="json_schema")`` triggers 400
+      errors (empty messages, schema translation issues).
+    - OpenAI-compatible providers (DeepSeek, Alibaba, Together, etc.): the
+      ``json_schema`` response format type is unsupported by these APIs.
+    """
+    if isinstance(llm, _get_chat_anthropic()):
+        return True
+    if _is_openai_compatible(llm):
+        return True
+    return False
 
 
 # Metrics for monitoring structured output success rates
@@ -68,6 +147,7 @@ async def get_structured_output(
         An instance of the schema model, or None if all methods fail
     """
     _METRICS["total_calls"] += 1
+    messages = _ensure_human_message(messages)
 
     # Fast path: models that only support manual parsing (e.g. Gemma)
     # Skip Strategies 1 & 2 to avoid wasted API calls and error noise.
@@ -78,7 +158,20 @@ async def get_structured_output(
         )
         return await _manual_parse(llm, schema, messages)
 
-    # Strategy 1: Try native structured output (json_schema)
+    # Fast path: providers that don't support json_schema (Anthropic,
+    # OpenAI-compatible like DeepSeek/Alibaba/Together/xAI).
+    # Go straight to function calling as the primary strategy.
+    if _skip_json_schema(llm):
+        logger.debug(
+            f"Using function_calling as primary method for {type(llm).__name__} "
+            f"(json_schema unsupported) — {schema.__name__}"
+        )
+        return await _function_calling_with_fallback(
+            llm, schema, messages, fallback_to_manual_parse,
+        )
+
+    # Strategy 1: Try native structured output (json_schema) — most reliable
+    # for providers that support it (OpenAI, Mistral, Google Gemini, etc.)
     try:
         logger.debug(f"Attempting structured output with method=json_schema for {schema.__name__}")
         structured_llm = llm.with_structured_output(schema, method="json_schema")
@@ -95,10 +188,13 @@ async def get_structured_output(
         _METRICS["json_schema_failure"] += 1
         logger.warning(f"json_schema failed for {schema.__name__}: {e}, trying fallback")
 
-    # Strategy 2: Fall back to default method (function calling)
+    # Strategy 2: Fall back to function calling.
+    # We explicitly pass method="function_calling" because ChatOpenAI's
+    # default changed to "json_schema" in langchain-openai >= 0.2, which
+    # would make this strategy identical to Strategy 1 for OpenAI providers.
     try:
-        logger.debug(f"Attempting structured output with default method for {schema.__name__}")
-        structured_llm = llm.with_structured_output(schema)
+        logger.debug(f"Attempting structured output with function_calling for {schema.__name__}")
+        structured_llm = llm.with_structured_output(schema, method="function_calling")
         result = await structured_llm.ainvoke(messages)
 
         if result is not None:
@@ -119,6 +215,42 @@ async def get_structured_output(
             return result
 
     # All strategies failed
+    logger.error(f"All structured output strategies failed for {schema.__name__}")
+    return None
+
+
+async def _function_calling_with_fallback(
+    llm: BaseChatModel,
+    schema: Type[T],
+    messages: List[BaseMessage],
+    fallback_to_manual_parse: bool,
+) -> Optional[T]:
+    """Try function calling first, then fall back to manual parse.
+
+    Used as the primary path for providers that don't support json_schema
+    (Anthropic, DeepSeek, Alibaba, Together, xAI, etc.).
+    """
+    try:
+        logger.debug(f"Attempting structured output with function_calling for {schema.__name__}")
+        structured_llm = llm.with_structured_output(schema, method="function_calling")
+        result = await structured_llm.ainvoke(messages)
+
+        if result is not None:
+            _METRICS["default_method_success"] += 1
+            logger.debug(f"Successfully got structured output via function_calling for {schema.__name__}")
+            return result
+
+        _METRICS["default_method_failure"] += 1
+        logger.warning(f"function_calling returned None for {schema.__name__}, trying manual parse")
+    except Exception as e:
+        _METRICS["default_method_failure"] += 1
+        logger.warning(f"function_calling failed for {schema.__name__}: {e}, trying manual parse")
+
+    if fallback_to_manual_parse:
+        result = await _manual_parse(llm, schema, messages)
+        if result is not None:
+            return result
+
     logger.error(f"All structured output strategies failed for {schema.__name__}")
     return None
 
@@ -153,6 +285,12 @@ async def _manual_parse(
         logger.warning(f"Manual parse failed for {schema.__name__}: {e}")
 
     return None
+
+
+def reset_structured_output_metrics() -> None:
+    """Reset all structured output metrics to zero."""
+    for key in _METRICS:
+        _METRICS[key] = 0
 
 
 def get_structured_output_metrics() -> dict:

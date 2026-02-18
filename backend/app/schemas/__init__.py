@@ -366,6 +366,10 @@ class OmbreSuggestRequest(BaseModel):
         default_factory=list,
         description="The user's current chat history with the guardian",
     )
+    model_config_override: Optional[ModelConfig] = Field(
+        default=None,
+        description="Optional LLM configuration override for the adversarial agent",
+    )
 
 
 class OmbreSuggestResponse(BaseModel):

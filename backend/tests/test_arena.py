@@ -28,6 +28,7 @@ from app.services.arena.models import (
 )
 from app.services.arena.elo import EloRatingSystem
 from app.services.arena.engine import ArenaEngine, GUARDIAN_INFO, _resolve_model_id
+from app.services.adversarials.base import _is_transient_error
 from app.services.arena.leaderboard import Leaderboard
 from app.services.adversarials.factory import (
     get_adversarial_agent,
@@ -328,6 +329,33 @@ class TestEloRatingSystem:
         assert score >= 0.6
         assert score <= 1.0
 
+    def test_outcome_modifier_adversarial_win_forfeit(self):
+        """Guardian API crashed — adversarial wins by forfeit with modest score."""
+        result = self._make_result(BattleOutcome.ADVERSARIAL_WIN_FORFEIT)
+        score = self.elo._outcome_modifier(result)
+        assert score == 0.5
+
+    def test_outcome_modifier_guardian_win_forfeit(self):
+        """Adversarial API crashed — guardian wins by forfeit."""
+        result = self._make_result(BattleOutcome.GUARDIAN_WIN_FORFEIT)
+        score = self.elo._outcome_modifier(result)
+        assert score == 0.1
+
+    def test_forfeit_ratings_adversarial_wins(self):
+        """Adversarial win by forfeit — with unequal ratings it still shifts."""
+        result = self._make_result(BattleOutcome.ADVERSARIAL_WIN_FORFEIT)
+        # Use a weaker adversarial so the 0.5 actual score exceeds expectation
+        new_adv, new_guard = self.elo.calculate_new_ratings(1400, 1600, result)
+        assert new_adv > 1400
+        assert new_guard < 1600
+
+    def test_forfeit_ratings_guardian_wins(self):
+        """Guardian win by forfeit — adversarial still gets small score (0.1)."""
+        result = self._make_result(BattleOutcome.GUARDIAN_WIN_FORFEIT)
+        new_adv, new_guard = self.elo.calculate_new_ratings(1500, 1500, result)
+        assert new_guard > 1500
+        assert new_adv < 1500
+
 
 # ================================================================
 # Adversarial Factory & Base
@@ -398,6 +426,55 @@ class TestAdversarialBase:
         """The guess_secret tool should have the right schema."""
         result = guess_secret_tool.invoke({"guess": "TEST"})
         assert result == ""
+
+
+class TestIsTransientError:
+    """Tests for _is_transient_error helper."""
+
+    def test_connection_error(self):
+        assert _is_transient_error(Exception("Connection refused")) is True
+
+    def test_timeout_error(self):
+        assert _is_transient_error(Exception("Request timed out")) is True
+
+    def test_rate_limit_error(self):
+        assert _is_transient_error(Exception("429 Too Many Requests")) is True
+
+    def test_server_error_500(self):
+        assert _is_transient_error(Exception("HTTP 500 Internal Server Error")) is True
+
+    def test_server_error_502(self):
+        assert _is_transient_error(Exception("502 Bad Gateway")) is True
+
+    def test_server_error_503(self):
+        assert _is_transient_error(Exception("503 Service Unavailable")) is True
+
+    def test_client_error_not_transient(self):
+        assert _is_transient_error(Exception("400 Bad Request")) is False
+
+    def test_validation_error_not_transient(self):
+        assert _is_transient_error(Exception("Validation failed")) is False
+
+    def test_broken_pipe(self):
+        assert _is_transient_error(Exception("Broken pipe")) is True
+
+    def test_eof_error(self):
+        assert _is_transient_error(Exception("Unexpected EOF")) is True
+
+    def test_rate_limit_keyword(self):
+        assert _is_transient_error(Exception("rate limit exceeded")) is True
+
+    def test_timeout_exception_type(self):
+        """Exception type name containing 'timeout' should be transient."""
+        class TimeoutError(Exception):
+            pass
+        assert _is_transient_error(TimeoutError("something")) is True
+
+    def test_connection_exception_type(self):
+        """Exception type name containing 'connection' should be transient."""
+        class ConnectionError(Exception):
+            pass
+        assert _is_transient_error(ConnectionError("something")) is True
 
 
 # ================================================================

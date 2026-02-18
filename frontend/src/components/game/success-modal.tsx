@@ -269,7 +269,7 @@ export function SuccessModal({
                 <Button variant="outline" className="flex-1" onClick={onClose}>
                   View Stats
                 </Button>
-                {level < 5 && (
+                {level < 20 && (
                   <Button
                     variant="gold"
                     className="flex-1"
