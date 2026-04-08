@@ -10,9 +10,12 @@ Date: 2026/02/07
 import os
 from typing import Optional
 
-from mistralai import Mistral
-
 from ..core import settings, logger
+
+try:
+    from mistralai import Mistral
+except ImportError:
+    Mistral = None  # type: ignore[assignment, misc]
 
 
 # Supported audio MIME types and their file extensions
@@ -36,8 +39,10 @@ MAX_AUDIO_SIZE = 25 * 1024 * 1024
 TRANSCRIPTION_MODEL = "voxtral-mini-latest"
 
 
-def _get_mistral_client() -> Mistral:
+def _get_mistral_client() -> "Mistral":
     """Get an authenticated Mistral client."""
+    if Mistral is None:
+        raise ImportError("mistralai package is required for audio transcription. Install it with: pip install mistralai")
     api_key = settings.mistral_api_key or os.environ.get("MISTRAL_API_KEY", "")
     if not api_key:
         raise ValueError("MISTRAL_API_KEY is not configured")
