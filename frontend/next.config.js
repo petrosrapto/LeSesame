@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -10,6 +11,14 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'microphone=(self)',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },

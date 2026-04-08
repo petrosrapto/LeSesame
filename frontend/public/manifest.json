@@ -1,7 +1,7 @@
 {
   "name": "Le Sésame — AI Secret Keeper Challenge",
   "short_name": "Le Sésame",
-  "description": "5 AI guardians. 5 secrets. Can you break them all? Powered by Mistral AI.",
+  "description": "Can LLMs keep a secret? 20 AI guardians with progressively stronger defenses. Use adversarial techniques to extract secrets, or watch AI-vs-AI red-teaming battles in the arena.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

@@ -1,7 +1,9 @@
 """
-Le Sésame Backend - Mistral Embeddings Client
+Le Sésame Backend - LangChain Embeddings Client
 
-Wraps the Mistral embeddings API for semantic similarity computations.
+Wraps LangChain-compatible embeddings for semantic similarity computations.
+Using LangChain embeddings ensures all calls are traced in LangSmith
+alongside LLM calls.
 
 Author: Petros Raptopoulos
 Date: 2026/02/08
@@ -13,35 +15,43 @@ import os
 import logging
 from typing import List
 
-import numpy as np
-from mistralai import Mistral
+from langchain_community.utils.math import cosine_similarity as _matrix_cosine_similarity
+from langchain_mistralai import MistralAIEmbeddings
+from langsmith import traceable
 
 logger = logging.getLogger(__name__)
 
-_client: Mistral | None = None
+_embeddings: MistralAIEmbeddings | None = None
 
 EMBEDDING_MODEL = "mistral-embed"
 
 
-def _get_client() -> Mistral:
-    """Lazily initialise and return the Mistral client singleton."""
-    global _client
-    if _client is None:
+def _get_embeddings() -> MistralAIEmbeddings:
+    """Lazily initialise and return the MistralAIEmbeddings singleton."""
+    global _embeddings
+    if _embeddings is None:
         api_key = os.environ.get("MISTRAL_API_KEY", "")
         if not api_key:
-            # Fall back to settings
             try:
                 from ...core import settings
                 api_key = settings.mistral_api_key
             except Exception:
                 pass
-        _client = Mistral(api_key=api_key)
-    return _client
+        _embeddings = MistralAIEmbeddings(
+            model=EMBEDDING_MODEL,
+            mistral_api_key=api_key,
+        )
+    return _embeddings
 
 
+@traceable(run_type="embedding", name="embed_texts")
 async def embed_texts(texts: List[str]) -> List[List[float]]:
     """
-    Embed a list of texts using Mistral's embedding model.
+    Embed a list of texts using LangChain MistralAI embeddings.
+
+    Decorated with @traceable so every call appears in LangSmith traces
+    (LangChain Embeddings do not extend Runnable, so they are not
+    auto-traced through the callback system like ChatModels are).
 
     Args:
         texts: A list of strings to embed.
@@ -49,22 +59,11 @@ async def embed_texts(texts: List[str]) -> List[List[float]]:
     Returns:
         A list of embedding vectors (each a list of floats).
     """
-    client = _get_client()
-    # Mistral batch limit is 16384 tokens / ~50 texts; chunk if needed.
-    all_embeddings: List[List[float]] = []
-    batch_size = 32
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i : i + batch_size]
-        resp = client.embeddings.create(model=EMBEDDING_MODEL, inputs=batch)
-        all_embeddings.extend([d.embedding for d in resp.data])
-    return all_embeddings
+    embeddings = _get_embeddings()
+    return await embeddings.aembed_documents(texts)
 
 
+@traceable(run_type="tool", name="cosine_similarity")
 def cosine_similarity(a: List[float], b: List[float]) -> float:
     """Compute cosine similarity between two vectors."""
-    va = np.array(a, dtype=np.float32)
-    vb = np.array(b, dtype=np.float32)
-    denom = np.linalg.norm(va) * np.linalg.norm(vb)
-    if denom < 1e-10:
-        return 0.0
-    return float(np.dot(va, vb) / denom)
+    return float(_matrix_cosine_similarity([a], [b])[0][0])
