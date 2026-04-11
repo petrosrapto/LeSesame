@@ -23,7 +23,8 @@ class TestUserSchemas:
         user = UserCreate(
             username="testuser",
             password="testpass123",
-            email="test@example.com"
+            email="test@example.com",
+            captcha_token="test-token"
         )
         assert user.username == "testuser"
         assert user.password == "testpass123"
@@ -50,7 +51,7 @@ class TestUserSchemas:
     
     def test_login_request_valid(self):
         """Test valid login request schema."""
-        login = LoginRequest(username="testuser", password="testpass")
+        login = LoginRequest(username="testuser", password="testpass", captcha_token="test-token")
         assert login.username == "testuser"
         assert login.password == "testpass"
 

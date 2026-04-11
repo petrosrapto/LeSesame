@@ -7,7 +7,7 @@ Date: 2026/02/06
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 
 # ============== Auth Schemas ==============
@@ -16,7 +16,14 @@ class UserCreate(BaseModel):
     """Schema for user registration."""
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
-    email: Optional[str] = None
+    email: EmailStr
+    captcha_token: str = Field(..., min_length=1)
+
+
+class GoogleAuthRequest(BaseModel):
+    """Schema for Google OAuth login/register."""
+    credential: str = Field(..., min_length=1, description="Google ID token")
+    captcha_token: str = Field(..., min_length=1)
 
 
 class UserResponse(BaseModel):
@@ -24,7 +31,9 @@ class UserResponse(BaseModel):
     id: int
     username: str
     role: str = "user"
-    is_approved: bool = False
+    is_approved: bool = True
+    email_verified: bool = False
+    auth_provider: str = "local"
     created_at: datetime
     
     class Config:
@@ -40,7 +49,7 @@ class TokenResponse(BaseModel):
 
 
 class RegisterResponse(BaseModel):
-    """Schema for registration response (no token until approved)."""
+    """Schema for registration response (no token until email verified)."""
     message: str
     user: UserResponse
 
@@ -49,6 +58,13 @@ class LoginRequest(BaseModel):
     """Schema for login request."""
     username: str
     password: str
+    captcha_token: str = Field(..., min_length=1)
+
+
+class ResendVerificationRequest(BaseModel):
+    """Schema for resending verification email."""
+    email: EmailStr
+    captcha_token: str = Field(..., min_length=1)
 
 
 # ============== Admin Schemas ==============
@@ -60,6 +76,8 @@ class AdminUserResponse(BaseModel):
     email: Optional[str] = None
     role: str
     is_approved: bool
+    email_verified: bool = False
+    auth_provider: str = "local"
     created_at: datetime
 
     class Config:

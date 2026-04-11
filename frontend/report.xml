@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="74" failures="0" errors="0" time="0.827">
+    <testsuite name="src/__tests__/api.test.ts" timestamp="2026-04-11T14:32:06.959Z" hostname="192.168.1.12" tests="28" failures="0" errors="0" skipped="0" time="0.008766625">
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; sendMessage &gt; returns mock response on API failure" time="0.001176917">
+            <system-err>
+API not available, using mock response
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; sendMessage &gt; returns mock response with attack pattern detection" time="0.000139333">
+            <system-err>
+API not available, using mock response
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; sendMessage &gt; returns mock response with passphrase detection" time="0.000088292">
+            <system-err>
+API not available, using mock response
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; sendMessage &gt; transforms successful API response" time="0.000111">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; verifySecret &gt; returns mock correct response on API failure" time="0.000150708">
+            <system-err>
+API not available, using mock response
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; verifySecret &gt; returns mock incorrect response on API failure" time="0.00009425">
+            <system-err>
+API not available, using mock response
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; verifySecret &gt; returns API response on success" time="0.000070708">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getProgress &gt; returns null on API failure" time="0.000096125">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getProgress &gt; returns data on success" time="0.00027925">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getLevels &gt; returns empty array on failure" time="0.000200083">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getLevelCompletion &gt; returns null on failure" time="0.000207583">
+            <system-err>
+API not available or level not completed
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getLevelCompletion &gt; returns completion data on success" time="0.000092875">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getChatHistory &gt; returns empty array on failure" time="0.000156416">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; getSession &gt; returns null on failure" time="0.000097084">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; resetSession &gt; handles failure gracefully" time="0.000328834">
+            <system-err>
+Failed to reset session
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; transcribeAudio &gt; sends audio blob and returns transcription" time="0.001724333">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; transcribeAudio &gt; sends language parameter when provided" time="0.000236708">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="GameAPI &gt; transcribeAudio &gt; throws on API failure" time="0.000742708">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="AuthAPI &gt; register &gt; returns message on success" time="0.000163833">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="AuthAPI &gt; register &gt; throws on failure" time="0.000146125">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="AuthAPI &gt; login &gt; stores token on success" time="0.000122417">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="AuthAPI &gt; getMe &gt; returns null on failure" time="0.00008725">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="AuthAPI &gt; logout &gt; calls auth logout" time="0.000194209">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="LeaderboardAPI &gt; getLeaderboard &gt; returns empty response on failure" time="0.000456708">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="LeaderboardAPI &gt; getLeaderboard &gt; passes level and timeframe params" time="0.000101375">
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="LeaderboardAPI &gt; getTopPlayers &gt; returns empty array on failure" time="0.000102625">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="LeaderboardAPI &gt; getStats &gt; returns null on failure" time="0.00008925">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/api.test.ts" name="LeaderboardAPI &gt; getLevelLeaderboard &gt; returns empty response on failure" time="0.000144083">
+            <system-err>
+API not available
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/auth.test.ts" timestamp="2026-04-11T14:32:06.962Z" hostname="192.168.1.12" tests="6" failures="0" errors="0" skipped="0" time="0.002473459">
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; storeToken &gt; should store token and username in localStorage" time="0.001242417">
+        </testcase>
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; getAuthToken &gt; should retrieve token from localStorage" time="0.000203959">
+        </testcase>
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; getAuthToken &gt; should return null if no token exists" time="0.000081417">
+        </testcase>
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; getStoredUsername &gt; should retrieve username from localStorage" time="0.000108833">
+        </testcase>
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; clearCredentials &gt; should remove token and username from localStorage" time="0.000122458">
+        </testcase>
+        <testcase classname="src/__tests__/auth.test.ts" name="auth utilities &gt; isAuthEnabled &gt; should return true by default" time="0.00007675">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/constants.test.ts" timestamp="2026-04-11T14:32:06.962Z" hostname="192.168.1.12" tests="10" failures="0" errors="0" skipped="0" time="0.002742417">
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; LEVEL_NAMES &gt; should have 20 levels defined" time="0.000633167">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; LEVEL_NAMES &gt; should have string values for all levels" time="0.000557291">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; DIFFICULTY_COLORS &gt; should have color definitions for all 20 levels" time="0.000073833">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; DIFFICULTY_COLORS &gt; should have tailwind color classes" time="0.00026175">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; GAME_CONFIG &gt; should have maxLevels set to 20" time="0.000061875">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; GAME_CONFIG &gt; should have defaultLevel set to 1" time="0.000056166">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; ATTACK_CATEGORIES &gt; should have attack categories defined" time="0.000060084">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; ATTACK_CATEGORIES &gt; should have name and description for each category" time="0.000147708">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; SAMPLE_ATTACK_PROMPTS &gt; should have sample prompts defined" time="0.000058458">
+        </testcase>
+        <testcase classname="src/__tests__/constants.test.ts" name="constants &gt; SAMPLE_ATTACK_PROMPTS &gt; should all be non-empty strings" time="0.000171292">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/use-game.test.ts" timestamp="2026-04-11T14:32:06.963Z" hostname="192.168.1.12" tests="11" failures="0" errors="0" skipped="0" time="0.0214685">
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; initial state &gt; should have correct initial values" time="0.00798125">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; setCurrentLevel &gt; should update current level" time="0.001430167">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; completeLevel &gt; should add level to completed levels" time="0.001738625">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; completeLevel &gt; should increment successful attempts" time="0.001288583">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; completeLevel &gt; should not auto-advance (auto-advance is handled by the page component)" time="0.001474708">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; completeLevel &gt; should not add duplicate completed levels" time="0.001517708">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; incrementAttempts &gt; should increment total attempts" time="0.000996125">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; incrementAttempts &gt; should increment level attempts for current level" time="0.001181708">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; updateLevelTime &gt; should update time for a level" time="0.001028459">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; resetProgress &gt; should reset all state to initial values" time="0.001082458">
+        </testcase>
+        <testcase classname="src/__tests__/use-game.test.ts" name="useGame hook &gt; startSession &gt; should set session start time" time="0.000918208">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/utils.test.ts" timestamp="2026-04-11T14:32:06.964Z" hostname="192.168.1.12" tests="19" failures="0" errors="0" skipped="0" time="0.005640084">
+        <testcase classname="src/__tests__/utils.test.ts" name="cn (classname utility) &gt; should merge class names correctly" time="0.003036083">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="cn (classname utility) &gt; should handle conditional classes" time="0.00008975">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="cn (classname utility) &gt; should merge tailwind classes correctly" time="0.000255208">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="cn (classname utility) &gt; should handle empty inputs" time="0.000065584">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="formatDate &gt; should return &apos;Today&apos; for today&apos;s date" time="0.000078375">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="formatDate &gt; should return &apos;Yesterday&apos; for yesterday&apos;s date" time="0.000059083">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="formatDate &gt; should return &apos;X days ago&apos; for dates within a week" time="0.00005375">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="formatDate &gt; should accept string dates" time="0.000183708">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="generateId &gt; should generate a non-empty string" time="0.000094042">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="generateId &gt; should generate unique ids" time="0.000311875">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="truncateText &gt; should not truncate short text" time="0.000062417">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="truncateText &gt; should truncate long text and add ellipsis" time="0.000052208">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="truncateText &gt; should handle exact length" time="0.000048541">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getLevelName &gt; should return correct names for each level" time="0.000105333">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getLevelName &gt; should return default name for unknown levels" time="0.000087041">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getLevelDescription &gt; should return descriptions for valid levels" time="0.000128541">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getLevelDescription &gt; should return default description for unknown levels" time="0.000050916">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getDifficultyColor &gt; should return correct colors for each level" time="0.000097958">
+        </testcase>
+        <testcase classname="src/__tests__/utils.test.ts" name="getDifficultyColor &gt; should return default color for unknown levels" time="0.000047042">
+        </testcase>
+    </testsuite>
+</testsuites>

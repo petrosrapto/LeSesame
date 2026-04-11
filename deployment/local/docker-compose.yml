@@ -63,6 +63,8 @@ services:
       args:
         - NEXT_PUBLIC_API_URL=http://localhost:8000/api
         - NEXT_PUBLIC_ENABLE_AUTH=true
+        - NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID:-}
+        - NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
     container_name: le-sesame-frontend
     ports:
       - "3000:3000"

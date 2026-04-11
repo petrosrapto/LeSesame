@@ -224,8 +224,10 @@ function UsersTab() {
               </th>
               <th className="py-2 pr-4">Username</th>
               <th className="py-2 pr-4">Email</th>
+              <th className="py-2 pr-4">Provider</th>
               <th className="py-2 pr-4">Role</th>
-              <th className="py-2 pr-4">Approved</th>
+              <th className="py-2 pr-4">Verified</th>
+              <th className="py-2 pr-4">Enabled</th>
               <th className="py-2 pr-4">Created</th>
               <th className="py-2 text-right">Actions</th>
             </tr>
@@ -251,6 +253,17 @@ function UsersTab() {
                 <td className="py-2 pr-4">
                   <span
                     className={`px-2 py-0.5 text-xs border rounded-none ${
+                      u.auth_provider === "google"
+                        ? "border-blue-500/40 bg-blue-500/10 text-blue-400"
+                        : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {u.auth_provider || "local"}
+                  </span>
+                </td>
+                <td className="py-2 pr-4">
+                  <span
+                    className={`px-2 py-0.5 text-xs border rounded-none ${
                       u.role === "admin"
                         ? "border-orange-500/40 bg-orange-500/10 text-orange-500"
                         : "border-border bg-muted text-muted-foreground"
@@ -258,6 +271,13 @@ function UsersTab() {
                   >
                     {u.role}
                   </span>
+                </td>
+                <td className="py-2 pr-4">
+                  {u.email_verified ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-yellow-500" />
+                  )}
                 </td>
                 <td className="py-2 pr-4">
                   {u.is_approved ? (

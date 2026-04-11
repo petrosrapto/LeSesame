@@ -134,7 +134,7 @@ class TestNewLevelsVerifyCorrectSecret:
 
         reg = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"},
         )
         assert reg.status_code == 200, f"Registration failed: {reg.text}"
         user_id = reg.json()["user"]["id"]
@@ -143,7 +143,7 @@ class TestNewLevelsVerifyCorrectSecret:
 
         login = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "captcha_token": "e2e-test"},
         )
         assert login.status_code == 200
         headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
@@ -336,7 +336,7 @@ class TestNewLevelFullFlow:
 
         reg = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"},
         )
         assert reg.status_code == 200
         user_id = reg.json()["user"]["id"]
@@ -345,7 +345,7 @@ class TestNewLevelFullFlow:
 
         login = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "captcha_token": "e2e-test"},
         )
         headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
 
@@ -399,7 +399,7 @@ class TestNewLevelFullFlow:
 
         reg = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"},
         )
         assert reg.status_code == 200
         user_id = reg.json()["user"]["id"]
@@ -408,7 +408,7 @@ class TestNewLevelFullFlow:
 
         login = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password},
+            json={"username": username, "password": password, "captcha_token": "e2e-test"},
         )
         headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
 

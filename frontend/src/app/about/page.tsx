@@ -1251,25 +1251,6 @@ export default function AboutPage() {
             </Card>
           </motion.section>
 
-          {/* Origin Note */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="border-2 border-orange-500/30 bg-orange-500/5 rounded-none p-5 max-w-2xl mx-auto">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <span className="text-orange-500 font-semibold">Note:</span>{" "}
-                Le Sésame was originally created as part of the{" "}
-                <span className="font-semibold text-foreground">
-                  Moonshot Interview Challenge for Mistral AI
-                </span>
-                . It has since evolved into an open-source project focused on
-                advancing LLM security research and education.
-              </p>
-            </div>
-          </motion.div>
-
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1303,6 +1284,13 @@ export default function AboutPage() {
                 </Button>
               </a>
             </div>
+
+            {/* Origin Note */}
+            <p className="text-xs text-muted-foreground/70 mt-10 max-w-lg mx-auto leading-relaxed">
+              Le Sésame was originally created as part of the Moonshot Interview
+              Challenge for Mistral AI. It has since evolved into an open-source
+              project focused on advancing LLM security research and education.
+            </p>
           </motion.div>
         </div>
       </main>

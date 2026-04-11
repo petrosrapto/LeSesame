@@ -225,21 +225,19 @@ describe("AuthAPI", () => {
   });
 
   describe("register", () => {
-    it("stores token on success", async () => {
-      const tokenData = {
-        access_token: "abc",
-        token_type: "bearer",
-        expires_in: 3600,
+    it("returns message on success", async () => {
+      const regData = {
+        message: "Registration successful!",
         user: { id: 1, username: "test", created_at: "2026-01-01" },
       };
-      mockAxios.post.mockResolvedValueOnce({ data: tokenData });
-      const result = await AuthAPI.register("test", "pass123");
-      expect(result.access_token).toBe("abc");
+      mockAxios.post.mockResolvedValueOnce({ data: regData });
+      const result = await AuthAPI.register("test", "pass123", "test@example.com", "captcha-token");
+      expect(result.message).toBe("Registration successful!");
     });
 
     it("throws on failure", async () => {
       mockAxios.post.mockRejectedValueOnce(new Error("400"));
-      await expect(AuthAPI.register("test", "pass123")).rejects.toThrow();
+      await expect(AuthAPI.register("test", "pass123", "test@example.com", "captcha-token")).rejects.toThrow();
     });
   });
 
@@ -252,7 +250,7 @@ describe("AuthAPI", () => {
         user: { id: 1, username: "test", created_at: "2026-01-01" },
       };
       mockAxios.post.mockResolvedValueOnce({ data: tokenData });
-      const result = await AuthAPI.login("test", "pass123");
+      const result = await AuthAPI.login("test", "pass123", "captcha-token");
       expect(result.access_token).toBe("xyz");
     });
   });

@@ -11,7 +11,7 @@ from tests.conftest import register_and_login
 
 @pytest.mark.asyncio
 async def test_register_user(client, sample_user_data):
-    """Test user registration returns message and user data (pending approval)."""
+    """Test user registration returns message and user data (pending email verification)."""
     response = await client.post("/api/auth/register", json=sample_user_data)
 
     assert response.status_code == 200
@@ -19,14 +19,16 @@ async def test_register_user(client, sample_user_data):
 
     assert "message" in data
     assert data["user"]["username"] == sample_user_data["username"]
-    assert data["user"]["is_approved"] is False
+    assert data["user"]["is_approved"] is True
+    assert data["user"]["email_verified"] is False
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_username(client, sample_user_data):
     """Test registration with duplicate username fails."""
     await client.post("/api/auth/register", json=sample_user_data)
-    response = await client.post("/api/auth/register", json=sample_user_data)
+    dup = {**sample_user_data, "email": "other@example.com"}
+    response = await client.post("/api/auth/register", json=dup)
 
     assert response.status_code == 400
     assert "already registered" in response.json()["detail"]
@@ -37,24 +39,27 @@ async def test_register_short_username(client):
     """Test registration with too short username fails."""
     response = await client.post("/api/auth/register", json={
         "username": "ab",
-        "password": "testpass123"
+        "password": "testpass123",
+        "email": "ab@example.com",
+        "captcha_token": "test",
     })
 
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_login_unapproved_user(client, sample_user_data):
-    """Test that unapproved users cannot login."""
+async def test_login_unverified_email(client, sample_user_data):
+    """Test that users with unverified email cannot login."""
     await client.post("/api/auth/register", json=sample_user_data)
 
     response = await client.post("/api/auth/login", json={
         "username": sample_user_data["username"],
         "password": sample_user_data["password"],
+        "captcha_token": "test",
     })
 
     assert response.status_code == 403
-    assert "pending admin approval" in response.json()["detail"]
+    assert "verify your email" in response.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -71,7 +76,8 @@ async def test_login_wrong_password(client, sample_user_data):
 
     response = await client.post("/api/auth/login", json={
         "username": sample_user_data["username"],
-        "password": "wrongpassword"
+        "password": "wrongpassword",
+        "captcha_token": "test",
     })
 
     assert response.status_code == 401
@@ -82,7 +88,8 @@ async def test_login_nonexistent_user(client):
     """Test login with non-existent user fails."""
     response = await client.post("/api/auth/login", json={
         "username": "nonexistent",
-        "password": "testpass123"
+        "password": "testpass123",
+        "captcha_token": "test",
     })
 
     assert response.status_code == 401

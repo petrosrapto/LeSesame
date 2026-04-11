@@ -59,10 +59,15 @@ async def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Always verify email if not yet verified (admin override)
+    if not user.email_verified:
+        await repo.verify_email(user)
+
     if user.is_approved:
         return {"message": f"User '{user.username}' is already approved."}
     
     await repo.approve_user(user)
+
     logger.info(f"Admin {admin.username} approved user {user.username}")
     
     return {"message": f"User '{user.username}' has been approved."}

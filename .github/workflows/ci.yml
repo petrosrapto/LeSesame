@@ -274,6 +274,8 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_ENABLE_AUTH=${{ secrets.NEXT_PUBLIC_ENABLE_AUTH }}
+            NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID }}
+            NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
 
       - name: Summary
         run: |

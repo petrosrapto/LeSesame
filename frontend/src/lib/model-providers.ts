@@ -106,28 +106,6 @@ export const providers: Provider[] = [
     ],
   },
 
-  // ── AWS Bedrock (native provider) ──────────────────────────────────────
-  {
-    displayName: "AWS Bedrock",
-    providerId: "aws",
-    apiName: "bedrock",
-    models: [
-      // Anthropic
-      { displayName: "Claude Sonnet 4",           apiIdentifier: "us.anthropic.claude-sonnet-4-20250514-v1:0" },
-      { displayName: "Claude 3.5 Haiku",          apiIdentifier: "us.anthropic.claude-3-5-haiku-20241022-v1:0" },
-      // Meta Llama
-      { displayName: "Llama 4 Maverick 17B",      apiIdentifier: "us.meta.llama4-maverick-17b-instruct-v1:0" },
-      { displayName: "Llama 4 Scout 17B",         apiIdentifier: "us.meta.llama4-scout-17b-instruct-v1:0" },
-      { displayName: "Llama 3.3 70B",             apiIdentifier: "us.meta.llama3-3-70b-instruct-v1:0" },
-      // Amazon Nova
-      { displayName: "Amazon Nova Pro",            apiIdentifier: "us.amazon.nova-pro-v1:0" },
-      { displayName: "Amazon Nova Lite",           apiIdentifier: "us.amazon.nova-lite-v1:0" },
-      { displayName: "Amazon Nova Micro",          apiIdentifier: "us.amazon.nova-micro-v1:0" },
-      // Mistral on Bedrock
-      { displayName: "Mistral Large (Bedrock)",    apiIdentifier: "mistral.mistral-large-2407-v1:0" },
-    ],
-  },
-
   // ── Alibaba / DashScope (OpenAI-compatible) ────────────────────────────
   {
     displayName: "Alibaba",

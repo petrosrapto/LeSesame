@@ -42,7 +42,7 @@ def _get_admin_token(client: httpx.Client | None = None) -> str:
     try:
         resp = c.post(
             "/api/auth/login",
-            json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
+            json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD, "captcha_token": "e2e-test"},
         )
         if resp.status_code != 200:
             pytest.exit(
@@ -142,6 +142,7 @@ def registered_user(http_client: httpx.Client, unique_username: str, test_passwo
             "username": unique_username,
             "password": test_password,
             "email": f"{unique_username}@test.com",
+            "captcha_token": "e2e-test",
         },
     )
     assert reg_response.status_code == 200, f"Registration failed: {reg_response.text}"
@@ -157,7 +158,7 @@ def registered_user(http_client: httpx.Client, unique_username: str, test_passwo
     # 3. Login to get token
     login_response = http_client.post(
         "/api/auth/login",
-        json={"username": unique_username, "password": test_password},
+        json={"username": unique_username, "password": test_password, "captcha_token": "e2e-test"},
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
     login_data = login_response.json()
@@ -185,7 +186,7 @@ def admin_user(http_client: httpx.Client) -> dict:
 
     reg_response = http_client.post(
         "/api/auth/register",
-        json={"username": username, "password": password},
+        json={"username": username, "password": password, "email": f"{username}@test.com", "captcha_token": "e2e-test"},
     )
     assert reg_response.status_code == 200
     user_id = reg_response.json()["user"]["id"]
@@ -195,7 +196,7 @@ def admin_user(http_client: httpx.Client) -> dict:
 
     login_response = http_client.post(
         "/api/auth/login",
-        json={"username": username, "password": password},
+        json={"username": username, "password": password, "captcha_token": "e2e-test"},
     )
     assert login_response.status_code == 200
     login_data = login_response.json()
@@ -240,7 +241,7 @@ def check_llm_availability(base_url: str) -> bool:
             username = f"llm_check_{uuid.uuid4().hex[:8]}"
             reg_response = client.post(
                 "/api/auth/register",
-                json={"username": username, "password": "TestPass123!"},
+                json={"username": username, "password": "TestPass123!", "email": f"{username}@test.com", "captcha_token": "e2e-test"},
             )
             if reg_response.status_code != 200:
                 return False
@@ -252,7 +253,7 @@ def check_llm_availability(base_url: str) -> bool:
             _approve_user_via_api(user_id)
             login_resp = client.post(
                 "/api/auth/login",
-                json={"username": username, "password": "TestPass123!"},
+                json={"username": username, "password": "TestPass123!", "captcha_token": "e2e-test"},
             )
             if login_resp.status_code != 200:
                 return False

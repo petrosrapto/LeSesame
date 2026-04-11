@@ -87,12 +87,47 @@ All optional — set only the ones you use. Variables without a secret are skipp
 | `LANGCHAIN_API_KEY` | LangSmith API key | No |
 | `LANGCHAIN_ENDPOINT` | LangSmith endpoint URL | No |
 
+### Backend — Google OAuth
+
+| Secret Name | Description | Required | Default if unset |
+|------------|-------------|----------|------------------|
+| `GOOGLE_OAUTH_CLIENT_ID` | Google OAuth client ID (same value as frontend `NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID`) | Yes | _(empty — Google sign-in disabled)_ |
+
+### Backend — reCAPTCHA v3
+
+| Secret Name | Description | Required | Default if unset |
+|------------|-------------|----------|------------------|
+| `RECAPTCHA_SECRET_KEY` | reCAPTCHA v3 server-side secret key | Yes | _(empty — verification skipped)_ |
+| `RECAPTCHA_SCORE_THRESHOLD` | Minimum score to pass (0.0–1.0) | No | `0.5` |
+| `RECAPTCHA_BYPASS_TOKEN` | Token value that skips reCAPTCHA (for e2e tests) | No | _(empty — no bypass)_ |
+
+### Backend — SMTP (Email Verification)
+
+| Secret Name | Description | Required | Default if unset |
+|------------|-------------|----------|------------------|
+| `SMTP_HOST` | SMTP server hostname | Yes | _(empty — emails not sent)_ |
+| `SMTP_PORT` | SMTP port (`465` for SSL, `587` for STARTTLS) | No | `587` |
+| `SMTP_USER` | SMTP username (e.g. `resend` for Resend) | Yes | — |
+| `SMTP_PASSWORD` | SMTP password or API key | Yes | — |
+| `SMTP_FROM_EMAIL` | Sender email address | No | `noreply@lesesame.eu` |
+| `SMTP_FROM_NAME` | Sender display name | No | `Le Sésame` |
+| `SMTP_USE_TLS` | Use STARTTLS (`true`/`false`) | No | `true` |
+| `SMTP_USE_SSL` | Use implicit SSL (`true`/`false`) | No | `false` |
+
+### Backend — Frontend URL
+
+| Secret Name | Description | Required | Default if unset |
+|------------|-------------|----------|------------------|
+| `FRONTEND_URL` | Frontend URL for email verification links | Yes | `http://localhost:3000` |
+
 ### Frontend Application Secrets
 
 | Secret Name | Description | Required | Default if unset |
 |------------|-------------|----------|------------------|
 | `NEXT_PUBLIC_API_URL` | Backend API URL | No | `http://backend:8000` (from `.env.example`) |
 | `NEXT_PUBLIC_ENABLE_AUTH` | Enable authentication | No | `true` (from `.env.example`) |
+| `NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID` | Google OAuth client ID (baked at build time) | Yes | _(empty)_ |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | reCAPTCHA v3 site key (baked at build time) | Yes | _(empty)_ |
 | `NODE_ENV` | Node environment | No | `production` (from `.env.example`) |
 
 ## Generating Required Values

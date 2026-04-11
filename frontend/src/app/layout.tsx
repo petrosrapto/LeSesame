@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Press_Start_2P, JetBrains_Mono, VT323 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { AuthProviders } from "@/components/providers/auth-providers";
 import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
@@ -131,7 +132,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ToastProvider>{children}</ToastProvider>
+          <AuthProviders>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProviders>
         </ThemeProvider>
       </body>
     </html>

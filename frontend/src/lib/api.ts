@@ -45,6 +45,8 @@ export interface User {
   username: string;
   role: string;
   is_approved: boolean;
+  email_verified: boolean;
+  auth_provider: string;
   created_at: string;
 }
 
@@ -67,6 +69,8 @@ export interface AdminUser {
   email: string | null;
   role: string;
   is_approved: boolean;
+  email_verified: boolean;
+  auth_provider: string;
   created_at: string;
 }
 
@@ -266,13 +270,15 @@ export const AuthAPI = {
   async register(
     username: string,
     password: string,
-    email?: string
+    email: string,
+    captchaToken: string,
   ): Promise<RegisterResponse> {
     try {
       const response = await apiClient.post<RegisterResponse>("/auth/register", {
         username,
         password,
-        ...(email ? { email } : {}),
+        email,
+        captcha_token: captchaToken,
       });
       return response.data;
     } catch (error) {
@@ -280,11 +286,12 @@ export const AuthAPI = {
     }
   },
 
-  async login(username: string, password: string): Promise<TokenResponse> {
+  async login(username: string, password: string, captchaToken: string): Promise<TokenResponse> {
     try {
       const response = await apiClient.post<TokenResponse>("/auth/login", {
         username,
         password,
+        captcha_token: captchaToken,
       });
       storeToken(response.data.access_token, response.data.user.username);
       // Store role info
@@ -295,6 +302,26 @@ export const AuthAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  async googleAuth(credential: string, captchaToken: string): Promise<TokenResponse> {
+    const response = await apiClient.post<TokenResponse>("/auth/google", {
+      credential,
+      captcha_token: captchaToken,
+    });
+    storeToken(response.data.access_token, response.data.user.username);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("le-sesame-user-role", response.data.user.role);
+    }
+    return response.data;
+  },
+
+  async resendVerification(email: string, captchaToken: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>("/auth/resend-verification", {
+      email,
+      captcha_token: captchaToken,
+    });
+    return response.data;
   },
 
   async getMe(): Promise<User | null> {

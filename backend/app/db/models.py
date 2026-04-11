@@ -18,10 +18,19 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=True)
-    hashed_password = Column(String(255), nullable=False)
+    hashed_password = Column(String(255), nullable=True)  # nullable for Google OAuth users
     role = Column(String(20), nullable=False, server_default="user")  # 'user' or 'admin'
-    is_approved = Column(Boolean, nullable=False, server_default="false")  # admin must approve
+    is_approved = Column(Boolean, nullable=False, server_default="true")  # auto-approved on registration
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Auth provider: "local" or "google"
+    auth_provider = Column(String(20), nullable=False, server_default="local")
+    google_id = Column(String(255), unique=True, nullable=True, index=True)
+
+    # Email verification (for local auth)
+    email_verified = Column(Boolean, nullable=False, server_default="false")
+    email_verification_token = Column(String(255), nullable=True)
+    email_verification_expires = Column(DateTime, nullable=True)
     
     # Relationships
     game_sessions = relationship("GameSession", back_populates="user")

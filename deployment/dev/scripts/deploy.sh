@@ -282,9 +282,18 @@ if [ "$BUILD" = true ]; then
     echo -e "\n${BLUE}Building backend image...${NC}"
     docker build -t dev-backend:latest "$BACKEND_DIR"
     
-    # Build frontend image
+    # Build frontend image (pass NEXT_PUBLIC_* build args from frontend .env)
     echo -e "\n${BLUE}Building frontend image...${NC}"
-    docker build -t dev-frontend:latest "$FRONTEND_DIR"
+    FRONTEND_BUILD_ARGS=""
+    if [ -f "$DEPLOY_DIR/frontend/.env" ]; then
+        source "$DEPLOY_DIR/frontend/.env"
+    fi
+    docker build \
+        --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-/api}" \
+        --build-arg NEXT_PUBLIC_ENABLE_AUTH="${NEXT_PUBLIC_ENABLE_AUTH:-true}" \
+        --build-arg NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID="${NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID:-}" \
+        --build-arg NEXT_PUBLIC_RECAPTCHA_SITE_KEY="${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}" \
+        -t dev-frontend:latest "$FRONTEND_DIR"
     
     # Set image names for local builds
     export BACKEND_IMAGE="dev-backend:latest"

@@ -8,6 +8,7 @@ Date: 2026/02/07
 """
 
 from typing import Optional, List
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import joinedload
@@ -35,6 +36,13 @@ class UserRepository(BaseRepository[User]):
             select(User).where(User.email == email)
         )
         return result.scalar_one_or_none()
+
+    async def get_by_google_id(self, google_id: str) -> Optional[User]:
+        """Get a user by Google ID."""
+        result = await self._session.execute(
+            select(User).where(User.google_id == google_id)
+        )
+        return result.scalar_one_or_none()
     
     async def username_exists(self, username: str) -> bool:
         """Check if a username already exists."""
@@ -49,10 +57,15 @@ class UserRepository(BaseRepository[User]):
     async def create_user(
         self,
         username: str,
-        hashed_password: str,
+        hashed_password: Optional[str] = None,
         email: Optional[str] = None,
         role: str = "user",
-        is_approved: bool = False,
+        is_approved: bool = True,
+        auth_provider: str = "local",
+        google_id: Optional[str] = None,
+        email_verified: bool = False,
+        email_verification_token: Optional[str] = None,
+        email_verification_expires: Optional[datetime] = None,
     ) -> User:
         """Create a new user."""
         user = User(
@@ -61,6 +74,11 @@ class UserRepository(BaseRepository[User]):
             hashed_password=hashed_password,
             role=role,
             is_approved=is_approved,
+            auth_provider=auth_provider,
+            google_id=google_id,
+            email_verified=email_verified,
+            email_verification_token=email_verification_token,
+            email_verification_expires=email_verification_expires,
         )
         return await self.create(user)
     
@@ -77,6 +95,28 @@ class UserRepository(BaseRepository[User]):
     async def set_role(self, user: User, role: str) -> User:
         """Set a user's role."""
         user.role = role
+        return await self.update(user)
+
+    async def get_by_verification_token(self, token: str) -> Optional[User]:
+        """Get a user by their email verification token."""
+        result = await self._session.execute(
+            select(User).where(User.email_verification_token == token)
+        )
+        return result.scalar_one_or_none()
+
+    async def verify_email(self, user: User) -> User:
+        """Mark user email as verified and clear the token."""
+        user.email_verified = True
+        user.email_verification_token = None
+        user.email_verification_expires = None
+        return await self.update(user)
+
+    async def set_verification_token(
+        self, user: User, token: str, expires: datetime,
+    ) -> User:
+        """Set a new verification token on a user."""
+        user.email_verification_token = token
+        user.email_verification_expires = expires
         return await self.update(user)
     
     async def get_all_users(self, page: int = 1, per_page: int = 50) -> tuple[List[User], int]:
