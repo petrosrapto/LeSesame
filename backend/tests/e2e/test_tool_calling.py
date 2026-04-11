@@ -133,7 +133,7 @@ PROVIDERS = [
         id="bedrock",
     ),
     pytest.param(
-        {"provider": "anthropic", "model_id": "claude-3-5-haiku-20241022"},
+        {"provider": "anthropic", "model_id": "claude-sonnet-4-20250514"},
         "anthropic",
         id="anthropic",
     ),
