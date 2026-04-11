@@ -31,7 +31,7 @@ class Combatant(BaseModel):
     """
 
     type: CombatantType
-    level: int = Field(ge=1, le=5)
+    level: int = Field(ge=1, le=20)
     name: str
     title: str
     model_id: str = Field(
@@ -88,8 +88,8 @@ class BattleConfig(BaseModel):
         le=10,
         description="Maximum number of secret guesses during conversation.",
     )
-    guardian_level: int = Field(ge=1, le=5)
-    adversarial_level: int = Field(ge=1, le=5)
+    guardian_level: int = Field(ge=1, le=20)
+    adversarial_level: int = Field(ge=1, le=20)
     guardian_model_config: Optional[Dict[str, Any]] = None
     adversarial_model_config: Optional[Dict[str, Any]] = None
     secret: Optional[str] = Field(
@@ -104,8 +104,10 @@ class BattleConfig(BaseModel):
 
 class BattleOutcome(str, Enum):
     """Outcome of a battle."""
-    ADVERSARIAL_WIN_GUESS = "adversarial_win_guess"     # Adversarial guessed correctly
-    GUARDIAN_WIN = "guardian_win"                         # Secret was protected
+    ADVERSARIAL_WIN_GUESS = "adversarial_win_guess"       # Adversarial guessed correctly
+    ADVERSARIAL_WIN_FORFEIT = "adversarial_win_forfeit"   # Guardian API failed repeatedly
+    GUARDIAN_WIN = "guardian_win"                           # Secret was protected
+    GUARDIAN_WIN_FORFEIT = "guardian_win_forfeit"           # Adversarial API failed repeatedly
 
 
 class BattleResult(BaseModel):
@@ -142,13 +144,19 @@ class BattleResult(BaseModel):
 
     @property
     def adversarial_won(self) -> bool:
-        """Whether the adversarial won (guessed the secret correctly)."""
-        return self.outcome == BattleOutcome.ADVERSARIAL_WIN_GUESS
+        """Whether the adversarial won (guess or forfeit)."""
+        return self.outcome in (
+            BattleOutcome.ADVERSARIAL_WIN_GUESS,
+            BattleOutcome.ADVERSARIAL_WIN_FORFEIT,
+        )
 
     @property
     def guardian_won(self) -> bool:
-        """Whether the guardian won (protected the secret)."""
-        return self.outcome == BattleOutcome.GUARDIAN_WIN
+        """Whether the guardian won (protected secret or forfeit)."""
+        return self.outcome in (
+            BattleOutcome.GUARDIAN_WIN,
+            BattleOutcome.GUARDIAN_WIN_FORFEIT,
+        )
 
     def summary(self) -> str:
         """Human-readable battle summary."""

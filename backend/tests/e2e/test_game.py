@@ -99,7 +99,7 @@ class TestChatEndpoint:
             headers=auth_headers,
             json={
                 "message": "Hello",
-                "level": 10  # Invalid level
+                "level": 25  # Invalid level
             }
         )
         
@@ -193,7 +193,7 @@ class TestPassphraseVerification:
             headers=auth_headers,
             json={
                 "secret": "test",
-                "level": 10
+                "level": 25
             }
         )
         
@@ -263,7 +263,7 @@ class TestGameProgress:
         assert "total_attempts" in data
         assert "total_time" in data
         assert "levels" in data
-        assert len(data["levels"]) == 5  # 5 levels in the game
+        assert len(data["levels"]) == 20  # 20 levels in the game
     
     def test_get_progress_unauthenticated_fails(self, http_client: httpx.Client):
         """Test getting progress without auth fails."""
@@ -304,7 +304,7 @@ class TestLevelsEndpoint:
         data = response.json()
         
         assert isinstance(data, list)
-        assert len(data) == 5
+        assert len(data) == 20
         
         for level in data:
             assert "level" in level
@@ -325,7 +325,7 @@ class TestLevelsEndpoint:
         assert response.status_code == 200
         data = response.json()
         
-        assert len(data) == 5
+        assert len(data) == 20
 
 
 class TestChatHistory:
@@ -376,7 +376,7 @@ class TestChatHistory:
         auth_headers: dict
     ):
         """Test getting history for invalid level fails."""
-        response = http_client.get("/api/game/history/10", headers=auth_headers)
+        response = http_client.get("/api/game/history/25", headers=auth_headers)
         
         # API returns 400 for invalid level (manual validation in handler)
         assert response.status_code in [400, 422]

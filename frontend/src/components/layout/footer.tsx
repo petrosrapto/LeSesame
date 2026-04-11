@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Logo } from "@/components/brand/logo";
 import { Github, Linkedin, Globe, GraduationCap, Mail } from "lucide-react";
 
@@ -22,17 +21,7 @@ export function Footer() {
               The Multi-Level Secret Keeper Game. Can you outsmart the AI
               guardians?
             </p>
-            <div className="flex items-center gap-2 opacity-60">
-              <Image
-                src="/mistral-logo.png"
-                alt="Mistral AI"
-                width={16}
-                height={16}
-              />
-              <span className="text-xs text-muted-foreground">
-                Powered by Mistral AI
-              </span>
-            </div>
+
           </div>
 
           {/* Quick Links */}
@@ -165,16 +154,7 @@ export function Footer() {
               © {new Date().getFullYear()} Le Sésame. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground">
-              Powered by{" "}
-              <a
-                href="https://mistral.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:underline"
-              >
-                Mistral AI
-              </a>{" "}
-              · Implemented by{" "}
+              Created by{" "}
               <a
                 href="https://petrosraptopoulos.com/"
                 target="_blank"

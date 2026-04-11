@@ -8,6 +8,8 @@ Date: 2026/02/06
 from fastapi import APIRouter
 from datetime import datetime
 
+from ..services.llm import get_structured_output_metrics, reset_structured_output_metrics
+
 router = APIRouter()
 
 
@@ -29,4 +31,45 @@ async def readiness_check():
         "status": "ready",
         "service": "le-sesame-api",
         "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@router.get("/metrics/structured-output")
+async def structured_output_metrics():
+    """
+    Get metrics about structured output success rates.
+
+    Use this endpoint to monitor which fallback tier is being used:
+    - High json_schema_success_rate (>95%) = Good, primary method working
+    - High default_method_success_rate = Fallback being used frequently (investigate)
+    - High manual_parse_success_rate = Both structured methods failing (critical)
+    - Low overall_success_rate (<90%) = Critical issue, system degraded
+    """
+    metrics = get_structured_output_metrics()
+
+    # Determine health status based on metrics
+    total = metrics.get("total_calls", 0)
+    if total == 0:
+        status = "no_data"
+    elif metrics.get("json_schema_success_rate", 0) > 95:
+        status = "healthy"
+    elif metrics.get("overall_success_rate", 0) > 90:
+        status = "degraded"
+    else:
+        status = "critical"
+
+    return {
+        "status": status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "metrics": metrics,
+    }
+
+
+@router.post("/metrics/structured-output/reset")
+async def reset_structured_output_metrics_endpoint():
+    """Reset structured output metrics counters to zero."""
+    reset_structured_output_metrics()
+    return {
+        "status": "reset",
+        "timestamp": datetime.utcnow().isoformat(),
     }

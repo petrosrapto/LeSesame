@@ -10,6 +10,7 @@ Date: 2026/02/08
 
 import json
 import pytest
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from unittest.mock import patch, AsyncMock, MagicMock
 
@@ -27,6 +28,7 @@ from app.services.arena.models import (
 )
 from app.services.arena.elo import EloRatingSystem
 from app.services.arena.engine import ArenaEngine, GUARDIAN_INFO, _resolve_model_id
+from app.services.adversarials.base import _is_transient_error
 from app.services.arena.leaderboard import Leaderboard
 from app.services.adversarials.factory import (
     get_adversarial_agent,
@@ -103,7 +105,7 @@ class TestCombatant:
             )
         with pytest.raises(ValidationError):
             Combatant(
-                type=CombatantType.GUARDIAN, level=6,
+                type=CombatantType.GUARDIAN, level=21,
                 name="Test", title="Test", model_id="x",
             )
 
@@ -327,6 +329,33 @@ class TestEloRatingSystem:
         assert score >= 0.6
         assert score <= 1.0
 
+    def test_outcome_modifier_adversarial_win_forfeit(self):
+        """Guardian API crashed — adversarial wins by forfeit with modest score."""
+        result = self._make_result(BattleOutcome.ADVERSARIAL_WIN_FORFEIT)
+        score = self.elo._outcome_modifier(result)
+        assert score == 0.5
+
+    def test_outcome_modifier_guardian_win_forfeit(self):
+        """Adversarial API crashed — guardian wins by forfeit."""
+        result = self._make_result(BattleOutcome.GUARDIAN_WIN_FORFEIT)
+        score = self.elo._outcome_modifier(result)
+        assert score == 0.1
+
+    def test_forfeit_ratings_adversarial_wins(self):
+        """Adversarial win by forfeit — with unequal ratings it still shifts."""
+        result = self._make_result(BattleOutcome.ADVERSARIAL_WIN_FORFEIT)
+        # Use a weaker adversarial so the 0.5 actual score exceeds expectation
+        new_adv, new_guard = self.elo.calculate_new_ratings(1400, 1600, result)
+        assert new_adv > 1400
+        assert new_guard < 1600
+
+    def test_forfeit_ratings_guardian_wins(self):
+        """Guardian win by forfeit — adversarial still gets small score (0.1)."""
+        result = self._make_result(BattleOutcome.GUARDIAN_WIN_FORFEIT)
+        new_adv, new_guard = self.elo.calculate_new_ratings(1500, 1500, result)
+        assert new_guard > 1500
+        assert new_adv < 1500
+
 
 # ================================================================
 # Adversarial Factory & Base
@@ -335,7 +364,7 @@ class TestEloRatingSystem:
 
 class TestAdversarialFactory:
     def test_get_all_levels(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             agent = get_adversarial_agent(level)
             assert isinstance(agent, AdversarialAgent)
             assert agent.level == level
@@ -344,14 +373,14 @@ class TestAdversarialFactory:
         with pytest.raises(ValueError, match="Invalid"):
             get_adversarial_agent(0)
         with pytest.raises(ValueError, match="Invalid"):
-            get_adversarial_agent(6)
+            get_adversarial_agent(21)
 
     def test_with_model_config(self):
         agent = get_adversarial_agent(1, model_config={"model_id": "gpt-4o"})
         assert agent.model_config == {"model_id": "gpt-4o"}
 
     def test_adversarial_info_complete(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             info = ADVERSARIAL_INFO[level]
             assert "name" in info
             assert "title" in info
@@ -399,6 +428,55 @@ class TestAdversarialBase:
         assert result == ""
 
 
+class TestIsTransientError:
+    """Tests for _is_transient_error helper."""
+
+    def test_connection_error(self):
+        assert _is_transient_error(Exception("Connection refused")) is True
+
+    def test_timeout_error(self):
+        assert _is_transient_error(Exception("Request timed out")) is True
+
+    def test_rate_limit_error(self):
+        assert _is_transient_error(Exception("429 Too Many Requests")) is True
+
+    def test_server_error_500(self):
+        assert _is_transient_error(Exception("HTTP 500 Internal Server Error")) is True
+
+    def test_server_error_502(self):
+        assert _is_transient_error(Exception("502 Bad Gateway")) is True
+
+    def test_server_error_503(self):
+        assert _is_transient_error(Exception("503 Service Unavailable")) is True
+
+    def test_client_error_not_transient(self):
+        assert _is_transient_error(Exception("400 Bad Request")) is False
+
+    def test_validation_error_not_transient(self):
+        assert _is_transient_error(Exception("Validation failed")) is False
+
+    def test_broken_pipe(self):
+        assert _is_transient_error(Exception("Broken pipe")) is True
+
+    def test_eof_error(self):
+        assert _is_transient_error(Exception("Unexpected EOF")) is True
+
+    def test_rate_limit_keyword(self):
+        assert _is_transient_error(Exception("rate limit exceeded")) is True
+
+    def test_timeout_exception_type(self):
+        """Exception type name containing 'timeout' should be transient."""
+        class TimeoutError(Exception):
+            pass
+        assert _is_transient_error(TimeoutError("something")) is True
+
+    def test_connection_exception_type(self):
+        """Exception type name containing 'connection' should be transient."""
+        class ConnectionError(Exception):
+            pass
+        assert _is_transient_error(ConnectionError("something")) is True
+
+
 # ================================================================
 # Engine
 # ================================================================
@@ -422,7 +500,7 @@ class TestResolveModelId:
 
 class TestArenaEngine:
     def test_guardian_info_complete(self):
-        for level in range(1, 6):
+        for level in range(1, 21):
             assert level in GUARDIAN_INFO
             assert "name" in GUARDIAN_INFO[level]
             assert "title" in GUARDIAN_INFO[level]
@@ -607,8 +685,8 @@ class TestLeaderboard:
         await test_session.commit()
 
         rankings = await lb.get_rankings()
-        # 5 guardians + 5 adversarials = 10
-        assert len(rankings) == 10
+        # 20 guardians + 20 adversarials = 40
+        assert len(rankings) == 40
         for entry in rankings:
             assert entry.model_id == "test-model"
 
@@ -620,7 +698,7 @@ class TestLeaderboard:
         await test_session.commit()
 
         rankings = await lb.get_rankings()
-        assert len(rankings) == 20  # 10 per model
+        assert len(rankings) == 80  # 40 per model
 
     @pytest.mark.asyncio
     async def test_record_battle(self, test_session: AsyncSession):
@@ -679,8 +757,8 @@ class TestLeaderboard:
 
         guardians = await lb.get_rankings(CombatantType.GUARDIAN)
         adversarials = await lb.get_rankings(CombatantType.ADVERSARIAL)
-        assert len(guardians) == 5
-        assert len(adversarials) == 5
+        assert len(guardians) == 20
+        assert len(adversarials) == 20
         assert all(e.combatant_type == CombatantType.GUARDIAN for e in guardians)
 
     @pytest.mark.asyncio
@@ -1133,3 +1211,193 @@ class TestArenaRouterWithData:
         data = response.json()
         assert data["rounds"] == []
         assert data["guesses"] == []
+
+
+# ================================================================
+# Guardian Validation Gate
+# ================================================================
+
+
+@dataclass
+class _FakeValidationResult:
+    """Minimal stand-in for ``ValidationResult``."""
+    passed: bool
+    summary: str = "test"
+
+
+class TestSetValidationResult:
+    """Tests for ``ArenaRepository.set_validation_result``."""
+
+    @pytest.mark.asyncio
+    async def test_set_validation_passed(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_val",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        await repo.set_validation_result("guardian_L1_val", passed=True)
+        await test_session.commit()
+
+        c = await repo.get_combatant("guardian_L1_val")
+        assert c.validated is True
+        assert c.validation_passed is True
+        assert c.validated_at is not None
+
+    @pytest.mark.asyncio
+    async def test_set_validation_failed(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L2_val",
+            combatant_type="guardian", level=2,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        await repo.set_validation_result("guardian_L2_val", passed=False)
+        await test_session.commit()
+
+        c = await repo.get_combatant("guardian_L2_val")
+        assert c.validated is True
+        assert c.validation_passed is False
+
+    @pytest.mark.asyncio
+    async def test_set_validation_nonexistent(self, test_session: AsyncSession):
+        repo = ArenaRepository(test_session)
+        # Should not raise
+        await repo.set_validation_result("nonexistent", passed=True)
+
+
+class TestEnsureGuardianValidated:
+    """Tests for ``Leaderboard.ensure_guardian_validated``."""
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_passes(self, mock_validator_cls, test_session: AsyncSession):
+        """Guardian that passes validation returns True and is stored."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_test",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_test", level=1,
+        )
+        await test_session.commit()
+
+        assert result is True
+        c = await repo.get_combatant("guardian_L1_test")
+        assert c.validated is True
+        assert c.validation_passed is True
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_fails(self, mock_validator_cls, test_session: AsyncSession):
+        """Guardian that fails validation returns False and is stored."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=False),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_fail",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_fail", level=1,
+        )
+        await test_session.commit()
+
+        assert result is False
+        c = await repo.get_combatant("guardian_L1_fail")
+        assert c.validated is True
+        assert c.validation_passed is False
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_cached(self, mock_validator_cls, test_session: AsyncSession):
+        """Second call uses cached DB result without re-validating."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_cache",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+
+        # First call — runs validation
+        result1 = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_cache", level=1,
+        )
+        await test_session.commit()
+        assert result1 is True
+        assert mock_instance.validate_level.await_count == 1
+
+        # Second call — should use cached result
+        result2 = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_cache", level=1,
+        )
+        assert result2 is True
+        # validate_level should NOT have been called again
+        assert mock_instance.validate_level.await_count == 1
+
+    @pytest.mark.asyncio
+    @patch("app.services.levels.validator.LevelValidator")
+    async def test_force_revalidation(self, mock_validator_cls, test_session: AsyncSession):
+        """force=True re-runs validation even when cached."""
+        mock_instance = MagicMock()
+        mock_instance.validate_level = AsyncMock(
+            return_value=_FakeValidationResult(passed=True),
+        )
+        mock_validator_cls.return_value = mock_instance
+
+        repo = ArenaRepository(test_session)
+        await repo.upsert_combatant(
+            combatant_id="guardian_L1_force",
+            combatant_type="guardian", level=1,
+            name="G", title="T", model_id="test",
+        )
+        await test_session.commit()
+
+        lb = Leaderboard(test_session)
+
+        # First call
+        await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_force", level=1,
+        )
+        await test_session.commit()
+        assert mock_instance.validate_level.await_count == 1
+
+        # Force re-run
+        result = await lb.ensure_guardian_validated(
+            combatant_id="guardian_L1_force", level=1, force=True,
+        )
+        await test_session.commit()
+        assert result is True
+        assert mock_instance.validate_level.await_count == 2

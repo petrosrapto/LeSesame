@@ -12,5 +12,6 @@ Supported providers:
 """
 
 from .llm import get_llm
+from .structured_output import get_structured_output, get_structured_output_metrics, reset_structured_output_metrics
 
-__all__ = ["get_llm"]
+__all__ = ["get_llm", "get_structured_output", "get_structured_output_metrics", "reset_structured_output_metrics"]

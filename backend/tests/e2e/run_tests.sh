@@ -95,7 +95,7 @@ echo -e "Test path: ${BLUE}${TEST_PATH}${NC}"
 echo ""
 
 export E2E_API_URL="${API_URL}"
-pytest "${TEST_PATH}" -v --tb=short -x --no-cov --override-ini="addopts="
+pytest "${TEST_PATH}" -v --tb=short -x --no-cov --override-ini="addopts=" -m "not bedrock"
 
 TEST_EXIT_CODE=$?
 

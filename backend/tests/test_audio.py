@@ -26,28 +26,33 @@ from app.services.audio import (
 class TestGetMistralClient:
     """Tests for Mistral client instantiation."""
 
+    @patch("app.services.audio.Mistral")
     @patch("app.services.audio.settings")
-    def test_client_with_api_key(self, mock_settings):
+    def test_client_with_api_key(self, mock_settings, mock_mistral_cls):
         """Test client creation when API key is configured."""
         mock_settings.mistral_api_key = "test-api-key"
         client = _get_mistral_client()
         assert client is not None
+        mock_mistral_cls.assert_called_once_with(api_key="test-api-key")
 
+    @patch("app.services.audio.Mistral")
     @patch.dict("os.environ", {"MISTRAL_API_KEY": ""}, clear=False)
     @patch("app.services.audio.settings")
-    def test_client_missing_api_key_raises(self, mock_settings):
+    def test_client_missing_api_key_raises(self, mock_settings, mock_mistral_cls):
         """Test that missing API key raises ValueError."""
         mock_settings.mistral_api_key = ""
         with pytest.raises(ValueError, match="MISTRAL_API_KEY"):
             _get_mistral_client()
 
+    @patch("app.services.audio.Mistral")
     @patch.dict("os.environ", {"MISTRAL_API_KEY": "env-key"}, clear=False)
     @patch("app.services.audio.settings")
-    def test_client_falls_back_to_env(self, mock_settings):
+    def test_client_falls_back_to_env(self, mock_settings, mock_mistral_cls):
         """Test client falls back to environment variable."""
         mock_settings.mistral_api_key = ""
         client = _get_mistral_client()
         assert client is not None
+        mock_mistral_cls.assert_called_once_with(api_key="env-key")
 
 
 class TestTranscribeAudio:

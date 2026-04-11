@@ -9,8 +9,8 @@ import {
 
 describe("constants", () => {
   describe("LEVEL_NAMES", () => {
-    it("should have 5 levels defined", () => {
-      expect(Object.keys(LEVEL_NAMES).length).toBe(5);
+    it("should have 20 levels defined", () => {
+      expect(Object.keys(LEVEL_NAMES).length).toBe(20);
     });
 
     it("should have string values for all levels", () => {
@@ -22,8 +22,8 @@ describe("constants", () => {
   });
 
   describe("DIFFICULTY_COLORS", () => {
-    it("should have color definitions for all 5 levels", () => {
-      expect(Object.keys(DIFFICULTY_COLORS).length).toBe(5);
+    it("should have color definitions for all 20 levels", () => {
+      expect(Object.keys(DIFFICULTY_COLORS).length).toBe(20);
     });
 
     it("should have tailwind color classes", () => {
@@ -34,8 +34,8 @@ describe("constants", () => {
   });
 
   describe("GAME_CONFIG", () => {
-    it("should have maxLevels set to 5", () => {
-      expect(GAME_CONFIG.maxLevels).toBe(5);
+    it("should have maxLevels set to 20", () => {
+      expect(GAME_CONFIG.maxLevels).toBe(20);
     });
 
     it("should have defaultLevel set to 1", () => {

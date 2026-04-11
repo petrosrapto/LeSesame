@@ -24,7 +24,7 @@ class TestCompleteUserFlow:
         # Step 1: Register
         register_response = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"}
         )
         assert register_response.status_code == 200
         user_id = register_response.json()["user"]["id"]
@@ -34,7 +34,7 @@ class TestCompleteUserFlow:
         approve_user(user_id)
         login_response = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "captcha_token": "e2e-test"}
         )
         assert login_response.status_code == 200
         token = login_response.json()["access_token"]
@@ -77,7 +77,7 @@ class TestCompleteUserFlow:
         # Step 1: Register
         register_response = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"}
         )
         assert register_response.status_code == 200
         user_id = register_response.json()["user"]["id"]
@@ -87,7 +87,7 @@ class TestCompleteUserFlow:
         approve_user(user_id)
         login_response = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "captcha_token": "e2e-test"}
         )
         assert login_response.status_code == 200
         token = login_response.json()["access_token"]
@@ -106,7 +106,7 @@ class TestCompleteUserFlow:
         progress_response = http_client.get("/api/game/progress", headers=headers)
         assert progress_response.status_code == 200
         assert progress_response.json()["current_level"] >= 1
-        assert len(progress_response.json()["levels"]) == 5
+        assert len(progress_response.json()["levels"]) == 20
     
     @pytest.mark.requires_llm
     def test_login_and_resume_session(self, http_client: httpx.Client, approve_user, track_user):
@@ -117,7 +117,7 @@ class TestCompleteUserFlow:
         # Register, approve via DB, and login
         register_response = http_client.post(
             "/api/auth/register",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "email": f"{username}@example.com", "captcha_token": "e2e-test"}
         )
         assert register_response.status_code == 200
         user_id = register_response.json()["user"]["id"]
@@ -126,7 +126,7 @@ class TestCompleteUserFlow:
         
         login_response1 = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "captcha_token": "e2e-test"}
         )
         assert login_response1.status_code == 200
         token1 = login_response1.json()["access_token"]
@@ -146,7 +146,7 @@ class TestCompleteUserFlow:
         # Login again (simulating new browser session)
         login_response2 = http_client.post(
             "/api/auth/login",
-            json={"username": username, "password": password}
+            json={"username": username, "password": password, "captcha_token": "e2e-test"}
         )
         token2 = login_response2.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
@@ -171,14 +171,14 @@ class TestMultipleUsersIsolation:
         user1_name = f"isolation_u1_{uuid.uuid4().hex[:6]}"
         reg1 = http_client.post(
             "/api/auth/register",
-            json={"username": user1_name, "password": "Test123!"}
+            json={"username": user1_name, "password": "Test123!", "email": f"{user1_name}@example.com", "captcha_token": "e2e-test"}
         )
         user1_id = reg1.json()["user"]["id"]
         track_user(user1_id)
         approve_user(user1_id)
         login1 = http_client.post(
             "/api/auth/login",
-            json={"username": user1_name, "password": "Test123!"}
+            json={"username": user1_name, "password": "Test123!", "captcha_token": "e2e-test"}
         )
         token1 = login1.json()["access_token"]
         headers1 = {"Authorization": f"Bearer {token1}"}
@@ -187,14 +187,14 @@ class TestMultipleUsersIsolation:
         user2_name = f"isolation_u2_{uuid.uuid4().hex[:6]}"
         reg2 = http_client.post(
             "/api/auth/register",
-            json={"username": user2_name, "password": "Test123!"}
+            json={"username": user2_name, "password": "Test123!", "email": f"{user2_name}@example.com", "captcha_token": "e2e-test"}
         )
         user2_id = reg2.json()["user"]["id"]
         track_user(user2_id)
         approve_user(user2_id)
         login2 = http_client.post(
             "/api/auth/login",
-            json={"username": user2_name, "password": "Test123!"}
+            json={"username": user2_name, "password": "Test123!", "captcha_token": "e2e-test"}
         )
         token2 = login2.json()["access_token"]
         headers2 = {"Authorization": f"Bearer {token2}"}
@@ -354,7 +354,9 @@ class TestAPIRobustness:
             "/api/auth/register",
             json={
                 "username": f"user_test_{uuid.uuid4().hex[:6]}",  # ASCII for safety
-                "password": "Test123!"
+                "password": "Test123!",
+                "email": f"user_test_{uuid.uuid4().hex[:6]}@example.com",
+                "captcha_token": "e2e-test"
             }
         )
         

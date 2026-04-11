@@ -245,6 +245,20 @@ stop_containers
 # ============================================
 echo -e "\n${YELLOW}🏗️  Step 3: Building and starting services from source...${NC}"
 
+# Export NEXT_PUBLIC_* variables from frontend/.env so docker-compose
+# can pass them as build args (they must be set at build time for Next.js).
+if [ -f "$DEPLOY_DIR/frontend/.env" ]; then
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        [[ -z "$key" || "$key" == \#* ]] && continue
+        # Only export NEXT_PUBLIC_ variables
+        if [[ "$key" == NEXT_PUBLIC_* ]]; then
+            export "${key}=${value}"
+        fi
+    done < "$DEPLOY_DIR/frontend/.env"
+    echo -e "${GREEN}✅ Exported NEXT_PUBLIC_* build args from frontend/.env${NC}"
+fi
+
 cd "$DEPLOY_DIR"
 docker-compose -f "$COMPOSE_FILE" up -d --build
 

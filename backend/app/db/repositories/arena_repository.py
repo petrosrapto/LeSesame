@@ -8,6 +8,7 @@ Date: 2026/02/08
 """
 
 import json
+from datetime import datetime
 from typing import Optional, List, Tuple, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, or_
@@ -94,6 +95,20 @@ class ArenaRepository(BaseRepository[ArenaCombatant]):
             entry.wins += 1
         else:
             entry.losses += 1
+        await self.update(entry)
+
+    async def set_validation_result(
+        self,
+        combatant_id: str,
+        passed: bool,
+    ) -> None:
+        """Store the validation outcome for a combatant."""
+        entry = await self.get_combatant(combatant_id)
+        if not entry:
+            return
+        entry.validated = True
+        entry.validation_passed = passed
+        entry.validated_at = datetime.utcnow()
         await self.update(entry)
 
     # ── Battle operations ─────────────────────────────────────────────

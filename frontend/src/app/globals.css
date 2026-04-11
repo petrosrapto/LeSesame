@@ -381,3 +381,8 @@
 ::selection {
   @apply bg-orange-500/30;
 }
+
+/* Hide reCAPTCHA v3 badge (text attribution is in the login form) */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}

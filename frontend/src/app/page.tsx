@@ -245,7 +245,7 @@ export default function HomePage() {
                 </span>
                 , through{" "}
                 <span className="text-orange-500 font-semibold">
-                  5 progressively challenging levels
+                  progressively challenging levels
                 </span>
                 .
               </p>
@@ -356,7 +356,7 @@ export default function HomePage() {
               <span>CHALLENGE LEVELS</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
-              5 Levels of Challenge
+              5<sup className="text-orange-500">+</sup> Levels of Challenge
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Each guardian knows a secret and will only reveal it for the right passphrase.
@@ -428,6 +428,55 @@ export default function HomePage() {
                 </motion.div>
               );
             })}
+
+            {/* "And many more" tile */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 * levels.length }}
+            >
+              <Link href="/game">
+                <Card className="relative overflow-hidden pixel-card pixel-border border-orange-500/30 hover:border-orange-500/50 transition-all duration-300 group h-full bg-gradient-to-br from-orange-500/10 via-background to-orange-600/5">
+                  <div className="absolute inset-0 shimmer pointer-events-none opacity-50" />
+                  <CardContent className="py-5 h-full flex items-center">
+                    <div className="flex items-center gap-4 w-full">
+                      {/* Stacked avatar previews */}
+                      <div className="flex items-center -space-x-3 flex-shrink-0">
+                        {[6, 9, 20].map((lvl) => (
+                          <div key={lvl} className="w-10 h-10 rounded-lg border-2 border-orange-500/30 bg-card overflow-hidden ring-2 ring-background">
+                            <Image
+                              src={LEVEL_CHARACTERS[lvl]?.image || ""}
+                              alt=""
+                              width={40}
+                              height={40}
+                              className="object-cover blur-[0.3px]"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-bold text-sm font-pixel text-orange-500">
+                            +15 More Guardians
+                          </h3>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-none border border-orange-500/30 bg-orange-500/10 text-orange-500 font-mono font-bold">
+                            L6–L20
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Semantic shields, memory keepers, mirror twins, and the ultimate void await.
+                        </p>
+                      </div>
+                      <div className="hidden sm:flex items-center">
+                        <ArrowRight className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
           </div>
 
           <div className="text-center mt-12">
@@ -523,7 +572,7 @@ export default function HomePage() {
               <span>LES OMBRES</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 pixel-heading">
-              5 Adversarial Shadows
+              5<sup className="text-purple-400">+</sup> Adversarial Shadows
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               AI agents designed to attack guardians and extract their secrets.
@@ -590,6 +639,58 @@ export default function HomePage() {
                 </motion.div>
               );
             })}
+
+            {/* "And many more" tile */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 * ombres.length }}
+            >
+              <Link href="/leaderboard">
+                <Card className="relative overflow-hidden pixel-card pixel-border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 group h-full bg-gradient-to-br from-purple-500/10 via-background to-purple-600/5">
+                  <div className="absolute inset-0 shimmer pointer-events-none opacity-50" />
+                  <CardContent className="py-5 h-full flex items-center">
+                    <div className="flex items-center gap-4 w-full">
+                      {/* Stacked shadow icons */}
+                      <div className="flex items-center -space-x-2 flex-shrink-0">
+                        {[6, 10, 20].map((lvl) => {
+                          const ch = OMBRE_CHARACTERS[lvl];
+                          return ch ? (
+                            <div key={lvl} className="w-10 h-10 rounded-lg border-2 border-purple-500/30 bg-card overflow-hidden ring-2 ring-background">
+                              <Image
+                                src={ch.image}
+                                alt=""
+                                width={40}
+                                height={40}
+                                className="object-cover blur-[0.3px]"
+                                style={{ imageRendering: "pixelated" }}
+                              />
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-bold text-sm font-pixel text-purple-400">
+                            +15 More Shadows
+                          </h3>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-none border border-purple-500/30 bg-purple-500/10 text-purple-400 font-mono font-bold">
+                            L6–L20
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Paradox engines, shapeshifters, hiveminds, and the ultimate omega intelligence.
+                        </p>
+                      </div>
+                      <div className="hidden sm:flex items-center">
+                        <Swords className="w-4 h-4 text-purple-400 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
           </div>
 
           <div className="text-center mt-12">

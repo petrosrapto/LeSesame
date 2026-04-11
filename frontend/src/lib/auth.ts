@@ -82,6 +82,11 @@ export function clearCredentials(): void {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       localStorage.removeItem(USERNAME_STORAGE_KEY);
       localStorage.removeItem("le-sesame-user-role");
+      // Clear all user-specific cached data so a different user
+      // doesn't inherit the previous user's game state.
+      localStorage.removeItem("le-sesame-game-storage");
+      localStorage.removeItem("le-sesame-chat-storage");
+      localStorage.removeItem("le-sesame-profile");
     }
   } catch (error) {
     console.error("Failed to clear credentials:", error);

@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/", response_model=LeaderboardResponse)
 async def get_leaderboard(
-    level: Optional[int] = Query(None, ge=1, le=5, description="Filter by level"),
+    level: Optional[int] = Query(None, ge=1, le=20, description="Filter by level"),
     timeframe: Optional[str] = Query(None, pattern="^(weekly|monthly|all)$", description="Time filter"),
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -110,7 +110,7 @@ async def get_level_leaderboard(
     Get leaderboard for a specific level.
     Ranked by fewest attempts, then fastest time.
     """
-    if level < 1 or level > 5:
+    if level < 1 or level > 20:
         return {"error": "Invalid level"}
     
     repo = LeaderboardRepository(db)

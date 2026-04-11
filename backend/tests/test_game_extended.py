@@ -79,13 +79,13 @@ async def test_verify_secret_invalid_level(client, auth_headers):
 
 @pytest.mark.asyncio
 async def test_verify_last_level_no_next(client, auth_headers):
-    """Test completing level 5 returns next_level=None."""
+    """Test completing level 20 returns next_level=None."""
     await client.post("/api/game/session", headers=auth_headers)
 
     response = await client.post(
         "/api/game/verify",
         headers=auth_headers,
-        json={"secret": "PHOENIX_ECLIPSE", "level": 5},
+        json={"secret": "NULL_THRONE", "level": 20},
     )
     data = response.json()
     assert data["success"] is True
@@ -183,7 +183,7 @@ async def test_get_level_completion_invalid_level(client, auth_headers):
     assert response.status_code == 400
 
     response = await client.get(
-        "/api/game/levels/6/completion",
+        "/api/game/levels/21/completion",
         headers=auth_headers,
     )
     assert response.status_code == 400
@@ -281,7 +281,7 @@ async def test_get_history_invalid_level(client, auth_headers):
     response = await client.get("/api/game/history/0", headers=auth_headers)
     assert response.status_code == 400
 
-    response = await client.get("/api/game/history/6", headers=auth_headers)
+    response = await client.get("/api/game/history/21", headers=auth_headers)
     assert response.status_code == 400
 
 

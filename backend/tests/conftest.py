@@ -116,38 +116,50 @@ def sample_user_data():
     return {
         "username": "testuser",
         "password": "testpass123",
-        "email": "test@example.com"
+        "email": "test@example.com",
+        "captcha_token": "test-captcha-token",
     }
 
 
 async def register_and_login(client, user_data: dict) -> str:
-    """Register a user, approve them in the DB, login, and return the access token.
+    """Register a user, verify email, login, and return the access token.
 
     This helper works with the in-memory SQLite test DB and the dependency
     overrides applied by the ``client`` fixture.
+    reCAPTCHA verification is skipped because the secret key is not configured
+    in the test environment.
     """
     from app.main import app as _app
     from app.db import get_db as _get_db, User as _User
     from sqlalchemy import update as _update
 
+    # Ensure captcha_token is present for the request
+    reg_data = {**user_data}
+    if "captcha_token" not in reg_data:
+        reg_data["captcha_token"] = "test-captcha-token"
+
     # 1. Register
-    reg = await client.post("/api/auth/register", json=user_data)
+    reg = await client.post("/api/auth/register", json=reg_data)
     assert reg.status_code == 200, f"Registration failed: {reg.text}"
     user_id = reg.json()["user"]["id"]
 
-    # 2. Approve directly via DB session
+    # 2. Mark email as verified directly via DB session
     get_db_override = _app.dependency_overrides.get(_get_db, _get_db)
     async for session in get_db_override():
         await session.execute(
-            _update(_User).where(_User.id == user_id).values(is_approved=True)
+            _update(_User).where(_User.id == user_id).values(
+                email_verified=True, is_approved=True,
+            )
         )
         await session.commit()
         break
 
     # 3. Login
-    login_resp = await client.post("/api/auth/login", json={
+    login_data = {
         "username": user_data["username"],
         "password": user_data["password"],
-    })
+        "captcha_token": "test-captcha-token",
+    }
+    login_resp = await client.post("/api/auth/login", json=login_data)
     assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
     return login_resp.json()["access_token"]

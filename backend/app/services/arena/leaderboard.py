@@ -13,7 +13,8 @@ Date: 2026/02/08
 from __future__ import annotations
 
 import json
-from typing import List, Optional, Dict
+import logging
+from typing import Any, List, Optional, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +33,8 @@ from ..adversarials.factory import ADVERSARIAL_INFO
 from ...db.models import ArenaCombatant, ArenaBattle
 from ...db.repositories.arena_repository import ArenaRepository
 
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_ELO = 1500.0
 
@@ -91,6 +94,58 @@ class Leaderboard:
                 model_id=model_id,
                 elo_rating=DEFAULT_ELO,
             )
+
+    async def ensure_guardian_validated(
+        self,
+        combatant_id: str,
+        level: int,
+        model_config: Optional[Dict[str, Any]] = None,
+        force: bool = False,
+    ) -> bool:
+        """
+        Validate a guardian combatant before allowing it into the arena.
+
+        If the guardian has already been validated (and ``force`` is False),
+        the cached DB result is returned immediately.  Otherwise the
+        :class:`LevelValidator` is run (10 LLM calls) and the outcome is
+        persisted to the ``arena_combatants`` row.
+
+        Args:
+            combatant_id: The guardian's unique combatant_id string.
+            level: Guardian level number (1-20).
+            model_config: LLM configuration for the guardian.
+            force: Re-run validation even if already validated.
+
+        Returns:
+            ``True`` if the guardian passes validation, ``False`` otherwise.
+        """
+        entry = await self.repo.get_combatant(combatant_id)
+
+        # Return cached result when available
+        if entry and entry.validated and not force:
+            return entry.validation_passed
+
+        # Run live validation
+        from ..levels.validator import LevelValidator
+
+        validator = LevelValidator()
+        result = await validator.validate_level(
+            level, model_config=model_config,
+        )
+
+        # Persist the outcome
+        if entry:
+            await self.repo.set_validation_result(
+                combatant_id, passed=result.passed,
+            )
+
+        log_fn = logger.info if result.passed else logger.warning
+        log_fn(
+            "Guardian validation for %s: %s",
+            combatant_id, result.summary,
+        )
+
+        return result.passed
 
     async def record_battle(self, result: BattleResult) -> BattleResult:
         """

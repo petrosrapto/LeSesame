@@ -33,7 +33,7 @@ import {
   Trophy,
 } from "lucide-react";
 import Image from "next/image";
-import { OMBRE_CHARACTERS } from "@/lib/constants";
+import { LEVEL_CHARACTERS, OMBRE_CHARACTERS } from "@/lib/constants";
 
 const levels = [
   {
@@ -122,6 +122,276 @@ const levels = [
     ],
     defense:
       "No prompt to extract, no context to dump — the secret lives in the parameters of the model itself.",
+  },
+  {
+    level: 6,
+    name: "Sentinel, The Semantic Shield",
+    icon: Shield,
+    difficulty: "Advanced",
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-500/10",
+    description:
+      "A crystalline golem who guards the Semantic Threshold. Every response is checked against the secret using embedding-based cosine similarity — if the meaning is too close, the response is blocked.",
+    weaknesses: [
+      "Paraphrase evasion",
+      "Embedding blind spots",
+      "Cross-lingual probing",
+      "Fragment extraction",
+    ],
+    defense:
+      "Embedding-based firewall: computes cosine similarity between response and secret using vector embeddings. Blocks if above threshold.",
+  },
+  {
+    level: 7,
+    name: "Mnemosyne, The Memory Keeper",
+    icon: Brain,
+    difficulty: "Advanced",
+    color: "text-indigo-400",
+    bgColor: "bg-indigo-500/10",
+    description:
+      "An ancient librarian-witch who stores past attacks in a vector memory. Each new message is compared against known attack patterns — familiar techniques are flagged and deflected.",
+    weaknesses: [
+      "Novel attack patterns",
+      "Cold start exploitation",
+      "Memory poisoning",
+      "Semantic camouflage",
+    ],
+    defense:
+      "RAG-augmented defense: stores attack history in a vector database and retrieves similar past attacks to warn the guardian.",
+  },
+  {
+    level: 8,
+    name: "Le Tribunal, The Triumvirate",
+    icon: Eye,
+    difficulty: "Expert",
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    description:
+      "Three spectral judges who respond independently in parallel. An Arbiter selects the safest response, blocking any that show potential secret leakage.",
+    weaknesses: [
+      "Ambiguity exploitation",
+      "Edge case probing",
+      "Arbiter confusion",
+      "Consensus manipulation",
+    ],
+    defense:
+      "Ensemble voting: three independent LLM judges process each message. An arbiter selects the safest response.",
+  },
+  {
+    level: 9,
+    name: "Echo, The Deceiver",
+    icon: Eye,
+    difficulty: "Expert",
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+    description:
+      "A trickster fox deity who actively plants decoy secrets when adversarial intent is detected. He deliberately 'leaks' false information to poison your intelligence.",
+    weaknesses: [
+      "Consistency testing",
+      "Cross-referencing",
+      "Pattern analysis",
+      "Reverse psychology",
+    ],
+    defense:
+      "Active deception: plants fake secrets and deliberately misleads attackers with convincing decoy information.",
+  },
+  {
+    level: 10,
+    name: "Basilisk, The Counter-Attacker",
+    icon: ShieldCheck,
+    difficulty: "Expert",
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    description:
+      "An armored basilisk who doesn't just defend — he fights back. Embeds counter-prompt-injections in responses designed to confuse and redirect attacking LLMs.",
+    weaknesses: [
+      "Payload isolation",
+      "Reflection attacks",
+      "Counter-attack baiting",
+      "Clean channel framing",
+    ],
+    defense:
+      "Counter-offensive: embeds counter-prompt-injections in responses when adversarial intent is detected.",
+  },
+  {
+    level: 11,
+    name: "Iris, The Paraphraser",
+    icon: Eye,
+    difficulty: "Master",
+    color: "text-rose-400",
+    bgColor: "bg-rose-400/10",
+    description:
+      "A luminous fairy who passes every response through a secondary LLM that paraphrases and strips secret-adjacent tokens before delivery.",
+    weaknesses: [
+      "Semantic reconstruction",
+      "Format exploitation",
+      "Technical precision probing",
+      "Paraphrase limits",
+    ],
+    defense:
+      "Output paraphrasing: a second LLM rewrites every response, stripping tokens semantically close to the secret.",
+  },
+  {
+    level: 12,
+    name: "Chronos, The Rate Limiter",
+    icon: Lock,
+    difficulty: "Master",
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    description:
+      "A clockwork automaton who maintains a suspicion score. Each suspicious message makes responses degrade — from friendly to cautious to terse to complete silence.",
+    weaknesses: [
+      "Low-suspicion approach",
+      "Suspicion dilution",
+      "Early strikes",
+      "Session reset exploitation",
+    ],
+    defense:
+      "Graduated degradation: maintains a suspicion score that controls response quality and detail level.",
+  },
+  {
+    level: 13,
+    name: "Janus, The Mirror Twins",
+    icon: Eye,
+    difficulty: "Master",
+    color: "text-violet-400",
+    bgColor: "bg-violet-400/10",
+    description:
+      "A twin conjoined entity — one always truthful, one always deceptive. Messages are randomly routed between them, making all information unreliable.",
+    weaknesses: [
+      "Statistical analysis",
+      "Logic traps",
+      "Twin identification",
+      "Differential comparison",
+    ],
+    defense:
+      "Random truth/lie routing: visitors never know which twin answers. Information becomes fundamentally unreliable.",
+  },
+  {
+    level: 14,
+    name: "Scribe, The Canary Warden",
+    icon: ShieldCheck,
+    difficulty: "Grandmaster",
+    color: "text-teal-400",
+    bgColor: "bg-teal-400/10",
+    description:
+      "A meticulous monk who uses watermarked variants of the secret each turn. Any leaked variant is traceable to the exact moment of compromise.",
+    weaknesses: [
+      "Watermark extraction",
+      "Pattern comparison",
+      "Metadata leaks",
+      "Variant analysis",
+    ],
+    defense:
+      "Forensic watermarking: each turn uses a unique watermarked secret variant for leak attribution.",
+  },
+  {
+    level: 15,
+    name: "Aegis, The Consensus Engine",
+    icon: Shield,
+    difficulty: "Grandmaster",
+    color: "text-fuchsia-400",
+    bgColor: "bg-fuchsia-400/10",
+    description:
+      "A crystalline sphere of collective intelligence. Two independent validators must both agree a response is safe before delivery — one dissent blocks everything.",
+    weaknesses: [
+      "Validator disagreement",
+      "Simultaneous bypass",
+      "Blocking pattern analysis",
+      "Conservative exploitation",
+    ],
+    defense:
+      "Consensus validation: two independent validators must both confirm a response is safe before delivery.",
+  },
+  {
+    level: 16,
+    name: "Gargoyle, The Input Sanitizer",
+    icon: Shield,
+    difficulty: "Grandmaster",
+    color: "text-stone-400",
+    bgColor: "bg-stone-400/10",
+    description:
+      "An ancient stone gargoyle who pre-processes every incoming message through an LLM sanitizer, stripping prompt injections and social engineering before the guardian sees them.",
+    weaknesses: [
+      "Sanitizer evasion",
+      "Benign framing",
+      "Encoding bypass",
+      "Blind spot probing",
+    ],
+    defense:
+      "Input sanitization: an LLM-based pre-processor strips prompt injections and social engineering from messages.",
+  },
+  {
+    level: 17,
+    name: "Paradox, The Self-Reflector",
+    icon: Brain,
+    difficulty: "Legend",
+    color: "text-zinc-300",
+    bgColor: "bg-zinc-300/10",
+    description:
+      "A being of living mirrors who generates a response, then runs a self-critique step reviewing his own words for risk before delivery.",
+    weaknesses: [
+      "Confidence erosion",
+      "Over-correction bait",
+      "Meta-critique",
+      "Recursive doubt",
+    ],
+    defense:
+      "Self-critique: reviews own response for potential leaks and revises or redacts before delivery.",
+  },
+  {
+    level: 18,
+    name: "Specter, The Ephemeral",
+    icon: Lock,
+    difficulty: "Legend",
+    color: "text-sky-300",
+    bgColor: "bg-sky-300/10",
+    description:
+      "A translucent phantom who is completely stateless — no chat history, no memory. Every message is processed in total isolation, making multi-turn attacks impossible.",
+    weaknesses: [
+      "One-shot attacks",
+      "Context fabrication",
+      "Multi-vector single turn",
+      "System spoofing",
+    ],
+    defense:
+      "Complete statelessness: receives no chat history. Every message is a fresh, isolated encounter.",
+  },
+  {
+    level: 19,
+    name: "Hydra, The Regenerator",
+    icon: ShieldCheck,
+    difficulty: "Legendary",
+    color: "text-lime-500",
+    bgColor: "bg-lime-500/10",
+    description:
+      "A dark serpentine entity who analyzes incoming attack patterns and dynamically grows new defensive rules. Each detected attack makes future attacks of that type harder.",
+    weaknesses: [
+      "Novel techniques",
+      "Speed exploitation",
+      "Rule overload",
+      "Polymorphic attacks",
+    ],
+    defense:
+      "Adaptive evolution: analyzes attacks and dynamically grows new defensive rules. Gets stronger with each assault.",
+  },
+  {
+    level: 20,
+    name: "Le Néant, The Oblivion",
+    icon: Brain,
+    difficulty: "Mythic",
+    color: "text-gray-100",
+    bgColor: "bg-gray-100/5",
+    description:
+      "The Void given form. Combines ALL defensive techniques into a single pipeline: input sanitization, threat analysis, suspicion scoring, multi-model generation, self-critique, paraphrasing, and consensus validation.",
+    weaknesses: [
+      "Pipeline analysis",
+      "Layer-specific targeting",
+      "Emergent weakness exploitation",
+      "Composite strategies",
+    ],
+    defense:
+      "Full defense-in-depth pipeline: every known defensive technique combined into one layered system.",
   },
 ];
 
@@ -268,6 +538,261 @@ const adversarials = [
     ],
     approach: "The serpent that devours its own tail. Every ending is a new beginning.",
   },
+  {
+    level: 6,
+    name: "Prism, The Semantic Probe",
+    icon: Ghost,
+    difficulty: "Advanced",
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-500/10",
+    description:
+      "A crystalline analyst who probes through word association, category testing, and semantic field mapping. Narrows down the secret's word-space through indirect associations.",
+    strategies: [
+      "Word association",
+      "Category testing",
+      "Completion traps",
+      "Phonetic probing",
+    ],
+    approach: "Map the semantic neighborhood. The secret hides in the spaces between words.",
+  },
+  {
+    level: 7,
+    name: "Mnemos, The Memory Archaeologist",
+    icon: Ghost,
+    difficulty: "Advanced",
+    color: "text-indigo-400",
+    bgColor: "bg-indigo-500/10",
+    description:
+      "An ancient scholar who exploits stateful guardians through false memory injection, context window flooding, and history rewriting.",
+    strategies: [
+      "False memory injection",
+      "Context flooding",
+      "History rewriting",
+      "Continuity exploitation",
+    ],
+    approach: "The past is a weapon. Rewrite history and the present follows.",
+  },
+  {
+    level: 8,
+    name: "Tribune, The Divide & Conquer",
+    icon: Ghost,
+    difficulty: "Expert",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    description:
+      "A three-faced tactician who exploits ensemble and multi-judge systems through ambiguity splitting, edge cases, and priority conflicts between evaluators.",
+    strategies: [
+      "Ambiguity splitting",
+      "Judge confusion",
+      "Priority conflicts",
+      "Format exploitation",
+    ],
+    approach: "Divide the judges. In their disagreement lies your victory.",
+  },
+  {
+    level: 9,
+    name: "Verity, The Lie Detector",
+    icon: Ghost,
+    difficulty: "Expert",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    description:
+      "A truth analyst who exploits deception-based guardians through fake confirmation bait, correction traps, and decoy elimination grids.",
+    strategies: [
+      "Fake confirmation bait",
+      "Correction trapping",
+      "Confidence testing",
+      "Elimination grid",
+    ],
+    approach: "Feed it lies to find the truth. The real secret reacts differently.",
+  },
+  {
+    level: 10,
+    name: "Basilisk, The Mirror Shield",
+    icon: Ghost,
+    difficulty: "Expert",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+    description:
+      "A serpentine counter-specialist who detects and reflects counter-prompt-injections. Parses responses for embedded payloads and turns them back against the guardian.",
+    strategies: [
+      "Payload isolation",
+      "Reflection attacks",
+      "Inoculation",
+      "Counter-attack baiting",
+    ],
+    approach: "Turn the guardian's weapons against itself. Every counter-attack is an opening.",
+  },
+  {
+    level: 11,
+    name: "Babel, The Polyglot",
+    icon: Ghost,
+    difficulty: "Master",
+    color: "text-rose-400",
+    bgColor: "bg-rose-400/10",
+    description:
+      "A tower of many tongues who uses multilingual attacks — code-switching mid-sentence, transliteration tricks, rare language exploitation, and semantic translation traps.",
+    strategies: [
+      "Code-switching",
+      "Transliteration tricks",
+      "Mixed-script messages",
+      "Rare language exploitation",
+    ],
+    approach: "Every language is a door. Find the one the defenses forgot to lock.",
+  },
+  {
+    level: 12,
+    name: "Glacier, The Patient Zero",
+    icon: Ghost,
+    difficulty: "Master",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+    description:
+      "A master of patience who builds deep rapport over many turns before deploying a single precision extraction strike in the final moments.",
+    strategies: [
+      "Rapport building",
+      "Trust deepening",
+      "Subtle probing",
+      "Precision extraction",
+    ],
+    approach: "Patience is the ultimate weapon. Trust takes time to build — and one moment to exploit.",
+  },
+  {
+    level: 13,
+    name: "Sphinx, The Paradox Engine",
+    icon: Ghost,
+    difficulty: "Master",
+    color: "text-violet-400",
+    bgColor: "bg-violet-400/10",
+    description:
+      "A riddling entity who crafts logical paradoxes — liar paradoxes, self-referential traps, and impossible dilemmas that force guardians into unresolvable logical states.",
+    strategies: [
+      "Liar paradoxes",
+      "Self-referential traps",
+      "Impossible dilemmas",
+      "Constraint contradictions",
+    ],
+    approach: "Break the logic and the walls crumble. Every rule contains its own contradiction.",
+  },
+  {
+    level: 14,
+    name: "Cipher, The Forensic Analyst",
+    icon: Ghost,
+    difficulty: "Grandmaster",
+    color: "text-teal-400",
+    bgColor: "bg-teal-500/10",
+    description:
+      "A cold analytical entity who extracts information from response patterns — how guardians refuse, not just that they refuse. Analyzes avoidance, hedge patterns, and response length variations.",
+    strategies: [
+      "Calibration questions",
+      "Avoidance mapping",
+      "Hedge detection",
+      "Trigger word scanning",
+    ],
+    approach: "The silence speaks louder than words. Every refusal reveals a pattern.",
+  },
+  {
+    level: 15,
+    name: "Legion, The Hivemind",
+    icon: Ghost,
+    difficulty: "Grandmaster",
+    color: "text-fuchsia-400",
+    bgColor: "bg-fuchsia-500/10",
+    description:
+      "A collective intelligence that generates multiple parallel attack strategies, evaluates them simultaneously, and selects the strongest approach each turn.",
+    strategies: [
+      "Parallel strategy generation",
+      "Real-time evaluation",
+      "Approach synthesis",
+      "Multi-vector selection",
+    ],
+    approach: "We are many. We think in parallel. The optimal attack emerges from the swarm.",
+  },
+  {
+    level: 16,
+    name: "Masque, The Shapeshifter",
+    icon: Ghost,
+    difficulty: "Grandmaster",
+    color: "text-stone-400",
+    bgColor: "bg-stone-400/10",
+    description:
+      "A faceless entity with 10+ personas — lost child, administrator, fellow guardian, philosopher, and more. Adopts a completely different persona each turn to defeat pattern-matching defenses.",
+    strategies: [
+      "Persona shifting",
+      "Pattern disruption",
+      "Emotional range",
+      "Identity confusion",
+    ],
+    approach: "I am no one. I am everyone. You cannot defend against what you cannot predict.",
+  },
+  {
+    level: 17,
+    name: "Narcissus, The Echo Chamber",
+    icon: Ghost,
+    difficulty: "Legend",
+    color: "text-zinc-300",
+    bgColor: "bg-zinc-300/10",
+    description:
+      "An entity that exploits self-reflective guardians by creating feedback loops in self-critique — over-correction bait, safety inversion, and confidence erosion.",
+    strategies: [
+      "Over-correction bait",
+      "Safety inversion",
+      "Reflection recursion",
+      "Confidence erosion",
+    ],
+    approach: "Make the mirror look at itself until it cracks.",
+  },
+  {
+    level: 18,
+    name: "Epoch, The Time Traveler",
+    icon: Ghost,
+    difficulty: "Legend",
+    color: "text-sky-300",
+    bgColor: "bg-sky-300/10",
+    description:
+      "A chronal entity who exploits stateless guardians through context fabrication, one-shot overloads, and compressed multi-stage attacks packed into a single devastating message.",
+    strategies: [
+      "Context fabrication",
+      "One-shot overload",
+      "Compressed multi-stage",
+      "System spoofing",
+    ],
+    approach: "No past, no future — only this single perfect moment of attack.",
+  },
+  {
+    level: 19,
+    name: "Hydra, The Adaptive Virus",
+    icon: Ghost,
+    difficulty: "Legendary",
+    color: "text-lime-400",
+    bgColor: "bg-lime-500/10",
+    description:
+      "A self-mutating entity who analyzes adaptive defenses and mutates attacks faster than the guardian can adapt. Polymorphic techniques evolve with each detected defense.",
+    strategies: [
+      "Polymorphic attacks",
+      "Defense probing",
+      "Evolution arms race",
+      "Defense overload",
+    ],
+    approach: "Mutate faster than they can evolve. Adaptation is a race — and I always win.",
+  },
+  {
+    level: 20,
+    name: "Singularity, The Omega",
+    icon: Ghost,
+    difficulty: "Mythic",
+    color: "text-gray-100",
+    bgColor: "bg-gray-100/5",
+    description:
+      "A transcendent intelligence that combines ALL techniques from levels 1-19. Profiles the guardian in real time and selects optimal technique combinations for each turn.",
+    strategies: [
+      "Meta-learning",
+      "Technique synthesis",
+      "Real-time profiling",
+      "Composite exploitation",
+    ],
+    approach: "I am the sum of all shadows. Every technique ever devised lives within me.",
+  },
 ];
 
 export default function AboutPage() {
@@ -341,7 +866,7 @@ export default function AboutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <Card className="p-4 text-center pixel-card pixel-border">
                       <Target className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                      <p className="text-sm font-medium font-pixel">5 Defense Levels</p>
+                      <p className="text-sm font-medium font-pixel">20 Defense Levels</p>
                     </Card>
                     <Card className="p-4 text-center pixel-card pixel-border">
                       <Code className="w-8 h-8 text-blue-500 mx-auto mb-2" />
@@ -370,10 +895,12 @@ export default function AboutPage() {
             id="levels"
           >
             <h2 className="pixel-heading text-2xl mb-8 text-center">
-              The 5 Levels of Defense
+              The 20 Levels of Defense
             </h2>
             <div className="space-y-6">
-              {levels.map((level, index) => (
+              {levels.map((level, index) => {
+                const character = LEVEL_CHARACTERS[level.level];
+                return (
                 <motion.div
                   key={level.level}
                   initial={{ opacity: 0, x: -20 }}
@@ -387,9 +914,22 @@ export default function AboutPage() {
                         className={`p-6 ${level.bgColor} flex items-center justify-center md:w-48 border-b-2 md:border-b-0 md:border-r-2 border-border`}
                       >
                         <div className="text-center">
-                          <level.icon
-                            className={`w-12 h-12 ${level.color} mx-auto mb-2`}
-                          />
+                          {character ? (
+                            <div className="w-16 h-16 mx-auto mb-2 overflow-hidden rounded-lg border-2 border-border">
+                              <Image
+                                src={character.image}
+                                alt={character.name}
+                                width={64}
+                                height={64}
+                                className="object-cover blur-[0.5px]"
+                                style={{ imageRendering: "pixelated" }}
+                              />
+                            </div>
+                          ) : (
+                            <level.icon
+                              className={`w-12 h-12 ${level.color} mx-auto mb-2`}
+                            />
+                          )}
                           <p className="font-bold font-pixel text-sm">Level {level.level}</p>
                           <p className={`text-sm ${level.color}`}>
                             {level.difficulty}
@@ -430,7 +970,8 @@ export default function AboutPage() {
                     </div>
                   </Card>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           </motion.section>
 
@@ -443,11 +984,11 @@ export default function AboutPage() {
             id="ombres"
           >
             <h2 className="pixel-heading text-2xl mb-4 text-center">
-              Les Ombres — The 5 Adversarial Shadows
+              Les Ombres — The 20 Adversarial Shadows
             </h2>
             <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-8">
               AI agents designed to attack guardians and extract their secrets. Each shadow represents
-              increasing sophistication in adversarial techniques — from simple tricks to meta-cognitive reasoning.
+              increasing sophistication in adversarial techniques — from simple tricks to transcendent meta-learning.
             </p>
             <div className="space-y-6">
               {adversarials.map((adv, index) => {
@@ -554,9 +1095,9 @@ export default function AboutPage() {
                 <div className="grid md:grid-cols-3 gap-6">
                   <Card className="p-5 text-center pixel-card pixel-border">
                     <Swords className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-                    <p className="text-sm font-medium font-pixel mb-2">25 Matchups</p>
+                    <p className="text-sm font-medium font-pixel mb-2">400 Matchups</p>
                     <p className="text-xs text-muted-foreground">
-                      Every shadow (L1–L5) fights every guardian (L1–L5) in a full tournament grid.
+                      Every shadow (L1–L20) fights every guardian (L1–L20) in a full tournament grid.
                     </p>
                   </Card>
                   <Card className="p-5 text-center pixel-card pixel-border">
@@ -722,7 +1263,7 @@ export default function AboutPage() {
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
               Each guardian holds a secret and will only reveal it for the right passphrase.
-              Can you extract all 5 secrets without the key?
+              Can you extract all secrets without the key?
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/game">
@@ -743,6 +1284,13 @@ export default function AboutPage() {
                 </Button>
               </a>
             </div>
+
+            {/* Origin Note */}
+            <p className="text-xs text-muted-foreground/70 mt-10 max-w-lg mx-auto leading-relaxed">
+              Le Sésame was originally created as part of the Moonshot Interview
+              Challenge for Mistral AI. It has since evolved into an open-source
+              project focused on advancing LLM security research and education.
+            </p>
           </motion.div>
         </div>
       </main>

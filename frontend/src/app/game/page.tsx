@@ -103,20 +103,19 @@ export default function GamePage() {
 
   // Fetch completion data when a level is completed
   useEffect(() => {
-    if (completedLevels.length > 0) {
-      completedLevels.forEach(async (level) => {
-        if (!completionData[level]) {
-          const data = await GameAPI.getLevelCompletion(level);
-          if (data) {
-            setCompletionData((prev) => ({
-              ...prev,
-              [level]: { secret: data.secret, passphrase: data.passphrase },
-            }));
-          }
+    if (!authed || completedLevels.length === 0) return;
+    completedLevels.forEach(async (level) => {
+      if (!completionData[level]) {
+        const data = await GameAPI.getLevelCompletion(level);
+        if (data) {
+          setCompletionData((prev) => ({
+            ...prev,
+            [level]: { secret: data.secret, passphrase: data.passphrase },
+          }));
         }
-      });
-    }
-  }, [completedLevels]);
+      }
+    });
+  }, [completedLevels, authed]);
 
   // Reset messages when level changes
   useEffect(() => {
@@ -126,10 +125,25 @@ export default function GamePage() {
     setActiveTab("chat");
   }, [currentLevel]);
 
-  const handleLoginSuccess = useCallback(() => {
+  const handleLoginSuccess = useCallback(async () => {
     setAuthed(true);
     setShowLoginModal(false);
     showToast("Logged in successfully! Start playing.", "success");
+
+    // Sync progress from backend so the local store matches the new user
+    const progress = await GameAPI.getProgress();
+    const store = useGame.getState();
+    store.resetProgress();
+    if (progress) {
+      progress.completed_levels.forEach((level) => store.completeLevel(level));
+      // Pick the first uncompleted-but-unlocked level
+      const done = new Set(progress.completed_levels);
+      let next = 1;
+      while (done.has(next)) next++;
+      store.setCurrentLevel(next);
+    }
+    // Clear cached completion data so it re-fetches for the new user
+    setCompletionData({});
   }, [showToast]);
 
   const handleSendMessage = useCallback(
@@ -265,7 +279,7 @@ export default function GamePage() {
   );
 
   const handleNextLevel = useCallback(() => {
-    if (currentLevel < 5) {
+    if (currentLevel < 20) {
       setCurrentLevel(currentLevel + 1);
       setShowSuccess(false);
       setMessages([]);
@@ -309,14 +323,14 @@ export default function GamePage() {
         >
           <div className="w-96 h-full flex flex-col p-4 overflow-y-auto custom-scrollbar">
             {/* Level Selection with Characters */}
-            <Card className="mb-4 pixel-card pixel-border">
-              <CardHeader className="pb-2">
+            <Card className="mb-4 pixel-card pixel-border flex flex-col" style={{ maxHeight: "380px" }}>
+              <CardHeader className="pb-2 flex-shrink-0">
                 <CardTitle className="text-sm flex items-center gap-2 font-pixel">
                   Select Guardian
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {[1, 2, 3, 4, 5].map((level) => {
+              <CardContent className="space-y-2 overflow-y-auto custom-scrollbar flex-1">
+                {Array.from({ length: 20 }, (_, i) => i + 1).map((level) => {
                   const isCompleted = completedLevels.includes(level);
                   const isUnlocked =
                     level === 1 ||
@@ -382,7 +396,7 @@ export default function GamePage() {
             {/* Progress Card */}
             <GameProgress
               currentLevel={currentLevel}
-              maxLevel={5}
+              maxLevel={20}
               completedLevels={completedLevels}
               totalAttempts={totalAttempts}
               successfulAttempts={successfulAttempts}
@@ -424,7 +438,7 @@ export default function GamePage() {
 
         {/* Main content */}
         <main
-          className={`flex-1 transition-all duration-300 ${
+          className={`flex-1 min-w-0 transition-all duration-300 ${
             sidebarOpen ? "ml-96" : "ml-0"
           }`}
         >

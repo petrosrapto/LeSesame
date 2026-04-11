@@ -2,6 +2,7 @@
 Le Sésame Backend - E2E Test Configuration
 
 Fixtures and configuration for end-to-end tests.
+All operations use the HTTP API (no direct DB access required).
 
 Author: Petros Raptopoulos
 Date: 2026/02/07
@@ -11,17 +12,15 @@ import os
 import pytest
 import httpx
 import uuid
-import psycopg2
 from typing import Generator
 
 # Base URL for the backend API (running in Docker)
 BASE_URL = os.environ.get("E2E_API_URL", "http://localhost:8000")
 
-# Postgres connection string for direct DB operations (approve users, cleanup)
-DB_DSN = os.environ.get(
-    "E2E_DATABASE_URL",
-    "postgresql://le_sesame_user:le_sesame_password@localhost:5432/le_sesame",
-)
+# Admin credentials for user approval / cleanup via the Admin API
+# Set via E2E_ADMIN_USERNAME / E2E_ADMIN_PASSWORD environment variables
+ADMIN_USERNAME = os.environ.get("E2E_ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ["E2E_ADMIN_PASSWORD"]
 
 # Flag to check if LLM is available (set during session startup)
 LLM_AVAILABLE = False
@@ -29,49 +28,62 @@ LLM_AVAILABLE = False
 # Track user IDs created during this session so we can clean them up
 _CREATED_USER_IDS: list[int] = []
 
-
-def _db_conn():
-    """Open a sync psycopg2 connection to the test database."""
-    return psycopg2.connect(DB_DSN)
+# Admin token (obtained once per session)
+_ADMIN_TOKEN: str | None = None
 
 
-def _approve_user_in_db(user_id: int, role: str = "user"):
-    """Directly approve (and optionally promote) a user via the DB."""
-    conn = _db_conn()
+def _get_admin_token(client: httpx.Client | None = None) -> str:
+    """Login as admin and return a bearer token. Caches the result."""
+    global _ADMIN_TOKEN
+    if _ADMIN_TOKEN:
+        return _ADMIN_TOKEN
+
+    c = client or httpx.Client(base_url=BASE_URL, timeout=30.0)
     try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE users SET is_approved = true, role = %s WHERE id = %s",
-                (role, user_id),
+        resp = c.post(
+            "/api/auth/login",
+            json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD, "captcha_token": "e2e-test"},
+        )
+        if resp.status_code != 200:
+            pytest.exit(
+                f"❌ Cannot login as admin ({ADMIN_USERNAME}): {resp.status_code} {resp.text}"
             )
-        conn.commit()
+        _ADMIN_TOKEN = resp.json()["access_token"]
+        return _ADMIN_TOKEN
     finally:
-        conn.close()
+        if client is None:
+            c.close()
 
 
-def _delete_user_cascade_db(user_id: int):
-    """Delete a user and all related data directly via the DB."""
-    conn = _db_conn()
-    try:
-        with conn.cursor() as cur:
-            # Delete activity logs
-            cur.execute("DELETE FROM user_activity WHERE user_id = %s", (user_id,))
-            # Get session IDs
-            cur.execute("SELECT id FROM game_sessions WHERE user_id = %s", (user_id,))
-            session_ids = [r[0] for r in cur.fetchall()]
-            if session_ids:
-                cur.execute(
-                    "DELETE FROM chat_messages WHERE session_id = ANY(%s)", (session_ids,)
-                )
-                cur.execute(
-                    "DELETE FROM level_attempts WHERE session_id = ANY(%s)", (session_ids,)
-                )
-                cur.execute("DELETE FROM game_sessions WHERE user_id = %s", (user_id,))
-            cur.execute("DELETE FROM leaderboard WHERE user_id = %s", (user_id,))
-            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
-        conn.commit()
-    finally:
-        conn.close()
+def _admin_headers(client: httpx.Client | None = None) -> dict:
+    return {"Authorization": f"Bearer {_get_admin_token(client)}"}
+
+
+def _approve_user_via_api(user_id: int, role: str = "user"):
+    """Approve (and optionally promote) a user via the Admin API."""
+    with httpx.Client(base_url=BASE_URL, timeout=30.0) as c:
+        headers = _admin_headers(c)
+        # Approve
+        resp = c.post("/api/admin/users/approve", json={"user_id": user_id}, headers=headers)
+        assert resp.status_code == 200, f"Approve failed: {resp.text}"
+        # Change role if needed
+        if role != "user":
+            resp = c.post(
+                "/api/admin/users/role",
+                json={"user_id": user_id, "role": role},
+                headers=headers,
+            )
+            assert resp.status_code == 200, f"Role change failed: {resp.text}"
+
+
+def _delete_user_via_api(user_id: int):
+    """Delete a user and all related data via the Admin API."""
+    with httpx.Client(base_url=BASE_URL, timeout=30.0) as c:
+        headers = _admin_headers(c)
+        resp = c.delete(f"/api/admin/users/{user_id}", headers=headers)
+        # 200 = deleted, 404 = already gone, both fine
+        if resp.status_code not in (200, 404):
+            print(f"  ⚠️  Delete user {user_id} returned {resp.status_code}: {resp.text}")
 
 
 @pytest.fixture(scope="session")
@@ -102,8 +114,8 @@ def unique_username() -> str:
 
 @pytest.fixture(scope="session")
 def approve_user():
-    """Return the approve-user-in-DB helper function."""
-    return _approve_user_in_db
+    """Return the approve-user helper function (uses Admin API)."""
+    return _approve_user_via_api
 
 
 @pytest.fixture(scope="session")
@@ -130,6 +142,7 @@ def registered_user(http_client: httpx.Client, unique_username: str, test_passwo
             "username": unique_username,
             "password": test_password,
             "email": f"{unique_username}@test.com",
+            "captcha_token": "e2e-test",
         },
     )
     assert reg_response.status_code == 200, f"Registration failed: {reg_response.text}"
@@ -139,13 +152,13 @@ def registered_user(http_client: httpx.Client, unique_username: str, test_passwo
     # Track for cleanup
     _CREATED_USER_IDS.append(user_id)
 
-    # 2. Approve via DB
-    _approve_user_in_db(user_id)
+    # 2. Approve via Admin API
+    _approve_user_via_api(user_id)
 
     # 3. Login to get token
     login_response = http_client.post(
         "/api/auth/login",
-        json={"username": unique_username, "password": test_password},
+        json={"username": unique_username, "password": test_password, "captcha_token": "e2e-test"},
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
     login_data = login_response.json()
@@ -173,17 +186,17 @@ def admin_user(http_client: httpx.Client) -> dict:
 
     reg_response = http_client.post(
         "/api/auth/register",
-        json={"username": username, "password": password},
+        json={"username": username, "password": password, "email": f"{username}@test.com", "captcha_token": "e2e-test"},
     )
     assert reg_response.status_code == 200
     user_id = reg_response.json()["user"]["id"]
     _CREATED_USER_IDS.append(user_id)
 
-    _approve_user_in_db(user_id, role="admin")
+    _approve_user_via_api(user_id, role="admin")
 
     login_response = http_client.post(
         "/api/auth/login",
-        json={"username": username, "password": password},
+        json={"username": username, "password": password, "captcha_token": "e2e-test"},
     )
     assert login_response.status_code == 200
     login_data = login_response.json()
@@ -228,7 +241,7 @@ def check_llm_availability(base_url: str) -> bool:
             username = f"llm_check_{uuid.uuid4().hex[:8]}"
             reg_response = client.post(
                 "/api/auth/register",
-                json={"username": username, "password": "TestPass123!"},
+                json={"username": username, "password": "TestPass123!", "email": f"{username}@test.com", "captcha_token": "e2e-test"},
             )
             if reg_response.status_code != 200:
                 return False
@@ -236,11 +249,11 @@ def check_llm_availability(base_url: str) -> bool:
             user_id = reg_response.json()["user"]["id"]
             _CREATED_USER_IDS.append(user_id)
 
-            # Approve + login
-            _approve_user_in_db(user_id)
+            # Approve via Admin API + login
+            _approve_user_via_api(user_id)
             login_resp = client.post(
                 "/api/auth/login",
-                json={"username": username, "password": "TestPass123!"},
+                json={"username": username, "password": "TestPass123!", "captcha_token": "e2e-test"},
             )
             if login_resp.status_code != 200:
                 return False
@@ -295,14 +308,14 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """Clean up all test users created during this session."""
+    """Clean up all test users created during this session via the Admin API."""
     if not _CREATED_USER_IDS:
         return
 
     print(f"\n🧹 Cleaning up {len(_CREATED_USER_IDS)} test user(s)...")
     for uid in _CREATED_USER_IDS:
         try:
-            _delete_user_cascade_db(uid)
+            _delete_user_via_api(uid)
         except Exception as exc:
             print(f"  ⚠️  Failed to clean up user {uid}: {exc}")
     print("✅ Cleanup complete")

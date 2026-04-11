@@ -99,6 +99,27 @@ class Settings(BaseSettings):
         default_factory=lambda: get_yaml_value(_yaml_config, "security", "jwt", "expiration_hours", default=24),
         alias="JWT_EXPIRATION_HOURS"
     )
+
+    # Google OAuth
+    google_oauth_client_id: str = Field(default="", alias="GOOGLE_OAUTH_CLIENT_ID")
+
+    # reCAPTCHA v3
+    recaptcha_secret_key: str = Field(default="", alias="RECAPTCHA_SECRET_KEY")
+    recaptcha_score_threshold: float = Field(default=0.5, alias="RECAPTCHA_SCORE_THRESHOLD")
+    recaptcha_bypass_token: str = Field(default="", alias="RECAPTCHA_BYPASS_TOKEN")
+
+    # SMTP for email verification
+    smtp_host: str = Field(default="", alias="SMTP_HOST")
+    smtp_port: int = Field(default=587, alias="SMTP_PORT")
+    smtp_user: str = Field(default="", alias="SMTP_USER")
+    smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
+    smtp_from_email: str = Field(default="noreply@lesesame.eu", alias="SMTP_FROM_EMAIL")
+    smtp_from_name: str = Field(default="Le Sésame", alias="SMTP_FROM_NAME")
+    smtp_use_tls: bool = Field(default=True, alias="SMTP_USE_TLS")
+    smtp_use_ssl: bool = Field(default=False, alias="SMTP_USE_SSL")
+
+    # Frontend URL (for email verification links)
+    frontend_url: str = Field(default="http://localhost:3000", alias="FRONTEND_URL")
     
     # LLM Configuration
     mistral_api_key: str = Field(default="", alias="MISTRAL_API_KEY")
@@ -112,6 +133,8 @@ class Settings(BaseSettings):
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
     vllm_api_key: str = Field(default="", alias="VLLM_API_KEY")
     together_api_key: str = Field(default="", alias="TOGETHER_API_KEY")
+    xai_api_key: str = Field(default="", alias="XAI_API_KEY")
+    cohere_api_key: str = Field(default="", alias="COHERE_API_KEY")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
 
     # LangSmith tracing

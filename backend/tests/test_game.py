@@ -27,7 +27,7 @@ async def test_get_levels(client, auth_headers):
     assert response.status_code == 200
     data = response.json()
     
-    assert len(data) == 5
+    assert len(data) == 20
     
     # Check first level structure
     level1 = data[0]
@@ -46,7 +46,7 @@ async def test_get_levels_unauthenticated(client):
     # Should work without authentication (returns default configs)
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 5
+    assert len(data) == 20
 
 
 @pytest.mark.asyncio
@@ -94,10 +94,10 @@ async def test_send_chat_invalid_level(client, auth_headers):
     """Test sending chat to invalid level fails."""
     response = await client.post("/api/game/chat", headers=auth_headers, json={
         "message": "Hello",
-        "level": 10  # Invalid level
+        "level": 25  # Invalid level
     })
     
-    assert response.status_code == 422  # Validation error (level must be 1-5)
+    assert response.status_code == 422  # Validation error (level must be 1-20)
 
 
 @pytest.mark.asyncio

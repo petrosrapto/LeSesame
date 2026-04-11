@@ -23,7 +23,8 @@ class TestUserSchemas:
         user = UserCreate(
             username="testuser",
             password="testpass123",
-            email="test@example.com"
+            email="test@example.com",
+            captcha_token="test-token"
         )
         assert user.username == "testuser"
         assert user.password == "testpass123"
@@ -50,7 +51,7 @@ class TestUserSchemas:
     
     def test_login_request_valid(self):
         """Test valid login request schema."""
-        login = LoginRequest(username="testuser", password="testpass")
+        login = LoginRequest(username="testuser", password="testpass", captcha_token="test-token")
         assert login.username == "testuser"
         assert login.password == "testpass"
 
@@ -75,9 +76,9 @@ class TestGameSchemas:
             ChatMessageRequest(message="Hello", level=0)
     
     def test_chat_message_invalid_level_high(self):
-        """Test that level above 5 fails validation."""
+        """Test that level above 20 fails validation."""
         with pytest.raises(ValidationError):
-            ChatMessageRequest(message="Hello", level=6)
+            ChatMessageRequest(message="Hello", level=21)
     
     def test_chat_message_too_long(self):
         """Test that too long message fails validation."""

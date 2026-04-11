@@ -27,20 +27,21 @@ class TestUserRegistration:
             json={
                 "username": unique_username,
                 "password": test_password,
-                "email": f"{unique_username}@example.com"
+                "email": f"{unique_username}@example.com",
+                "captcha_token": "e2e-test"
             }
         )
         
         assert response.status_code == 200
         data = response.json()
         
-        # Verify registration response structure (pending approval, no token)
+        # Verify registration response structure (auto-approved, email not yet verified)
         assert "message" in data
         assert "user" in data
         assert data["user"]["username"] == unique_username
         assert "id" in data["user"]
         assert "created_at" in data["user"]
-        assert data["user"]["is_approved"] is False
+        assert data["user"]["is_approved"] is True
         track_user(data["user"]["id"])
     
     def test_register_duplicate_username_fails(
@@ -54,7 +55,9 @@ class TestUserRegistration:
             "/api/auth/register",
             json={
                 "username": registered_user["username"],
-                "password": test_password
+                "password": test_password,
+                "email": f"{registered_user['username']}@example.com",
+                "captcha_token": "e2e-test"
             }
         )
         
@@ -72,7 +75,9 @@ class TestUserRegistration:
             "/api/auth/register",
             json={
                 "username": "ab",  # Too short (min 3)
-                "password": test_password
+                "password": test_password,
+                "email": "ab@example.com",
+                "captcha_token": "e2e-test"
             }
         )
         
@@ -88,7 +93,9 @@ class TestUserRegistration:
             "/api/auth/register",
             json={
                 "username": unique_username,
-                "password": "12345"  # Too short (min 6)
+                "password": "12345",  # Too short (min 6)
+                "email": f"{unique_username}@example.com",
+                "captcha_token": "e2e-test"
             }
         )
         
@@ -108,7 +115,8 @@ class TestUserLogin:
             "/api/auth/login",
             json={
                 "username": registered_user["username"],
-                "password": registered_user["password"]
+                "password": registered_user["password"],
+                "captcha_token": "e2e-test"
             }
         )
         
@@ -133,7 +141,8 @@ class TestUserLogin:
             "/api/auth/login",
             json={
                 "username": registered_user["username"],
-                "password": "wrong_password"
+                "password": "wrong_password",
+                "captcha_token": "e2e-test"
             }
         )
         
@@ -147,7 +156,8 @@ class TestUserLogin:
             "/api/auth/login",
             json={
                 "username": "nonexistent_user_xyz",
-                "password": "any_password"
+                "password": "any_password",
+                "captcha_token": "e2e-test"
             }
         )
         

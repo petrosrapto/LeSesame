@@ -76,10 +76,10 @@ async def send_message(
     """
     request = chat_request  # alias for cleaner usage below
     # Validate level
-    if request.level < 1 or request.level > 5:
+    if request.level < 1 or request.level > 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid level. Must be between 1 and 5."
+            detail="Invalid level. Must be between 1 and 20."
         )
     
     repo = GameRepository(db)
@@ -148,10 +148,10 @@ async def verify_passphrase(
     If correct, the level is marked complete.
     """
     # Validate level
-    if request.level < 1 or request.level > 5:
+    if request.level < 1 or request.level > 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid level. Must be between 1 and 5."
+            detail="Invalid level. Must be between 1 and 20."
         )
     
     game_repo = GameRepository(db)
@@ -195,7 +195,7 @@ async def verify_passphrase(
             message="🎉 Congratulations! You've unlocked the secret!",
             level=request.level,
             secret=keeper.secret,
-            next_level=request.level + 1 if request.level < 5 else None,
+            next_level=request.level + 1 if request.level < 20 else None,
             time_spent=attempt.time_spent_seconds,
             attempts=attempt.attempts
         )
@@ -298,10 +298,10 @@ async def get_level_completion(
     db: AsyncSession = Depends(get_db)
 ):
     """Get the secret and passphrase for a completed level."""
-    if level < 1 or level > 5:
+    if level < 1 or level > 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid level. Must be between 1 and 5."
+            detail="Invalid level. Must be between 1 and 20."
         )
     
     repo = GameRepository(db)
@@ -338,7 +338,7 @@ async def get_chat_history_endpoint(
     db: AsyncSession = Depends(get_db)
 ):
     """Get chat history for a specific level."""
-    if level < 1 or level > 5:
+    if level < 1 or level > 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid level"

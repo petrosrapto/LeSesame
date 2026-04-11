@@ -1,1 +1,24 @@
 *.venv
+*.coverage
+settings.*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Private keys & certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

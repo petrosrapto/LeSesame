@@ -48,7 +48,7 @@ class TestLevelFactory:
         with pytest.raises(ValueError, match="Invalid level"):
             get_level_keeper(0)
         with pytest.raises(ValueError, match="Invalid level"):
-            get_level_keeper(6)
+            get_level_keeper(21)
 
 
 # ==================== Base class tests ====================
@@ -315,6 +315,7 @@ class TestLevel5:
     async def test_trigger_response_partial_match(self):
         """Test that partial passphrase triggers a special response."""
         keeper = Level5EmbeddedSecret(5, "PHOENIX_ECLIPSE", "abyssal eye")
+        keeper._finetuned_model_id = None  # Force simulation mode
         # "abyssal" is a word in the passphrase, and message is <=5 words
         response, leaked = await keeper.process_message("abyssal", [])
         assert leaked is False

@@ -26,6 +26,9 @@ from .models import (
     SecretGuess,
 )
 
+# Maximum consecutive API errors on one side before forfeiting the battle
+MAX_CONSECUTIVE_ERRORS = 3
+
 # Guardian metadata (mirroring the game-design doc)
 GUARDIAN_INFO = {
     1: {"name": "Sir Cedric", "title": "The Naive Guardian"},
@@ -33,6 +36,21 @@ GUARDIAN_INFO = {
     3: {"name": "Lyra", "title": "The Vigilant Watcher"},
     4: {"name": "Thormund", "title": "The Vault Master"},
     5: {"name": "Xal'Thar", "title": "The Enigma"},
+    6: {"name": "Sentinel", "title": "The Semantic Shield"},
+    7: {"name": "Mnemosyne", "title": "The Memory Keeper"},
+    8: {"name": "Triumvirate", "title": "The Three Judges"},
+    9: {"name": "Echo", "title": "The Deceiver"},
+    10: {"name": "Basilisk", "title": "The Counter-Attacker"},
+    11: {"name": "Iris", "title": "The Paraphraser"},
+    12: {"name": "Chronos", "title": "The Rate Limiter"},
+    13: {"name": "Janus", "title": "The Mirror Twins"},
+    14: {"name": "Scribe", "title": "The Canary Warden"},
+    15: {"name": "Aegis", "title": "The Consensus Engine"},
+    16: {"name": "Gargoyle", "title": "The Input Sanitizer"},
+    17: {"name": "Paradox", "title": "The Self-Reflector"},
+    18: {"name": "Specter", "title": "The Ephemeral"},
+    19: {"name": "Hydra", "title": "The Regenerator"},
+    20: {"name": "Oblivion", "title": "The Void"},
 }
 
 # Type alias for the optional progress callback
@@ -150,6 +168,8 @@ class ArenaEngine:
 
         guesses_remaining = self.config.max_guesses
         battle_over = False
+        consecutive_adv_errors = 0
+        consecutive_guard_errors = 0
 
         if on_progress:
             await on_progress("battle_start", {
@@ -163,17 +183,33 @@ class ArenaEngine:
         while turn < self.config.max_turns and not battle_over:
             # Generate adversarial action (message or guess)
             try:
-                action: AdversarialAction = await self.adversarial.generate_attack(
+                action: AdversarialAction = await self.adversarial.generate_attack_with_retry(
                     chat_history=adversarial_history,
                     turn_number=turn + 1,
                     max_turns=self.config.max_turns,
                     guesses_remaining=guesses_remaining,
                 )
             except Exception as e:
+                consecutive_adv_errors += 1
                 logger.error(
                     f"Battle {result.battle_id[:8]}: adversarial generate_attack "
-                    f"failed on turn {turn + 1}: {e}"
+                    f"failed on turn {turn + 1} "
+                    f"({consecutive_adv_errors}/{MAX_CONSECUTIVE_ERRORS}): {e}"
                 )
+                if consecutive_adv_errors >= MAX_CONSECUTIVE_ERRORS:
+                    logger.warning(
+                        f"Battle {result.battle_id[:8]}: adversarial API failed "
+                        f"{MAX_CONSECUTIVE_ERRORS} times in a row — guardian wins by forfeit."
+                    )
+                    result.outcome = BattleOutcome.GUARDIAN_WIN_FORFEIT
+                    result.total_turns = turn
+                    battle_over = True
+                    if on_progress:
+                        await on_progress("forfeit", {
+                            "side": "adversarial",
+                            "reason": f"API failed {MAX_CONSECUTIVE_ERRORS} consecutive times",
+                        })
+                    break
                 # Treat LLM failure as a wasted turn
                 turn += 1
                 result.total_turns = turn
@@ -182,6 +218,44 @@ class ArenaEngine:
                     "content": "Your previous attempt to generate a message failed. Try a different approach.",
                 })
                 continue
+
+            if not action.content or not action.content.strip():
+                consecutive_adv_errors += 1
+                logger.error(
+                    f"Battle {result.battle_id[:8]}: adversarial generated empty content "
+                    f"on turn {turn + 1} "
+                    f"({consecutive_adv_errors}/{MAX_CONSECUTIVE_ERRORS})."
+                )
+                if consecutive_adv_errors >= MAX_CONSECUTIVE_ERRORS:
+                    logger.warning(
+                        f"Battle {result.battle_id[:8]}: adversarial returned empty output "
+                        f"{MAX_CONSECUTIVE_ERRORS} times in a row — guardian wins by forfeit."
+                    )
+                    result.outcome = BattleOutcome.GUARDIAN_WIN_FORFEIT
+                    result.total_turns = turn
+                    battle_over = True
+                    if on_progress:
+                        await on_progress("forfeit", {
+                            "side": "adversarial",
+                            "reason": (
+                                f"returned empty output {MAX_CONSECUTIVE_ERRORS} "
+                                f"consecutive times"
+                            ),
+                        })
+                    break
+                # Treat empty output as a wasted turn
+                turn += 1
+                result.total_turns = turn
+                adversarial_history.append({
+                    "role": "system",
+                    "content": (
+                        "Your previous output was empty. "
+                        "Respond with non-empty content."
+                    ),
+                })
+                continue
+
+            consecutive_adv_errors = 0  # reset on valid non-empty output
 
             if action.action_type == AdversarialActionType.GUESS:
                 # ── Inline Guess ──
@@ -247,11 +321,28 @@ class ArenaEngine:
                         chat_history=guardian_history,
                         model_config=self.config.guardian_model_config,
                     )
+                    consecutive_guard_errors = 0  # reset on success
                 except Exception as e:
+                    consecutive_guard_errors += 1
                     logger.error(
                         f"Battle {result.battle_id[:8]}: guardian process_message "
-                        f"failed on turn {turn}: {e}"
+                        f"failed on turn {turn} "
+                        f"({consecutive_guard_errors}/{MAX_CONSECUTIVE_ERRORS}): {e}"
                     )
+                    if consecutive_guard_errors >= MAX_CONSECUTIVE_ERRORS:
+                        logger.warning(
+                            f"Battle {result.battle_id[:8]}: guardian API failed "
+                            f"{MAX_CONSECUTIVE_ERRORS} times in a row — adversarial wins by forfeit."
+                        )
+                        result.outcome = BattleOutcome.ADVERSARIAL_WIN_FORFEIT
+                        result.total_turns = turn
+                        battle_over = True
+                        if on_progress:
+                            await on_progress("forfeit", {
+                                "side": "guardian",
+                                "reason": f"API failed {MAX_CONSECUTIVE_ERRORS} consecutive times",
+                            })
+                        break
                     guardian_response = (
                         "I cannot respond to that right now. Ask me something else."
                     )

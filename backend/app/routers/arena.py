@@ -251,9 +251,15 @@ async def get_ombre_suggestion(
 
     turn_number = len([m for m in arena_history if m["role"] == "adversarial"]) + 1
 
+    model_config = (
+        request.model_config_override.model_dump(exclude_none=True)
+        if request.model_config_override
+        else None
+    )
+
     try:
-        agent = get_adversarial_agent(adv_level)
-        action = await agent.generate_attack(
+        agent = get_adversarial_agent(adv_level, model_config=model_config)
+        action = await agent.generate_attack_with_retry(
             chat_history=arena_history,
             turn_number=turn_number,
             max_turns=20,       # generous limit — this is a suggestion

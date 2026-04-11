@@ -57,7 +57,7 @@ export function GameProgress({
         </div>
 
         {/* Level indicators */}
-        <div className="flex justify-between">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => {
             const isCompleted = completedLevels.includes(level);
             const isCurrent = level === currentLevel;
@@ -67,27 +67,26 @@ export function GameProgress({
               <div
                 key={level}
                 className={cn(
-                  "flex flex-col items-center gap-1",
+                  "flex flex-col items-center gap-0.5",
                   isLocked && "opacity-40"
                 )}
               >
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-none border-2 border-border flex items-center justify-center transition-all duration-300",
+                    "w-7 h-7 rounded-none border border-border flex items-center justify-center transition-all duration-300 text-[10px] font-mono font-bold",
                     isCompleted && "bg-success text-success-foreground",
                     isCurrent &&
                       !isCompleted &&
-                      "bg-orange-500 text-white ring-4 ring-orange-500/30 animate-pulse-glow",
+                      "bg-orange-500 text-white ring-2 ring-orange-500/30 animate-pulse-glow",
                     isLocked && "bg-muted text-muted-foreground"
                   )}
                 >
                   {isCompleted ? (
-                    <Unlock className="w-4 h-4" />
+                    <Unlock className="w-3 h-3" />
                   ) : (
-                    <Lock className="w-4 h-4" />
+                    <span>{level}</span>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">{level}</span>
               </div>
             );
           })}

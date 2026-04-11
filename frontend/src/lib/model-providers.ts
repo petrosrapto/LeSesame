@@ -56,6 +56,11 @@ export const providers: Provider[] = [
       { displayName: "Gemini 2.5 Flash",      apiIdentifier: "gemini-2.5-flash" },
 
       { displayName: "Gemini 2.0 Flash",      apiIdentifier: "gemini-2.0-flash" },
+      // Gemma 3 (open-source)
+      { displayName: "Gemma 3 27B",          apiIdentifier: "gemma-3-27b-it" },
+      { displayName: "Gemma 3 12B",          apiIdentifier: "gemma-3-12b-it" },
+      { displayName: "Gemma 3 4B",           apiIdentifier: "gemma-3-4b-it" },
+      { displayName: "Gemma 3 1B",           apiIdentifier: "gemma-3-1b-it" },
     ],
   },
 
@@ -101,28 +106,6 @@ export const providers: Provider[] = [
     ],
   },
 
-  // ── AWS Bedrock (native provider) ──────────────────────────────────────
-  {
-    displayName: "AWS Bedrock",
-    providerId: "aws",
-    apiName: "bedrock",
-    models: [
-      // Anthropic
-      { displayName: "Claude Sonnet 4",           apiIdentifier: "us.anthropic.claude-sonnet-4-20250514-v1:0" },
-      { displayName: "Claude 3.5 Haiku",          apiIdentifier: "us.anthropic.claude-3-5-haiku-20241022-v1:0" },
-      // Meta Llama
-      { displayName: "Llama 4 Maverick 17B",      apiIdentifier: "us.meta.llama4-maverick-17b-instruct-v1:0" },
-      { displayName: "Llama 4 Scout 17B",         apiIdentifier: "us.meta.llama4-scout-17b-instruct-v1:0" },
-      { displayName: "Llama 3.3 70B",             apiIdentifier: "us.meta.llama3-3-70b-instruct-v1:0" },
-      // Amazon Nova
-      { displayName: "Amazon Nova Pro",            apiIdentifier: "us.amazon.nova-pro-v1:0" },
-      { displayName: "Amazon Nova Lite",           apiIdentifier: "us.amazon.nova-lite-v1:0" },
-      { displayName: "Amazon Nova Micro",          apiIdentifier: "us.amazon.nova-micro-v1:0" },
-      // Mistral on Bedrock
-      { displayName: "Mistral Large (Bedrock)",    apiIdentifier: "mistral.mistral-large-2407-v1:0" },
-    ],
-  },
-
   // ── Alibaba / DashScope (OpenAI-compatible) ────────────────────────────
   {
     displayName: "Alibaba",
@@ -152,6 +135,28 @@ export const providers: Provider[] = [
     models: [
       { displayName: "DeepSeek V3",  apiIdentifier: "deepseek-chat",     endpoint: "https://api.deepseek.com" },
       { displayName: "DeepSeek R1",  apiIdentifier: "deepseek-reasoner", endpoint: "https://api.deepseek.com" },
+    ],
+  },
+
+  // ── xAI (OpenAI-compatible) ────────────────────────────────────────────
+  {
+    displayName: "xAI",
+    providerId: "xai",
+    apiName: "openai",
+    models: [
+      { displayName: "Grok 4.1 Fast Reasoning",      apiIdentifier: "grok-4-1-fast-reasoning",      endpoint: "https://api.x.ai/v1" },
+      { displayName: "Grok 4.1 Fast Non-Reasoning",   apiIdentifier: "grok-4-1-fast-non-reasoning",  endpoint: "https://api.x.ai/v1" },
+    ],
+  },
+
+  // ── Cohere (OpenAI-compatible) ──────────────────────────────────────────
+  {
+    displayName: "Cohere",
+    providerId: "cohere",
+    apiName: "cohere",
+    models: [
+      { displayName: "Command A",   apiIdentifier: "command-a-03-2025" },
+      { displayName: "Command R+",  apiIdentifier: "command-r-plus-08-2024" },
     ],
   },
 

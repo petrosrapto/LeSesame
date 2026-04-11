@@ -50,7 +50,7 @@ class TestLeaderboardMain:
     
     def test_get_leaderboard_invalid_level(self, http_client: httpx.Client):
         """Test that invalid level filter is rejected."""
-        response = http_client.get("/api/leaderboard/?level=10")
+        response = http_client.get("/api/leaderboard/?level=25")
         
         assert response.status_code == 422  # Validation error
     
@@ -146,14 +146,14 @@ class TestLevelLeaderboard:
     
     def test_get_level_leaderboard_all_levels(self, http_client: httpx.Client):
         """Test getting leaderboard for each valid level."""
-        for level in range(1, 6):
+        for level in range(1, 21):
             response = http_client.get(f"/api/leaderboard/level/{level}")
             assert response.status_code == 200
             assert response.json()["level"] == level
     
     def test_get_level_leaderboard_invalid_level(self, http_client: httpx.Client):
         """Test that invalid level returns error."""
-        response = http_client.get("/api/leaderboard/level/10")
+        response = http_client.get("/api/leaderboard/level/25")
         
         assert response.status_code == 200  # Returns with error in body
         data = response.json()

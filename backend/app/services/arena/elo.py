@@ -86,6 +86,18 @@ class EloRatingSystem:
 
             return 0.6 + guess_bonus + turn_bonus
 
+        elif result.outcome.value == "adversarial_win_forfeit":
+            # Guardian API crashed — adversarial wins by forfeit.
+            # Modest score (0.5): the adversarial didn't prove skill,
+            # but the guardian demonstrably failed to compete.
+            return 0.5
+
+        elif result.outcome.value == "guardian_win_forfeit":
+            # Adversarial API crashed — guardian wins by forfeit.
+            # Modest score for guardian (adversarial gets 0.1 instead
+            # of 0.0) because the guardian didn't prove strength either.
+            return 0.1
+
         else:
             # Guardian wins — no correct guess was made
             return 0.0
