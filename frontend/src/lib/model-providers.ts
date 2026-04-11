@@ -78,7 +78,6 @@ export const providers: Provider[] = [
       { displayName: "Claude Opus 4",       apiIdentifier: "claude-opus-4-20250514" },
       { displayName: "Claude Sonnet 4",     apiIdentifier: "claude-sonnet-4-20250514" },
       { displayName: "Claude Sonnet 3.7",   apiIdentifier: "claude-3-7-sonnet-20250219" },
-      { displayName: "Claude Haiku 3.5",    apiIdentifier: "claude-3-5-haiku-20241022" },
       { displayName: "Claude Haiku 3",      apiIdentifier: "claude-3-haiku-20240307" },
     ],
   },

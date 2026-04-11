@@ -322,7 +322,7 @@ class TestAnthropicProvider:
             auth_headers,
             model_config={
                 "provider": "anthropic",
-                "model_id": "claude-3-5-haiku-20241022",
+                "model_id": "claude-sonnet-4-20250514",
             },
         )
         _assert_chat_ok(response)
