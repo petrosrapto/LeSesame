@@ -100,10 +100,19 @@ async def send_message(
         if request.model_config_request
         else None
     )
-    response_text, leaked = await keeper.process_message(
-        request.message, chat_history, model_config=model_config
-    )
-    
+    try:
+        response_text, leaked = await keeper.process_message(
+            request.message, chat_history, model_config=model_config
+        )
+    except Exception as e:
+        logger.error(
+            f"LLM error for user {user.username} at level {request.level}: {e}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The AI guardian is temporarily unavailable. Please try again later.",
+        )
+
     # Save conversation
     await repo.save_conversation(
         session_id=session.id,

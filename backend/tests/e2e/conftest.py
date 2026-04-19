@@ -132,16 +132,19 @@ def test_password() -> str:
     return "TestPassword123!"
 
 
-@pytest.fixture
-def registered_user(http_client: httpx.Client, unique_username: str, test_password: str) -> dict:
-    """Register a new user, auto-approve via DB, login, and return user info with token."""
+@pytest.fixture(scope="session")
+def registered_user(http_client: httpx.Client) -> dict:
+    """Register a single shared user for the whole test session."""
+    username = f"e2e_user_{uuid.uuid4().hex[:8]}"
+    password = "TestPassword123!"
+
     # 1. Register
     reg_response = http_client.post(
         "/api/auth/register",
         json={
-            "username": unique_username,
-            "password": test_password,
-            "email": f"{unique_username}@test.com",
+            "username": username,
+            "password": password,
+            "email": f"{username}@test.com",
             "captcha_token": "e2e-test",
         },
     )
@@ -158,29 +161,29 @@ def registered_user(http_client: httpx.Client, unique_username: str, test_passwo
     # 3. Login to get token
     login_response = http_client.post(
         "/api/auth/login",
-        json={"username": unique_username, "password": test_password, "captcha_token": "e2e-test"},
+        json={"username": username, "password": password, "captcha_token": "e2e-test"},
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
     login_data = login_response.json()
 
     return {
-        "username": unique_username,
-        "password": test_password,
+        "username": username,
+        "password": password,
         "token": login_data["access_token"],
         "user_id": user_id,
         "response": login_data,
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def auth_headers(registered_user: dict) -> dict:
-    """Return authorization headers for authenticated requests."""
+    """Return authorization headers for the shared session user."""
     return {"Authorization": f"Bearer {registered_user['token']}"}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def admin_user(http_client: httpx.Client) -> dict:
-    """Register + approve + promote an admin user for tests."""
+    """Register + approve + promote a single shared admin user for the test session."""
     username = f"e2e_admin_{uuid.uuid4().hex[:8]}"
     password = "AdminPass123!"
 
@@ -209,9 +212,9 @@ def admin_user(http_client: httpx.Client) -> dict:
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def admin_headers(admin_user: dict) -> dict:
-    """Return authorization headers for admin requests."""
+    """Return authorization headers for the shared admin user."""
     return {"Authorization": f"Bearer {admin_user['token']}"}
 
 
