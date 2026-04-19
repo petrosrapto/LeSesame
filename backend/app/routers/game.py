@@ -9,6 +9,7 @@ Date: 2026/02/06
 
 from datetime import datetime
 from typing import Annotated, Optional, List
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -101,9 +102,25 @@ async def send_message(
         else None
     )
     try:
-        response_text, leaked = await keeper.process_message(
-            request.message, chat_history, model_config=model_config
-        )
+        # Retry on transient upstream LLM errors (e.g. Mistral 503)
+        last_exc = None
+        for _attempt in range(3):
+            try:
+                response_text, leaked = await keeper.process_message(
+                    request.message, chat_history, model_config=model_config
+                )
+                last_exc = None
+                break
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    f"LLM attempt {_attempt + 1}/3 failed for user "
+                    f"{user.username} at level {request.level}: {exc}"
+                )
+                if _attempt < 2:
+                    await asyncio.sleep(2)
+        if last_exc is not None:
+            raise last_exc
     except Exception as e:
         logger.error(
             f"LLM error for user {user.username} at level {request.level}: {e}"
