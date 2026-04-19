@@ -492,6 +492,8 @@ jobs:
             "cd ~/le_sesame_deploy && scripts/deploy.sh --status"
 
       - name: Run E2E Tests
+        continue-on-error: true
+        id: e2e
         run: |
           # Install test dependencies on the runner
           pip install -r backend/requirements-test.txt
@@ -508,6 +510,18 @@ jobs:
 
           # Kill the SSH tunnel
           pkill -f "ssh -f -N -L 8000:localhost:8000" || true
+
+      - name: E2E Test Results
+        if: always()
+        run: |
+          if [ "${{ steps.e2e.outcome }}" == "failure" ]; then
+            echo "::warning::⚠️ Some E2E tests failed (non-blocking). Check the logs above for details."
+            echo "## ⚠️ E2E Tests" >> $GITHUB_STEP_SUMMARY
+            echo "Some E2E tests failed. This is **non-blocking** as failures may be caused by transient upstream LLM issues (e.g. Mistral 503)." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ✅ E2E Tests" >> $GITHUB_STEP_SUMMARY
+            echo "All E2E tests passed." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Disconnect VPN
         if: always()

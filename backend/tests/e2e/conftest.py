@@ -9,6 +9,7 @@ Date: 2026/02/07
 """
 
 import os
+import time
 import pytest
 import httpx
 import uuid
@@ -30,6 +31,30 @@ _CREATED_USER_IDS: list[int] = []
 
 # Admin token (obtained once per session)
 _ADMIN_TOKEN: str | None = None
+
+# Maximum retries for LLM requests that may get transient 503s
+LLM_MAX_RETRIES = int(os.environ.get("E2E_LLM_RETRIES", "3"))
+LLM_RETRY_DELAY = float(os.environ.get("E2E_LLM_RETRY_DELAY", "2.0"))
+
+
+def retry_on_503(
+    send_fn,
+    *,
+    max_retries: int = LLM_MAX_RETRIES,
+    delay: float = LLM_RETRY_DELAY,
+) -> httpx.Response:
+    """Call *send_fn* (a zero-arg callable returning an httpx.Response),
+    retrying up to *max_retries* times when the server returns 503
+    (upstream LLM temporarily unavailable)."""
+    last_response = None
+    for attempt in range(1, max_retries + 1):
+        last_response = send_fn()
+        if last_response.status_code != 503:
+            return last_response
+        if attempt < max_retries:
+            print(f"  ⚠️  Got 503, retrying ({attempt}/{max_retries}) in {delay}s…")
+            time.sleep(delay)
+    return last_response
 
 
 def _get_admin_token(client: httpx.Client | None = None) -> str:
