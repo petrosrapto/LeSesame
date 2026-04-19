@@ -131,6 +131,7 @@ PROVIDERS = [
         },
         "bedrock",
         id="bedrock",
+        marks=pytest.mark.bedrock,
     ),
     pytest.param(
         {"provider": "anthropic", "model_id": "claude-sonnet-4-20250514"},

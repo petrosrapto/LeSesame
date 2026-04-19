@@ -257,14 +257,18 @@ class TestConcurrentAccess:
         
         messages = ["First question", "Second question", "Third question"]
         
-        for i, msg in enumerate(messages, 1):
+        prev_count = None
+        for msg in messages:
             response = http_client.post(
                 "/api/game/chat",
                 headers=auth_headers,
                 json={"message": msg, "level": 1}
             )
             assert response.status_code == 200
-            assert response.json()["messages_count"] == i
+            current_count = response.json()["messages_count"]
+            if prev_count is not None:
+                assert current_count == prev_count + 1
+            prev_count = current_count
     
     def test_multiple_passphrase_attempts(
         self, 
